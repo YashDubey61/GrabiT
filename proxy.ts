@@ -4,7 +4,7 @@ import { updateSession } from "@/lib/supabase/middleware";
 // Root middleware — runs on every matched request, ahead of any route
 // group. Role-based allow/deny (student/vendor/admin route separation) is
 // architected here but deferred until Day 2 (see lib/supabase/middleware.ts).
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   return await updateSession(request);
 }
 

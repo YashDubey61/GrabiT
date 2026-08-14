@@ -15,6 +15,18 @@ import { NextResponse, type NextRequest } from "next/server";
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
+  // No Supabase project is provisioned yet in this foundation phase (see
+  // Day 1 report, "Supabase — deferred"). Fail open to a pass-through
+  // response rather than crashing every request — a hard crash here would
+  // block viewing the route shells before a project exists, which isn't a
+  // real security boundary being bypassed, just an unconfigured one.
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    return supabaseResponse;
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
