@@ -8,7 +8,7 @@ import { NextResponse, type NextRequest } from "next/server";
  * policy yet: it refreshes the Supabase session on every request and
  * exposes the authenticated user for route-group checks. The actual
  * role → route allow-list (student → /student/*, vendor → /vendor/*,
- * admin → /admin/*) is deferred to Day 2 once `users.role` is queryable
+ * admin → /superadmin/*) is deferred until `users.role` is queryable
  * against a live schema — wiring it against an empty database would be
  * fake enforcement, which the brief explicitly rules out.
  */

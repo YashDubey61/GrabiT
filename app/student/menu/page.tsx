@@ -21,6 +21,7 @@ export default function StudentMenuPage() {
         />
 
         <MenuBrowser
+          canteenId={mockCanteenInfo.id}
           canteenName={mockCanteenInfo.name}
           items={mockMenuItems}
           categories={mockMenuCategories}

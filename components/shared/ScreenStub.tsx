@@ -13,7 +13,7 @@ export function ScreenStub({
 }: {
   title: string;
   stitchSource: string;
-  role: "Student" | "Vendor" | "Admin";
+  role: "Student" | "Vendor" | "Super Admin";
 }) {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-3 border border-dashed border-border-subtle p-8 text-center">

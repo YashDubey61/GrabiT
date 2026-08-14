@@ -31,6 +31,10 @@ export interface MockMenuItem {
 }
 
 export const mockCanteenInfo = {
+  // Matches lib/mock/campus.ts's "main-canteen" id — same canteen, two
+  // mock files, one identity. The cart uses this to enforce single-canteen
+  // orders (Day 3 canteen-consistency rule).
+  id: "main-canteen",
   name: "The Main Canteen",
   avgPrepMinutes: 10,
   rating: 4.5,

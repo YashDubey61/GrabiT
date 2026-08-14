@@ -4,26 +4,29 @@ import { useMemo, useState } from "react";
 import { CategoryChips } from "@/components/student/CategoryChips";
 import { MenuItemCard } from "@/components/student/MenuItemCard";
 import { CartBar } from "@/components/student/CartBar";
+import { CanteenConflictBanner } from "@/components/student/CanteenConflictBanner";
+import { useCart } from "@/lib/cart/CartContext";
 import type { MockMenuCategory, MockMenuItem } from "@/lib/mock/menu";
 
 /**
- * Owns the Menu screen's two interactions: category filtering and the
- * local cart (add / increment / decrement / remove-at-zero). Cart state
- * is a plain Record<itemId, quantity> — deliberately not a reducer or
- * context, since this is local-only, single-screen state per the Day 2
- * brief ("keep this implementation intentionally simple").
+ * Owns Menu's one screen-local interaction (category filtering). Cart
+ * state moved to the shared CartContext on Day 3 — this component reads
+ * quantities from `useCart()` instead of holding its own copy, so Menu
+ * and Checkout stay in sync automatically.
  */
 export function MenuBrowser({
+  canteenId,
   canteenName,
   items,
   categories,
 }: {
+  canteenId: string;
   canteenName: string;
   items: MockMenuItem[];
   categories: { id: MockMenuCategory; label: string }[];
 }) {
   const [selected, setSelected] = useState<MockMenuCategory>("all");
-  const [cart, setCart] = useState<Record<string, number>>({});
+  const cart = useCart();
 
   const visibleItems = useMemo(
     () =>
@@ -33,35 +36,32 @@ export function MenuBrowser({
     [items, selected],
   );
 
-  const { itemCount, total } = useMemo(() => {
-    return Object.entries(cart).reduce(
-      (acc, [itemId, qty]) => {
-        const item = items.find((i) => i.id === itemId);
-        if (!item) return acc;
-        return { itemCount: acc.itemCount + qty, total: acc.total + item.price * qty };
-      },
-      { itemCount: 0, total: 0 },
-    );
-  }, [cart, items]);
-
-  function increment(itemId: string) {
-    setCart((prev) => ({ ...prev, [itemId]: (prev[itemId] ?? 0) + 1 }));
+  function quantityOf(menuItemId: string) {
+    return cart.items.find((i) => i.menuItemId === menuItemId)?.quantity ?? 0;
   }
 
-  function decrement(itemId: string) {
-    setCart((prev) => {
-      const next = (prev[itemId] ?? 0) - 1;
-      if (next <= 0) {
-        return Object.fromEntries(
-          Object.entries(prev).filter(([id]) => id !== itemId),
-        );
-      }
-      return { ...prev, [itemId]: next };
+  function handleAdd(item: MockMenuItem) {
+    cart.addItem({
+      canteenId,
+      canteenName,
+      menuItemId: item.id,
+      name: item.name,
+      price: item.price,
+      image: item.image,
     });
   }
 
   return (
     <>
+      {cart.conflict && (
+        <CanteenConflictBanner
+          currentCanteenName={cart.canteenName ?? ""}
+          attemptedCanteenName={cart.conflict.attemptedCanteenName}
+          onKeepCurrentCart={cart.dismissConflict}
+          onStartOver={cart.resolveConflictByStartingOver}
+        />
+      )}
+
       <div className="sticky top-16 z-30 -mx-5 mb-4 bg-background/95 px-5 py-4 backdrop-blur-sm md:mx-0 md:px-0">
         <CategoryChips
           categories={categories}
@@ -75,9 +75,11 @@ export function MenuBrowser({
           <MenuItemCard
             key={item.id}
             item={item}
-            quantity={cart[item.id] ?? 0}
-            onIncrement={() => increment(item.id)}
-            onDecrement={() => decrement(item.id)}
+            quantity={quantityOf(item.id)}
+            onIncrement={() =>
+              quantityOf(item.id) === 0 ? handleAdd(item) : cart.increment(item.id)
+            }
+            onDecrement={() => cart.decrement(item.id)}
           />
         ))}
         {visibleItems.length === 0 && (
@@ -87,8 +89,8 @@ export function MenuBrowser({
         )}
       </div>
 
-      {itemCount > 0 && (
-        <CartBar canteenName={canteenName} itemCount={itemCount} total={total} />
+      {cart.itemCount > 0 && (
+        <CartBar canteenName={cart.canteenName ?? canteenName} itemCount={cart.itemCount} total={cart.subtotal} />
       )}
     </>
   );

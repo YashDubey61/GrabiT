@@ -1,9 +1,9 @@
 import Link from "next/link";
 
 // Temporary entry point. Once Supabase Auth + role claims are wired up (Day 2+),
-// this becomes a server-side redirect to /student, /vendor, or /admin based on
-// session role — never a client-side role check. For now it's an honest stub,
-// not a fake "signed in" state.
+// this becomes a server-side redirect to /student, /vendor, or /superadmin
+// based on session role — never a client-side role check. For now it's an
+// honest stub, not a fake "signed in" state.
 export default function Home() {
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-8 bg-background px-6 text-center">
@@ -33,10 +33,10 @@ export default function Home() {
           Vendor
         </Link>
         <Link
-          href="/admin"
+          href="/superadmin"
           className="rounded-full border border-border px-5 py-2.5 text-body font-600 text-foreground"
         >
-          Admin
+          Super Admin
         </Link>
       </nav>
     </main>

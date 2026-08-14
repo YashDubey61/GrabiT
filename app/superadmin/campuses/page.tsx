@@ -1,11 +1,11 @@
 import { ScreenStub } from "@/components/shared/ScreenStub";
 
-export default function AdminCampusManagementPage() {
+export default function SuperAdminCampusManagementPage() {
   return (
     <ScreenStub
       title="Campus Management"
       stitchSource="grabit_admin_campus_management/code.html"
-      role="Admin"
+      role="Super Admin"
     />
   );
 }

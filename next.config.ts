@@ -14,6 +14,19 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Day 3: /admin was the Day 1/2 route name; the canonical Super Admin
+  // dashboard is /superadmin. Kept as a redirect (not a route) so /admin
+  // is never the real, canonical implementation — see app/superadmin/.
+  async redirects() {
+    return [
+      { source: "/admin", destination: "/superadmin", permanent: false },
+      {
+        source: "/admin/:path*",
+        destination: "/superadmin/:path*",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

@@ -1,9 +1,10 @@
+import Link from "next/link";
+
 /**
- * Floating cart summary bar. Purely presentational — the parent decides
- * whether to render it (hidden when the cart is empty). No checkout
- * navigation wired yet: Day 2 scope is Campus Home + Menu only, so this
- * button is a visual placeholder for the real /student/checkout hookup
- * that /student/checkout's own conversion (a later day) will wire up.
+ * Floating cart summary bar. Presentational aside from real navigation —
+ * Day 3 wires this to /student/checkout via a genuine Next.js <Link>
+ * (real route change, not a click handler faking one). The parent decides
+ * whether to render it at all (hidden when the cart is empty).
  */
 export function CartBar({
   canteenName,
@@ -16,8 +17,8 @@ export function CartBar({
 }) {
   return (
     <div className="fixed inset-x-5 bottom-[88px] z-40 md:inset-x-16">
-      <button
-        type="button"
+      <Link
+        href="/student/checkout"
         className="flex h-14 w-full items-center justify-between rounded-xl bg-primary px-6 text-on-primary shadow-[0_4px_24px_-4px_rgb(255_109_0_/_0.4)] transition-transform active:scale-[0.98]"
       >
         <span className="flex items-center gap-3">
@@ -41,7 +42,7 @@ export function CartBar({
             arrow_forward_ios
           </span>
         </span>
-      </button>
+      </Link>
     </div>
   );
 }

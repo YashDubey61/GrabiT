@@ -1,11 +1,11 @@
 import { ScreenStub } from "@/components/shared/ScreenStub";
 
-export default function AdminGlobalDashboardPage() {
+export default function SuperAdminGlobalDashboardPage() {
   return (
     <ScreenStub
       title="Global Dashboard"
       stitchSource="grabit_admin_global_dashboard/code.html"
-      role="Admin"
+      role="Super Admin"
     />
   );
 }
