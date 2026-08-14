@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>GrabIt Vendor | Menu Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&amp;family=Sora:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary": "#c8c6c5",
+                    "on-secondary-container": "#bab8b7",
+                    "error": "#ffb4ab",
+                    "surface-container": "#121212",
+                    "on-error": "#690005",
+                    "on-primary-fixed": "#341100",
+                    "surface-dim": "#000000",
+                    "error-container": "#93000a",
+                    "secondary-fixed-dim": "#c8c6c5",
+                    "on-primary": "#562000",
+                    "inverse-primary": "#9f4200",
+                    "on-tertiary-fixed": "#1b1b1c",
+                    "on-surface-variant": "#e2bfb0",
+                    "surface-container-lowest": "#000000",
+                    "outline": "#a98a7c",
+                    "on-tertiary": "#303030",
+                    "inverse-on-surface": "#2f3037",
+                    "surface-bright": "#222222",
+                    "on-error-container": "#ffdad6",
+                    "on-background": "#ffffff",
+                    "primary": "#ffb692",
+                    "surface-container-low": "#0a0a0a",
+                    "secondary": "#c8c6c5",
+                    "primary-fixed": "#ffdbcb",
+                    "tertiary-container": "#9b9999",
+                    "tertiary-fixed-dim": "#c8c6c5",
+                    "inverse-surface": "#ffffff",
+                    "outline-variant": "#333333",
+                    "surface": "#000000",
+                    "surface-container-high": "#1a1a1a",
+                    "on-secondary": "#313030",
+                    "surface-tint": "#ffb692",
+                    "on-secondary-fixed-variant": "#474646",
+                    "on-secondary-fixed": "#1c1b1b",
+                    "tertiary-fixed": "#e5e2e1",
+                    "on-tertiary-container": "#323131",
+                    "on-primary-container": "#582100",
+                    "on-tertiary-fixed-variant": "#474746",
+                    "background": "#000000",
+                    "surface-container-highest": "#222222",
+                    "surface-variant": "#222222",
+                    "primary-container": "#ff6d00",
+                    "secondary-fixed": "#e5e2e1",
+                    "on-primary-fixed-variant": "#7a3000",
+                    "on-surface": "#ffffff",
+                    "secondary-container": "#4a4949",
+                    "primary-fixed-dim": "#ffb692"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-desktop": "64px",
+                    "margin-mobile": "20px",
+                    "gutter": "16px",
+                    "md": "16px",
+                    "xs": "4px",
+                    "unit": "4px",
+                    "xl": "40px",
+                    "lg": "24px",
+                    "sm": "8px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Montserrat"],
+                    "body-lg": ["Sora"],
+                    "label-bold": ["Sora"],
+                    "headline-xl": ["Montserrat"],
+                    "body-sm": ["Sora"],
+                    "headline-md": ["Montserrat"],
+                    "headline-lg-mobile": ["Montserrat"],
+                    "body-md": ["Sora"]
+            },
+            "fontSize": {
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "label-bold": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-xl": ["40px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #000000;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Custom toggle styling */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #333333;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #ff6d00;
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="font-body-md text-on-surface antialiased overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="docked full-width top-0 bg-black flex justify-between items-center w-full px-margin-mobile h-16 fixed z-50">
+<div class="flex items-center gap-3 active:scale-95 transition-transform duration-150">
+<span class="material-symbols-outlined text-primary-container">location_on</span>
+<span class="text-headline-md font-headline-md font-extrabold text-primary-container tracking-tight">GrabIt</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-on-surface-variant hover:opacity-80 active:scale-95 transition-all">qr_code_scanner</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/50">
+<img class="w-full h-full object-cover" data-alt="A cinematic, high-contrast close-up portrait of a young Gen-Z vendor smiling confidently, wearing a sleek black apron with a subtle orange logo. The lighting is dramatic and warm, emphasizing the energetic campus atmosphere in the blurred background. Deep shadows and vibrant orange highlights create a sophisticated stealth-tech aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDrbAJ_RyZESaLWcosoKCUT-drxPxg2_-WrkPJufOiz8LH9d3pE_9O7RQ1vQfunHRRqglwXBqDtRdYagsYozCjBdGjTNPbOWmDbD6LqD6cjw17aaUyoCL-Gw9RU2ZGU-iAw8PtL2aiHvhUf0WKrEV_yBCFPtnz6ifBbQNtFoD3kN8pRT4j8Y0zXMc91DznBLX1OGjX8K9vQjkfzvK9E3O9qjPgEnyqPeadduLfGXYh4ddWAvKzpvf9E"/>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="pt-20 pb-32 px-margin-mobile bg-black">
+<!-- Search and Stats -->
+<section class="mb-lg">
+<div class="flex items-center justify-between mb-md">
+<h1 class="text-headline-lg-mobile font-headline-lg-mobile text-on-surface">Menu Manager</h1>
+<span class="text-label-bold font-label-bold px-3 py-1 bg-surface-container-high rounded-full text-primary-container">24 ITEMS</span>
+</div>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-low border border-outline-variant/30 rounded-xl py-4 pl-12 pr-4 text-body-md focus:ring-2 focus:ring-primary-container/50 transition-all placeholder:text-on-surface-variant/50" placeholder="Search dish, price, or tags..." type="text"/>
+</div>
+</section>
+<!-- Categories Chips -->
+<section class="flex overflow-x-auto pb-4 -mx-margin-mobile px-margin-mobile scrollbar-hide gap-3 no-scrollbar">
+<button class="whitespace-nowrap px-6 py-2 rounded-full bg-primary-container text-white font-label-bold text-label-bold shadow-lg shadow-primary-container/20">All</button>
+<button class="whitespace-nowrap px-6 py-2 rounded-full bg-surface-container-high border border-outline-variant/50 text-on-surface-variant font-label-bold text-label-bold hover:bg-surface-variant transition-colors">Breakfast</button>
+<button class="whitespace-nowrap px-6 py-2 rounded-full bg-surface-container-high border border-outline-variant/50 text-on-surface-variant font-label-bold text-label-bold hover:bg-surface-variant transition-colors">Lunch</button>
+<button class="whitespace-nowrap px-6 py-2 rounded-full bg-surface-container-high border border-outline-variant/50 text-on-surface-variant font-label-bold text-label-bold hover:bg-surface-variant transition-colors">Snacks</button>
+<button class="whitespace-nowrap px-6 py-2 rounded-full bg-surface-container-high border border-outline-variant/50 text-on-surface-variant font-label-bold text-label-bold hover:bg-surface-variant transition-colors">Drinks</button>
+</section>
+<!-- Menu Grid (Asymmetric Bento-ish List) -->
+<section class="space-y-4 mt-2">
+<!-- Category Header -->
+<div class="flex items-center gap-2 pt-4 opacity-70">
+<span class="h-[1px] flex-grow bg-outline-variant/30"></span>
+<span class="text-label-bold font-label-bold tracking-widest uppercase text-on-surface-variant/80">Popular Choices</span>
+<span class="h-[1px] flex-grow bg-outline-variant/30"></span>
+</div>
+<!-- Menu Card 1 -->
+<div class="bg-surface-container rounded-2xl overflow-hidden border border-outline-variant/40 flex flex-col active:scale-[0.98] transition-transform duration-200">
+<div class="h-40 relative">
+<img class="w-full h-full object-cover" data-alt="A professional studio photograph of a gourmet Spicy Sriracha Chicken Wrap, sliced diagonally to show fresh ingredients. The wrap is sitting on a dark stone surface with artistic splatters of orange sauce. Vibrant, sharp lighting highlights the textures of the crispy chicken and fresh greens against a deep charcoal background, echoing the classroom stealth aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjMR0rpM2eUVY27irJtYlEN8Wsx2AYDFIsIrNd-EcUhJObALg7Mzhi5xtrgwW3X6csvJcsp1sct30z9-3M5023NZgrcJ61-8wL5BxvFOGkhUYILMrn6Y9_RC4BnDTX8nfvs_L2J4-mplKAfxbqXdVTvi8mmEevN-jGR9tkomG-URFH7xxLfmVYyXnsy0CSsvt_-3cbA1-mtUKeUL7l2XOg8CEL5_KK0QOhl_AWtp_YLDdG70QSUhHR"/>
+<div class="absolute top-3 right-3 bg-black/80 backdrop-blur-md px-3 py-1 rounded-lg">
+<span class="text-primary-container font-bold text-body-sm">$8.50</span>
+</div>
+</div>
+<div class="p-4 flex justify-between items-end">
+<div>
+<h3 class="text-body-lg font-headline-md text-on-surface">Spicy Chicken Wrap</h3>
+<p class="text-body-sm text-on-surface-variant mt-1">Lunch • Spicy • High Protein</p>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-on-surface-variant p-2 bg-surface-container-highest rounded-xl active:scale-90 transition-all border border-outline-variant/30">edit</button>
+<label class="toggle-switch">
+<input checked="" type="checkbox"/>
+<span class="slider"></span>
+</label>
+</div>
+</div>
+</div>
+<!-- Menu Card 2 (Compact Layout) -->
+<div class="bg-surface-container rounded-2xl p-4 border border-outline-variant/40 flex items-center gap-4 active:scale-[0.98] transition-transform duration-200">
+<div class="w-20 h-20 rounded-xl overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="A minimalist, top-down shot of a dark roasted espresso coffee in a sleek black ceramic mug. A single orange citrus peel garnishes the rim. The lighting is moody and directional, casting long shadows on a textured dark wood table. The style is athletic, modern, and high-contrast, fitting a high-energy campus vibe." src="https://lh3.googleusercontent.com/aida-public/AB6AXuArkRXmQUAW8a4PElvUFFoLgOKrpcpbS9Yx_nBfBjzJmlLSiSDZdUoJtiYLr9DokW3cotq1QpZSyYrJrIkKvz7EwQ5KutVF7F2b3vh_n263rJ_qYjrkOOUnFaKau-eh2jRzfluYlNy3-pHQjms28eDxKmhocD9ZDCfn7YYEm0kI8HDDbBUXvwhRHkLkzS7R18Nl-u572uFZ-axcxSH1urc7R-6BVE0MzzkExqGHm3j6Cmr2C3MSD_AZ"/>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-start">
+<h3 class="text-body-md font-headline-md text-on-surface leading-tight">Stealth Cold Brew</h3>
+<span class="text-primary-container font-bold text-body-sm">$4.20</span>
+</div>
+<p class="text-body-sm text-on-surface-variant mt-0.5">Drinks • Caffeine • Zero Sugar</p>
+<div class="flex justify-between items-center mt-2">
+<div class="flex gap-2">
+<button class="material-symbols-outlined text-on-surface-variant text-sm p-1.5 bg-surface-container-highest rounded-lg border border-outline-variant/30">edit</button>
+</div>
+<label class="toggle-switch">
+<input checked="" type="checkbox"/>
+<span class="slider"></span>
+</label>
+</div>
+</div>
+</div>
+<!-- Menu Card 3 (Compact Layout) -->
+<div class="bg-surface-container rounded-2xl p-4 border border-outline-variant/40 flex items-center gap-4 active:scale-[0.98] transition-transform duration-200">
+<div class="w-20 h-20 rounded-xl overflow-hidden shrink-0 opacity-40 grayscale">
+<img class="w-full h-full object-cover" data-alt="A close-up of a fresh, flaky butter croissant sitting on a minimalist dark plate. The lighting highlights the golden-brown layers and delicate texture. The background is a deep, out-of-focus cafe interior with cool blue and warm orange ambient lights. The overall feel is premium and urgent, aligned with a fast-paced campus morning." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxaARc2WsySerSaixRiIpdgjRc5KIQ8gMN_ERsuLRmaxt5Dtu7PVeuPrylBZQmvPdaTGzbSc19z3aUgRzSOaZvhBLnaBXdLOGWEr98faKBs6dCbxsnM1yl6GW9oxHNGmLIBHs12B2IjjQU9a-fJG6mkOEPKNh-WOGrwDuYi-LF7cbgn1gBsfhHedBSxKWMfPab-2TxbYokhZZjgAFAADC6W26U5REQXTvXNWgB0lPb4iM66JGHSnTA"/>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-start">
+<h3 class="text-body-md font-headline-md text-on-surface-variant/60 leading-tight">Butter Croissant</h3>
+<span class="text-on-surface-variant/40 font-bold text-body-sm">$3.50</span>
+</div>
+<p class="text-body-sm text-on-surface-variant/40 mt-0.5">Breakfast • Bakery • Out of Stock</p>
+<div class="flex justify-between items-center mt-2">
+<div class="flex gap-2">
+<button class="material-symbols-outlined text-on-surface-variant/40 text-sm p-1.5 bg-surface-container-highest rounded-lg border border-outline-variant/20">edit</button>
+</div>
+<label class="toggle-switch">
+<input type="checkbox"/>
+<span class="slider"></span>
+</label>
+</div>
+</div>
+</div>
+<!-- Category Header -->
+<div class="flex items-center gap-2 pt-6 opacity-70">
+<span class="h-[1px] flex-grow bg-outline-variant/30"></span>
+<span class="text-label-bold font-label-bold tracking-widest uppercase text-on-surface-variant/80">Healthy Sides</span>
+<span class="h-[1px] flex-grow bg-outline-variant/30"></span>
+</div>
+<!-- Menu Card 4 (Horizontal Bento) -->
+<div class="bg-surface-container rounded-2xl p-4 border border-outline-variant/40 flex items-center gap-4 active:scale-[0.98] transition-transform duration-200">
+<div class="w-20 h-20 rounded-xl overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="A vibrant, colorful Greek salad bowl with feta, olives, and fresh cucumbers in a sleek charcoal-colored takeaway container. The vegetables look crisp and hyper-real, illuminated by sharp studio lighting that creates high-contrast highlights. The mood is fresh and efficient, styled with a modern-geometric aesthetic for a Gen-Z health-conscious audience." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6cFtYFhfoCdL4AFopQQdlabAA4dQQa1nsOaxbc8VoHQC_vGmFQPYBEmp6ercfrZO_kY9CZG8ew_udxlBb3N4Xk7TQA_PEUKy-MTjKhB9N24Ji81e0WnyL-AWa4q-IoH2GjoF9TyGa1CJMk1lE4MZisOlXEpQ7bT7JCQaUbgQskbqfqXYyfSeb-jy5rDL9GCOAlpnHqcXQAulHakmK9DZtCTKF8eRsNZ8TtLbnMKU9zhcj-klOLZ4z"/>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-start">
+<h3 class="text-body-md font-headline-md text-on-surface leading-tight">Quinoa Salad Bowl</h3>
+<span class="text-primary-container font-bold text-body-sm">$9.00</span>
+</div>
+<p class="text-body-sm text-on-surface-variant mt-0.5">Snacks • Vegan • Gluten Free</p>
+<div class="flex justify-between items-center mt-2">
+<div class="flex gap-2">
+<button class="material-symbols-outlined text-on-surface-variant text-sm p-1.5 bg-surface-container-highest rounded-lg border border-outline-variant/30">edit</button>
+</div>
+<label class="toggle-switch">
+<input checked="" type="checkbox"/>
+<span class="slider"></span>
+</label>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- FAB: Add New Item -->
+<button class="fixed bottom-24 right-6 w-14 h-14 bg-primary-container text-white rounded-2xl shadow-2xl shadow-primary-container/40 flex items-center justify-center active:scale-90 transition-all z-40">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 py-3 pb-safe bg-black/90 backdrop-blur-xl z-50 border-t border-outline-variant/30 shadow-2xl rounded-t-2xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-label-bold font-label-bold mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary-container bg-primary-container/10 rounded-xl px-3 py-1 scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+<span class="text-label-bold font-label-bold mt-1">Orders</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="text-label-bold font-label-bold mt-1">Wallet</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="text-label-bold font-label-bold mt-1">Profile</span>
+</a>
+</nav>
+<script>
+        // Micro-interactions for toggles and buttons
+        document.querySelectorAll('.toggle-switch input').forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const card = this.closest('.bg-surface-container');
+                const img = card.querySelector('img');
+                const title = card.querySelector('h3');
+                const subtitle = card.querySelector('p');
+                const price = card.querySelector('.text-primary-container, .text-on-surface-variant');
+                
+                if (this.checked) {
+                    img.parentElement.classList.remove('opacity-40', 'grayscale');
+                    title.classList.remove('text-on-surface-variant/60');
+                    title.classList.add('text-on-surface');
+                    if(price) {
+                        price.classList.remove('text-on-surface-variant/40');
+                        price.classList.add('text-primary-container');
+                    }
+                } else {
+                    img.parentElement.classList.add('opacity-40', 'grayscale');
+                    title.classList.add('text-on-surface-variant/60');
+                    title.classList.remove('text-on-surface');
+                    if(price) {
+                        price.classList.add('text-on-surface-variant/40');
+                        price.classList.remove('text-primary-container');
+                    }
+                }
+            });
+        });
+
+        // Search highlight interaction
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput.addEventListener('focus', () => {
+            searchInput.parentElement.classList.add('scale-[1.01]');
+            searchInput.parentElement.classList.add('border-primary-container/40');
+        });
+        searchInput.addEventListener('blur', () => {
+            searchInput.parentElement.classList.remove('scale-[1.01]');
+            searchInput.parentElement.classList.remove('border-primary-container/40');
+        });
+    </script>
+</body></html>

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Order History - GrabIt</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Sora:wght@400;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&family=Sora:wght@100..900&display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #000000;
+            color: #e2e1eb;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .glass-card {
+            background: #1E1E1E;
+            border: 1px solid #27272A;
+            transition: transform 0.15s ease-in-out;
+        }
+        .glass-card:active {
+            transform: scale(0.98);
+        }
+        .order-status-picked-up {
+            color: #4ade80;
+        }
+        .order-status-cancelled {
+            color: #ffb4ab;
+        }
+        /* Custom scrollbar for stealth look */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #000000;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #27272A;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                "secondary": "#c8c6c5",
+                "error": "#ffb4ab",
+                "on-tertiary-fixed-variant": "#474746",
+                "tertiary-fixed": "#e5e2e1",
+                "surface-container-highest": "#33343c",
+                "surface-container-high": "#282a31",
+                "surface-bright": "#383940",
+                "on-secondary-container": "#bab8b7",
+                "surface-variant": "#33343c",
+                "surface-dim": "#12131a",
+                "on-tertiary-fixed": "#1b1b1c",
+                "inverse-primary": "#9f4200",
+                "background": "#12131a",
+                "inverse-surface": "#e2e1eb",
+                "surface": "#12131a",
+                "on-primary": "#562000",
+                "primary": "#ffb692",
+                "on-primary-fixed": "#341100",
+                "tertiary": "#c8c6c5",
+                "outline": "#a98a7c",
+                "on-tertiary": "#303030",
+                "on-secondary-fixed": "#1c1b1b",
+                "tertiary-fixed-dim": "#c8c6c5",
+                "primary-container": "#ff6d00",
+                "on-background": "#e2e1eb",
+                "inverse-on-surface": "#2f3037",
+                "on-secondary": "#313030",
+                "secondary-fixed": "#e5e2e1",
+                "secondary-container": "#4a4949",
+                "outline-variant": "#594136",
+                "primary-fixed-dim": "#ffb692",
+                "surface-container": "#1e1f26",
+                "on-secondary-fixed-variant": "#474646",
+                "surface-container-lowest": "#0c0e14",
+                "secondary-fixed-dim": "#c8c6c5",
+                "primary-fixed": "#ffdbcb",
+                "on-surface-variant": "#e2bfb0",
+                "surface-container-low": "#1a1b22",
+                "tertiary-container": "#9b9999",
+                "on-tertiary-container": "#323131",
+                "error-container": "#93000a",
+                "on-primary-fixed-variant": "#7a3000",
+                "on-error-container": "#ffdad6",
+                "on-surface": "#e2e1eb",
+                "on-primary-container": "#582100",
+                "surface-tint": "#ffb692",
+                "on-error": "#690005"
+              },
+              "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+              },
+              "spacing": {
+                "gutter": "16px",
+                "margin-mobile": "20px",
+                "unit": "4px",
+                "lg": "24px",
+                "sm": "8px",
+                "margin-desktop": "64px",
+                "xs": "4px",
+                "xl": "40px",
+                "md": "16px"
+              },
+              "fontFamily": {
+                "headline-xl": ["Montserrat"],
+                "label-bold": ["Sora"],
+                "body-md": ["Sora"],
+                "body-lg": ["Sora"],
+                "headline-lg-mobile": ["Montserrat"],
+                "headline-md": ["Montserrat"],
+                "headline-lg": ["Montserrat"],
+                "body-sm": ["Sora"]
+              },
+              "fontSize": {
+                "headline-xl": ["40px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                "label-bold": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                "headline-lg-mobile": ["28px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-on-surface pb-24">
+<!-- TopAppBar -->
+<header class="bg-background/90 backdrop-blur-md sticky top-0 z-50 flex justify-between items-center w-full px-margin-mobile h-16">
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-on-surface-variant hover:opacity-80 active:scale-95 transition-all">arrow_back</button>
+<h1 class="text-headline-md-mobile font-headline-md font-extrabold text-primary-container tracking-tight">Your Orders</h1>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant hover:opacity-80 active:scale-95 transition-all">filter_list</span>
+<span class="material-symbols-outlined text-on-surface-variant hover:opacity-80 active:scale-95 transition-all">search</span>
+</div>
+</header>
+<!-- Content Canvas -->
+<main class="px-margin-mobile pt-lg space-y-md">
+<!-- Filter Chips -->
+<div class="flex gap-sm overflow-x-auto pb-2 no-scrollbar">
+<button class="bg-primary-container text-mist-white px-5 py-2 rounded-full font-label-bold text-label-bold whitespace-nowrap shadow-md">All Orders</button>
+<button class="bg-surface-container text-on-surface-variant px-5 py-2 rounded-full font-label-bold text-label-bold whitespace-nowrap border border-outline-variant/20">Ongoing</button>
+<button class="bg-surface-container text-on-surface-variant px-5 py-2 rounded-full font-label-bold text-label-bold whitespace-nowrap border border-outline-variant/20">Completed</button>
+<button class="bg-surface-container text-on-surface-variant px-5 py-2 rounded-full font-label-bold text-label-bold whitespace-nowrap border border-outline-variant/20">Cancelled</button>
+</div>
+<!-- Orders List (Bento-ish Flex) -->
+<div class="space-y-md">
+<!-- Order Card 1: Completed -->
+<div class="glass-card rounded-xl p-md flex flex-col gap-md">
+<div class="flex justify-between items-start">
+<div class="flex gap-md">
+<div class="w-12 h-12 rounded-lg bg-cover bg-center" data-alt="A macro close-up of a stylish modern logo for a campus canteen called CyberCafe. The design features sharp geometric lines and a high-contrast Safety Orange and Gunmetal color palette. The aesthetic is clean, athletic, and Gen-Z focused, set against a dark, minimalist tech background." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBfK2OESRpX-0DJNT6agywlNdkIKQzLdVFFXQoi6kU-KCnhC1Iue8DuvTxnJuajBgbjnKxaQV6cXYGnTNFMzaeX8JmSQHW5TEin9Z4pXR_s6pRY-cjppDaE6nCCwzZZyayQ2zQ_CFU711TD0ZFOhSvUr4smpOeZXN24Uk2VokEYs_rpQ8KC-HL4lpYHSr4B6dM9j3dZ3Dsv2TdUpmQdItxfxiDSmVI1kvuQlDrkLlk_cwpWvTlDXoGg')"></div>
+<div>
+<h3 class="font-headline-md text-body-lg font-bold">CyberCafe Central</h3>
+<p class="text-body-sm text-on-surface-variant">Oct 24, 2023 • 12:45 PM</p>
+</div>
+</div>
+<div class="bg-surface-container-high px-2 py-1 rounded text-label-bold text-[10px] uppercase tracking-wider order-status-picked-up">Picked Up</div>
+</div>
+<div class="border-t border-outline-variant/20 pt-md">
+<div class="flex justify-between items-center mb-sm">
+<span class="text-body-md text-on-surface-variant">2x Stealth Burger, 1x Nitro Cold Brew</span>
+<span class="font-label-bold text-primary-container">$18.50</span>
+</div>
+</div>
+<div class="flex gap-sm">
+<button class="flex-1 bg-primary-container text-on-primary-container font-label-bold text-label-bold py-3 rounded-xl hover:opacity-90 active:scale-95 transition-all uppercase">Reorder</button>
+<button class="px-4 border border-outline-variant/40 rounded-xl flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high active:scale-95 transition-all">
+<span class="material-symbols-outlined">receipt</span>
+</button>
+</div>
+</div>
+<!-- Order Card 2: Cancelled -->
+<div class="glass-card rounded-xl p-md flex flex-col gap-md opacity-80">
+<div class="flex justify-between items-start">
+<div class="flex gap-md">
+<div class="w-12 h-12 rounded-lg bg-cover bg-center" data-alt="A stylized logo for an Asian fusion restaurant called Neon Noodle. The design uses neon tubes forming a bowl, glowing in Safety Orange and white against a pitch-black background. The mood is high-energy, nighttime campus vibe with sharp minimalist edges." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAKo9OjWJTSkLc_EuynvV2wUh_KuF6rIwXa8Kk6gjEboSUXjMVc0W9TgprPPwMPEdPUne7HMMl2h49L6YbPSJU_q3Xnn55yVTFciGKUq6y0dGTW-lIH5DIWYoFwpE9i9H7EXv007zCWqE1AzjOlXwTjGR2OXjV3pP7YVeQyuS2MydQVsneK057AEHIt_qLYlqPbMwpmNt1_1pSXFAJGVW9ykRFN2wCuCqnXfP9bAHpJO52ZJEX12mrY')"></div>
+<div>
+<h3 class="font-headline-md text-body-lg font-bold">Neon Noodle Hub</h3>
+<p class="text-body-sm text-on-surface-variant">Oct 22, 2023 • 06:15 PM</p>
+</div>
+</div>
+<div class="bg-error/10 px-2 py-1 rounded text-label-bold text-[10px] uppercase tracking-wider order-status-cancelled">Cancelled</div>
+</div>
+<div class="border-t border-outline-variant/20 pt-md">
+<div class="flex justify-between items-center mb-sm">
+<span class="text-body-md text-on-surface-variant">1x Spicy Miso Ramen</span>
+<span class="font-label-bold text-on-surface-variant">$12.00</span>
+</div>
+</div>
+<div class="flex gap-sm">
+<button class="flex-1 border border-primary-container text-primary-container font-label-bold text-label-bold py-3 rounded-xl hover:bg-primary-container/5 active:scale-95 transition-all uppercase">Reorder</button>
+<button class="px-4 border border-outline-variant/40 rounded-xl flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high active:scale-95 transition-all">
+<span class="material-symbols-outlined">info</span>
+</button>
+</div>
+</div>
+<!-- Order Card 3: Completed -->
+<div class="glass-card rounded-xl p-md flex flex-col gap-md">
+<div class="flex justify-between items-start">
+<div class="flex gap-md">
+<div class="w-12 h-12 rounded-lg bg-cover bg-center" data-alt="A minimalist logo for a smoothie bar called Velocity Greens. The icon is a stylized thunderbolt leaf in Safety Orange and white. The background is a textured deep gunmetal surface with high-contrast shadows, reflecting a modern, healthy campus lifestyle." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAtY8_qmTA46puzKraUXeAQNNUq0kI2uM1NPTVzb1hpIiZQQg69wK4rOqmZq9WqTThW-BZDUu5fOYkIr22_t8sIIDq1hLnBeKfrkD7v_43CzfmNkpzIa7kBsOW1Fumtz44BC2Ou66v81J6vxipKKmJB-xeY1bPblYxqW8nw44oVqubuJk3ytw411m3m-jLve1FBGKzAX5fVKc353UWx3LAKqAxg3egshreaw3fZX7C7wG8NmyXVm1ZX')"></div>
+<div>
+<h3 class="font-headline-md text-body-lg font-bold">Velocity Greens</h3>
+<p class="text-body-sm text-on-surface-variant">Oct 20, 2023 • 09:30 AM</p>
+</div>
+</div>
+<div class="bg-surface-container-high px-2 py-1 rounded text-label-bold text-[10px] uppercase tracking-wider order-status-picked-up">Picked Up</div>
+</div>
+<div class="border-t border-outline-variant/20 pt-md">
+<div class="flex justify-between items-center mb-sm">
+<span class="text-body-md text-on-surface-variant">1x Protein Blast Smoothie</span>
+<span class="font-label-bold text-primary-container">$8.75</span>
+</div>
+</div>
+<div class="flex gap-sm">
+<button class="flex-1 bg-primary-container text-on-primary-container font-label-bold text-label-bold py-3 rounded-xl hover:opacity-90 active:scale-95 transition-all uppercase">Reorder</button>
+<button class="px-4 border border-outline-variant/40 rounded-xl flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high active:scale-95 transition-all">
+<span class="material-symbols-outlined">receipt</span>
+</button>
+</div>
+</div>
+<!-- Order Card 4: Completed -->
+<div class="glass-card rounded-xl p-md flex flex-col gap-md">
+<div class="flex justify-between items-start">
+<div class="flex gap-md">
+<div class="w-12 h-12 rounded-lg bg-cover bg-center" data-alt="A bold, athletic logo for a pizzeria called Sprint Slices. The design features a pizza slice shaped like a fast-moving arrow, in vibrant Safety Orange and white. The background is a sleek matte black, echoing a high-speed, modern student dining experience." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBHPulorPCZkbb2x6K-ntfiNK0AVdI3e14sYh23ZREZYyp66aXwYd4-fQoQdCOt7tNa3PqFybWtMNMBOLHqyyUkg7toMX63mx0-V5paBpukwdy8iqpgMrgAmGegGxsXbEqc14k84Dyj81J8pI7wzd5LntSQRigguFXbPVyo2OwydR7UfyxB2tlOdtW-kskOJAAQHu2PKkAfmQcglOj1ETt2EAlGNxHULz5cQC95r7M_HXIadxpjo8Xb')"></div>
+<div>
+<h3 class="font-headline-md text-body-lg font-bold">Sprint Slices</h3>
+<p class="text-body-sm text-on-surface-variant">Oct 18, 2023 • 01:10 PM</p>
+</div>
+</div>
+<div class="bg-surface-container-high px-2 py-1 rounded text-label-bold text-[10px] uppercase tracking-wider order-status-picked-up">Picked Up</div>
+</div>
+<div class="border-t border-outline-variant/20 pt-md">
+<div class="flex justify-between items-center mb-sm">
+<span class="text-body-md text-on-surface-variant">1x Large Pepperoni, 2x Soda</span>
+<span class="font-label-bold text-primary-container">$24.00</span>
+</div>
+</div>
+<div class="flex gap-sm">
+<button class="flex-1 bg-primary-container text-on-primary-container font-label-bold text-label-bold py-3 rounded-xl hover:opacity-90 active:scale-95 transition-all uppercase">Reorder</button>
+<button class="px-4 border border-outline-variant/40 rounded-xl flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high active:scale-95 transition-all">
+<span class="material-symbols-outlined">receipt</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Persistent Shell) -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 py-3 pb-safe bg-surface-container/80 dark:bg-surface-container/80 backdrop-blur-md z-50 rounded-t-xl shadow-lg border-t border-outline-variant/20">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-bold text-label-bold mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary-container bg-primary-container/10 rounded-xl px-3 py-1 scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+<span class="font-label-bold text-label-bold mt-1">Orders</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-label-bold text-label-bold mt-1">Wallet</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-bold text-label-bold mt-1">Profile</span>
+</a>
+</nav>
+<script>
+        // Micro-interactions for buttons
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', function() {
+                const ripple = document.createElement('span');
+                ripple.classList.add('ripple');
+                this.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+            });
+        });
+
+        // Simple filtering logic mock
+        const chips = document.querySelectorAll('.overflow-x-auto button');
+        chips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                chips.forEach(c => {
+                    c.classList.remove('bg-primary-container', 'text-mist-white');
+                    c.classList.add('bg-surface-container', 'text-on-surface-variant');
+                });
+                chip.classList.remove('bg-surface-container', 'text-on-surface-variant');
+                chip.classList.add('bg-primary-container', 'text-mist-white');
+            });
+        });
+    </script>
+</body></html>

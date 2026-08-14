@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GrabIt Admin | Campus Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&amp;family=Sora:wght@300;400;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&amp;family=Sora:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed-dim": "#c8c6c5",
+                    "on-error": "#690005",
+                    "on-secondary-container": "#bab8b7",
+                    "primary-fixed-dim": "#ffb692",
+                    "secondary": "#c8c6c5",
+                    "on-primary": "#562000",
+                    "background": "#12131a",
+                    "surface-container-low": "#1a1b22",
+                    "inverse-on-surface": "#2f3037",
+                    "surface-variant": "#33343c",
+                    "surface-container": "#1e1f26",
+                    "tertiary-container": "#9b9999",
+                    "on-tertiary": "#303030",
+                    "surface-tint": "#ffb692",
+                    "on-error-container": "#ffdad6",
+                    "on-secondary": "#313030",
+                    "on-secondary-fixed-variant": "#474646",
+                    "surface-container-lowest": "#0c0e14",
+                    "primary-fixed": "#ffdbcb",
+                    "primary-container": "#ff6d00",
+                    "outline-variant": "#594136",
+                    "inverse-surface": "#e2e1eb",
+                    "on-tertiary-fixed-variant": "#474746",
+                    "on-secondary-fixed": "#1c1b1b",
+                    "error": "#ffb4ab",
+                    "on-tertiary-container": "#323131",
+                    "inverse-primary": "#9f4200",
+                    "on-tertiary-fixed": "#1b1b1c",
+                    "surface-container-highest": "#33343c",
+                    "secondary-fixed-dim": "#c8c6c5",
+                    "on-surface-variant": "#e2bfb0",
+                    "on-primary-container": "#582100",
+                    "secondary-fixed": "#e5e2e1",
+                    "on-primary-fixed": "#341100",
+                    "surface-bright": "#383940",
+                    "on-surface": "#e2e1eb",
+                    "on-background": "#e2e1eb",
+                    "on-primary-fixed-variant": "#7a3000",
+                    "surface-container-high": "#282a31",
+                    "tertiary": "#c8c6c5",
+                    "outline": "#a98a7c",
+                    "surface-dim": "#12131a",
+                    "surface": "#12131a",
+                    "secondary-container": "#4a4949",
+                    "error-container": "#93000a",
+                    "primary": "#ffb692",
+                    "tertiary-fixed": "#e5e2e1"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "margin-mobile": "20px",
+                    "xl": "40px",
+                    "unit": "4px",
+                    "md": "16px",
+                    "gutter": "16px",
+                    "lg": "24px",
+                    "margin-desktop": "64px",
+                    "sm": "8px"
+            },
+            "fontFamily": {
+                    "headline-xl": ["Montserrat"],
+                    "headline-md": ["Montserrat"],
+                    "body-sm": ["Sora"],
+                    "headline-lg": ["Montserrat"],
+                    "body-md": ["Sora"],
+                    "label-bold": ["Sora"],
+                    "body-lg": ["Sora"],
+                    "headline-lg-mobile": ["Montserrat"]
+            },
+            "fontSize": {
+                    "headline-xl": ["40px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "label-bold": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "1.2", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #12131a;
+            color: #e2e1eb;
+            overflow-x: hidden;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1a1b22;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #33343c;
+            border-radius: 10px;
+        }
+        .glass-panel {
+            background: rgba(30, 31, 38, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(89, 65, 54, 0.2);
+        }
+        .kinetic-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -10px rgba(255, 109, 0, 0.3);
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md selection:bg-primary-container selection:text-on-primary-container">
+<!-- SIDE NAVIGATION SHELL -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant flex flex-col p-md z-40 hidden md:flex">
+<div class="mb-xl px-sm">
+<h1 class="font-headline-md text-headline-md text-primary font-extrabold tracking-tight">GrabIt Admin</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant opacity-70">System Root</p>
+</div>
+<nav class="flex-1 space-y-sm overflow-y-auto custom-scrollbar">
+<!-- Nav Item: Dashboard -->
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant font-body-sm hover:bg-surface-variant/50 transition-colors rounded-lg group scale-98 active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">dashboard</span>
+<span>Dashboard</span>
+</a>
+<!-- Nav Item: Campuses (ACTIVE) -->
+<a class="flex items-center gap-md px-md py-sm text-primary font-label-bold bg-primary-container/10 rounded-lg group scale-98 active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">school</span>
+<span>Campuses</span>
+</a>
+<!-- Nav Item: Vendors -->
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant font-body-sm hover:bg-surface-variant/50 transition-colors rounded-lg group scale-98 active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">storefront</span>
+<span>Vendors</span>
+</a>
+<!-- Nav Item: Logistics -->
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant font-body-sm hover:bg-surface-variant/50 transition-colors rounded-lg group scale-98 active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">local_shipping</span>
+<span>Logistics</span>
+</a>
+<!-- Nav Item: Health -->
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant font-body-sm hover:bg-surface-variant/50 transition-colors rounded-lg group scale-98 active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">monitor_heart</span>
+<span>Health</span>
+</a>
+<!-- Nav Item: Settings -->
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant font-body-sm hover:bg-surface-variant/50 transition-colors rounded-lg group scale-98 active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="mt-auto pt-md border-t border-outline-variant/30 px-sm">
+<button class="w-full bg-primary-container text-on-primary-container font-label-bold py-md rounded-lg flex items-center justify-center gap-sm kinetic-hover transition-all duration-300">
+<span class="material-symbols-outlined text-[20px]">analytics</span>
+<span>Global Report</span>
+</button>
+<div class="mt-lg flex items-center gap-md">
+<img class="w-10 h-10 rounded-full border border-primary/20" data-alt="Close-up professional headshot of a young tech administrator with sharp features, wearing a dark minimal hoodie, against a moody dark studio background with subtle orange rim lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDzftxPsrcU90SvTE0WVfguGHECXdi0SvRe8JYBk8Gj0DEuhLu5gs-NhtR3i6XDSyaDpymwrdl2GfsRJOCBXpNT3Yr3YfMFpo_MhfuKfBeC-wFaBWYM6GnuAt09XJvsdAWNOhd-TydNQX2ehipQI6lJ58OYUgQ5A_LzQr6E2ZVKPpBlW3mazCLatY6RJazivegvno00XFwwxc-7tljZQoUrowyzFSXnY47jbsX9RhFiywYEyw-JFF6u"/>
+<div>
+<p class="font-label-bold text-on-surface leading-tight">Admin User</p>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest">Root Access</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- TOP NAVIGATION SHELL -->
+<header class="fixed top-0 right-0 w-full md:w-[calc(100%-16rem)] z-30 bg-background/80 backdrop-blur-md border-b border-outline-variant flex justify-between items-center h-16 px-lg">
+<div class="flex items-center gap-md w-full max-w-xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 text-body-sm focus:ring-1 focus:ring-primary-container transition-all" placeholder="Search campus location or city..." type="text"/>
+</div>
+<button class="flex items-center gap-xs px-md py-2 bg-surface-container-high rounded-full text-body-sm hover:bg-surface-variant transition-colors border border-outline-variant/20 whitespace-nowrap">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+<span>Filter</span>
+</button>
+</div>
+<div class="flex items-center gap-lg">
+<div class="hidden sm:flex items-center gap-md">
+<button class="text-on-surface-variant hover:text-primary transition-all active:scale-95"><span class="material-symbols-outlined">notifications</span></button>
+<button class="text-on-surface-variant hover:text-primary transition-all active:scale-95"><span class="material-symbols-outlined">help</span></button>
+<button class="text-on-surface-variant hover:text-primary transition-all active:scale-95"><span class="material-symbols-outlined">account_circle</span></button>
+</div>
+</div>
+</header>
+<!-- MAIN CANVAS -->
+<main class="pt-24 pb-12 px-md md:pl-72 md:pr-12 min-h-screen">
+<!-- Header Section -->
+<section class="flex flex-col md:flex-row md:items-end justify-between gap-lg mb-xl">
+<div class="space-y-sm">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary text-[32px]">location_on</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Campus Management</h2>
+</div>
+<p class="text-on-surface-variant font-body-md max-w-2xl">Monitor logistics, vendor density, and daily performance metrics across all active GrabIt zones. Efficiently onboard new educational institutions.</p>
+</div>
+<button class="bg-primary-container text-on-primary-container font-headline-md text-[16px] px-lg py-md rounded-xl flex items-center justify-center gap-md kinetic-hover transition-all duration-300 shadow-lg shadow-primary-container/20">
+<span class="material-symbols-outlined">add_circle</span>
+<span>Add New Campus</span>
+</button>
+</section>
+<!-- Stats Overview Bento (Briefly showing health) -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-lg mb-xl">
+<div class="glass-panel p-lg rounded-2xl flex flex-col gap-sm">
+<span class="text-on-surface-variant font-label-bold tracking-widest uppercase">Total Campuses</span>
+<div class="flex items-end gap-md">
+<span class="font-headline-xl text-headline-xl text-on-surface">24</span>
+<span class="text-primary font-label-bold mb-2">+2 New</span>
+</div>
+</div>
+<div class="glass-panel p-lg rounded-2xl flex flex-col gap-sm">
+<span class="text-on-surface-variant font-label-bold tracking-widest uppercase">Active Vendors</span>
+<div class="flex items-end gap-md">
+<span class="font-headline-xl text-headline-xl text-on-surface">186</span>
+<span class="text-emerald-400 font-label-bold mb-2">94% Live</span>
+</div>
+</div>
+<div class="glass-panel p-lg rounded-2xl flex flex-col gap-sm">
+<span class="text-on-surface-variant font-label-bold tracking-widest uppercase">Daily Volume</span>
+<div class="flex items-end gap-md">
+<span class="font-headline-xl text-headline-xl text-on-surface">12.4k</span>
+<span class="text-primary font-label-bold mb-2">Peak Now</span>
+</div>
+</div>
+<div class="glass-panel p-lg rounded-2xl flex flex-col gap-sm relative overflow-hidden">
+
+<div class="relative z-10 flex flex-col gap-sm">
+<span class="text-on-surface-variant font-label-bold tracking-widest uppercase">Network Health</span>
+<div class="flex items-end gap-md">
+<span class="font-headline-xl text-headline-xl text-on-surface">99.8</span>
+<span class="text-on-surface-variant font-label-bold mb-2">%</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Data Table Container -->
+<div class="glass-panel rounded-3xl overflow-hidden">
+<div class="p-lg border-b border-outline-variant/30 flex justify-between items-center bg-surface-container/30">
+<h3 class="font-headline-md text-[18px]">Institutional Registry</h3>
+<div class="flex gap-md">
+<button class="p-2 hover:bg-surface-variant rounded-lg transition-colors"><span class="material-symbols-outlined text-on-surface-variant">download</span></button>
+<button class="p-2 hover:bg-surface-variant rounded-lg transition-colors"><span class="material-symbols-outlined text-on-surface-variant">more_vert</span></button>
+</div>
+</div>
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-high/50">
+<th class="px-lg py-md font-label-bold text-on-surface-variant uppercase tracking-wider text-[11px]">Campus Name &amp; Location</th>
+<th class="px-lg py-md font-label-bold text-on-surface-variant uppercase tracking-wider text-[11px]">Vendor Count</th>
+<th class="px-lg py-md font-label-bold text-on-surface-variant uppercase tracking-wider text-[11px]">Daily Orders</th>
+<th class="px-lg py-md font-label-bold text-on-surface-variant uppercase tracking-wider text-[11px]">Logistics Lead</th>
+<th class="px-lg py-md font-label-bold text-on-surface-variant uppercase tracking-wider text-[11px]">Status</th>
+<th class="px-lg py-md font-label-bold text-on-surface-variant uppercase tracking-wider text-[11px] text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/20">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-variant/20 transition-colors group">
+<td class="px-lg py-lg">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-xl overflow-hidden border border-outline-variant/30">
+<img class="w-full h-full object-cover" data-alt="A modern architectural shot of a high-tech university campus building in Kanpur, featuring glass facades and geometric concrete patterns under a clear blue sky. Cinematic drone perspective, sharp focus, clean lines." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnL6yucAYd9Pmi4RFLLpjUqnREaSik4Hr8cWfjb_4cRgTLKjsvS1FXpojDeCHE8K5sL6y2DCUvdoJ0pNqrVEjEw-dMlChm-A_NrJ2OaCiJIldBlaBdRTnVf2-RblrCkWjmGmv6KifqsrKdjlP4lECNuKWiq7ZWjQ4CTVDmEvDunlXkXpwIxncN-rjEu_Ty0TB2hrpsN07nWk_H2n7QqWcUVVC7lsZtqdx49maJ5ZUruKWncwZ8yTEk"/>
+</div>
+<div>
+<p class="font-body-md font-bold text-on-surface">PSIT Kanpur</p>
+<p class="text-[12px] text-on-surface-variant">Uttar Pradesh, India</p>
+</div>
+</div>
+</td>
+<td class="px-lg py-lg">
+<div class="flex items-center gap-xs">
+<span class="font-body-md text-on-surface font-semibold">42</span>
+<span class="text-[11px] text-primary bg-primary/10 px-xs rounded">+3</span>
+</div>
+</td>
+<td class="px-lg py-lg">
+<p class="font-body-md text-on-surface">1,840</p>
+<div class="w-24 h-1 bg-surface-variant rounded-full mt-2 overflow-hidden">
+<div class="bg-primary h-full w-[80%]"></div>
+</div>
+</td>
+<td class="px-lg py-lg">
+<div class="flex items-center gap-sm">
+<div class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center border border-outline-variant/40">
+<span class="text-[10px] font-bold">AK</span>
+</div>
+<span class="text-body-sm text-on-surface-variant">Aryan Kapoor</span>
+</div>
+</td>
+<td class="px-lg py-lg">
+<span class="inline-flex items-center gap-xs px-sm py-1 bg-emerald-500/10 text-emerald-400 text-[11px] font-label-bold rounded-full border border-emerald-500/20">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                    ACTIVE
+                                </span>
+</td>
+<td class="px-lg py-lg text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors px-md py-sm rounded-lg hover:bg-surface-variant/40 font-label-bold text-[12px]">MANAGE</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-variant/20 transition-colors group">
+<td class="px-lg py-lg">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-xl overflow-hidden border border-outline-variant/30">
+<img class="w-full h-full object-cover" data-alt="A sprawling contemporary university entrance at Galgotias with large digital screens and student plazas. Sleek minimalist aesthetic with deep shadows and warm sunset lighting illuminating architectural textures." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXh1ho0ZzcaPiPBN4XmOTiDB-UC-u1D7hvaHopybSX5Tcy3mqbfr4r-3MHerbjQxbkE-q_tzYtBi7TKNkEpbiC8qVkxoiEyXnlw4SkwIjNjTZULB7bJrWGjV8JgYNgayi60peLaIF9GplOTIOLh5OjGZPtZbea7b26dyv93QLDKFUfnVAJmZxt9Xlit0afjB-n5sJ-4hCsyzwwlG37eAzHnZe2UVAtNSB8Fpg-X3T-jLieKFqyWFPd"/>
+</div>
+<div>
+<p class="font-body-md font-bold text-on-surface">Galgotias University</p>
+<p class="text-[12px] text-on-surface-variant">Greater Noida, Delhi NCR</p>
+</div>
+</div>
+</td>
+<td class="px-lg py-lg">
+<span class="font-body-md text-on-surface font-semibold">58</span>
+</td>
+<td class="px-lg py-lg">
+<p class="font-body-md text-on-surface">2,610</p>
+<div class="w-24 h-1 bg-surface-variant rounded-full mt-2 overflow-hidden">
+<div class="bg-primary h-full w-[95%]"></div>
+</div>
+</td>
+<td class="px-lg py-lg">
+<div class="flex items-center gap-sm">
+<div class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center border border-outline-variant/40">
+<span class="text-[10px] font-bold">SM</span>
+</div>
+<span class="text-body-sm text-on-surface-variant">Sania Mirza</span>
+</div>
+</td>
+<td class="px-lg py-lg">
+<span class="inline-flex items-center gap-xs px-sm py-1 bg-emerald-500/10 text-emerald-400 text-[11px] font-label-bold rounded-full border border-emerald-500/20">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                    ACTIVE
+                                </span>
+</td>
+<td class="px-lg py-lg text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors px-md py-sm rounded-lg hover:bg-surface-variant/40 font-label-bold text-[12px]">MANAGE</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-variant/20 transition-colors group">
+<td class="px-lg py-lg">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-xl overflow-hidden border border-outline-variant/30">
+<img class="w-full h-full object-cover" data-alt="Dynamic shot of a university sports complex and cafeteria area with industrial-chic design elements. Vibrant energy, students in motion, with stealthy branding integrated into the architecture." src="https://lh3.googleusercontent.com/aida-public/AB6AXuABszicRTmp2V2katFBUUwEt-EzRDFZmOA0tAQs5p-e5bY3cnbc32DwAIUQTORc1fxlnKo01m_AGZBDqC3ehL2oJqXePT0QsJ87RRpDYsRKjYFP_Ba6mz6aI7G-nViAtxQX-bnHdJax6M69dlyGVnlAqtA76bsh7KnFWHcUyh2JWI8mEBY51F1yLOQuoEZrMRT7zuMLunZb_CuzGf6aGYvejpDPkD-muURuZOYtMJIxsC5gss1IVDJf"/>
+</div>
+<div>
+<p class="font-body-md font-bold text-on-surface">SRM KTR</p>
+<p class="text-[12px] text-on-surface-variant">Chennai, Tamil Nadu</p>
+</div>
+</div>
+</td>
+<td class="px-lg py-lg">
+<span class="font-body-md text-on-surface font-semibold">31</span>
+</td>
+<td class="px-lg py-lg">
+<p class="font-body-md text-on-surface">920</p>
+<div class="w-24 h-1 bg-surface-variant rounded-full mt-2 overflow-hidden">
+<div class="bg-primary h-full w-[45%]"></div>
+</div>
+</td>
+<td class="px-lg py-lg">
+<div class="flex items-center gap-sm">
+<div class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center border border-outline-variant/40">
+<span class="text-[10px] font-bold">RV</span>
+</div>
+<span class="text-body-sm text-on-surface-variant">Rohan Verma</span>
+</div>
+</td>
+<td class="px-lg py-lg">
+<span class="inline-flex items-center gap-xs px-sm py-1 bg-amber-500/10 text-amber-400 text-[11px] font-label-bold rounded-full border border-amber-500/20">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                                    MAINTENANCE
+                                </span>
+</td>
+<td class="px-lg py-lg text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors px-md py-sm rounded-lg hover:bg-surface-variant/40 font-label-bold text-[12px]">MANAGE</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-variant/20 transition-colors group">
+<td class="px-lg py-lg">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-xl overflow-hidden border border-outline-variant/30">
+<img class="w-full h-full object-cover" data-alt="A futuristic campus courtyard at night with neon-orange lighting accents and dark glass walls. Moody atmospheric lighting, rainy pavement reflections, very high-end cyberpunk aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCplM-hOF-_VV1ektq9WsvFS6E39mYrLxjv4ZzKV2JEv3Pz22B4fpWBKx0MFA_AiM_0Oi5y3m6Xms7yyTjnFdlgS16XXfIAgH0iV4K_3hvivrSsz3J2QZcr8OkIL--e3bdESQ8XFgn_89y1Aqoe57T-aymSCyPy4ZPx-hYvr37DtRXLxnrBLLGhKU4-RfPCLlKedCG6QpNaABAm__P_H_YtNzRTWtd50ZMb49ktoOEkR1PPpvwMOEVP"/>
+</div>
+<div>
+<p class="font-body-md font-bold text-on-surface">LPU Punjab</p>
+<p class="text-[12px] text-on-surface-variant">Phagwara, Punjab</p>
+</div>
+</div>
+</td>
+<td class="px-lg py-lg">
+<span class="font-body-md text-on-surface font-semibold">104</span>
+</td>
+<td class="px-lg py-lg">
+<p class="font-body-md text-on-surface">5,420</p>
+<div class="w-24 h-1 bg-surface-variant rounded-full mt-2 overflow-hidden">
+<div class="bg-primary h-full w-[100%]"></div>
+</div>
+</td>
+<td class="px-lg py-lg">
+<div class="flex items-center gap-sm">
+<div class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center border border-outline-variant/40">
+<span class="text-[10px] font-bold">DS</span>
+</div>
+<span class="text-body-sm text-on-surface-variant">Deepak Singh</span>
+</div>
+</td>
+<td class="px-lg py-lg">
+<span class="inline-flex items-center gap-xs px-sm py-1 bg-emerald-500/10 text-emerald-400 text-[11px] font-label-bold rounded-full border border-emerald-500/20">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                    ACTIVE
+                                </span>
+</td>
+<td class="px-lg py-lg text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors px-md py-sm rounded-lg hover:bg-surface-variant/40 font-label-bold text-[12px]">MANAGE</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="p-lg flex items-center justify-between bg-surface-container-low/50">
+<span class="text-body-sm text-on-surface-variant">Showing <span class="text-on-surface font-semibold">1-10</span> of 24 campuses</span>
+<div class="flex gap-sm">
+<button class="p-2 border border-outline-variant/30 rounded-lg hover:bg-surface-variant transition-colors disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</button>
+<button class="p-2 border border-outline-variant/30 rounded-lg hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Secondary Insights / Map Preview -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-lg mt-xl">
+<div class="lg:col-span-2 glass-panel rounded-3xl p-lg flex flex-col gap-md min-h-[300px] relative overflow-hidden">
+<div class="flex justify-between items-center relative z-10">
+<h3 class="font-headline-md text-[18px]">Geospatial Reach</h3>
+<div class="flex gap-sm">
+<span class="px-sm py-1 bg-surface-variant rounded text-[10px] font-label-bold">LIVE TRAFFIC</span>
+</div>
+</div>
+<div class="flex-1 rounded-2xl border border-outline-variant/20 relative group bg-surface-container-lowest overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center grayscale opacity-40 mix-blend-overlay group-hover:scale-105 transition-transform duration-1000" data-location="India" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAdiiUruJkI8sg4FFgLqb3Jfax003CM3HCRRLFaQ4mhLxcHq31OmylUQI-bcyjgaEz6itmi7SeinVVziZVkhfbO4MrmUz9eS_kZZHoQEv99yl6lEDi6fAremQPymrVVFuCNHrKoOjgg7i-_Um87YbggcK_Vc3OzBXYy8BYbqzd617t3ephLp9KFJ_kSdnbH39fm2cPIRpJZY07_4XmODcLhoGzjB9Ld6132wtK5reH0G0rta9BoWIRX')"></div>
+<div class="absolute inset-0 flex items-center justify-center flex-col text-center p-xl gap-md">
+<span class="material-symbols-outlined text-primary text-[48px] animate-bounce">location_on</span>
+<div>
+<p class="font-headline-md text-on-surface">Interactive Expansion View</p>
+<p class="text-on-surface-variant text-body-sm max-w-sm mx-auto mt-2">Visualizing logistics corridors and supply chain nodes across the Indian subcontinent.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="glass-panel rounded-3xl p-lg flex flex-col gap-lg">
+<h3 class="font-headline-md text-[18px]">Recent Activity</h3>
+<div class="space-y-lg">
+<div class="flex gap-md">
+<div class="w-2 h-2 rounded-full bg-primary mt-2"></div>
+<div>
+<p class="text-body-sm font-semibold">New Campus Added</p>
+<p class="text-[12px] text-on-surface-variant">Amity University, Noida is now in pre-onboarding phase.</p>
+<span class="text-[10px] text-on-surface-variant/60 font-label-bold mt-1 block">2 HOURS AGO</span>
+</div>
+</div>
+<div class="flex gap-md">
+<div class="w-2 h-2 rounded-full bg-emerald-400 mt-2"></div>
+<div>
+<p class="text-body-sm font-semibold">Vendor Milestone</p>
+<p class="text-[12px] text-on-surface-variant">LPU Punjab reached 100+ active vendor storefronts.</p>
+<span class="text-[10px] text-on-surface-variant/60 font-label-bold mt-1 block">5 HOURS AGO</span>
+</div>
+</div>
+<div class="flex gap-md">
+<div class="w-2 h-2 rounded-full bg-amber-400 mt-2"></div>
+<div>
+<p class="text-body-sm font-semibold">System Alert</p>
+<p class="text-[12px] text-on-surface-variant">SRM KTR logistics nodes experiencing high latency.</p>
+<span class="text-[10px] text-on-surface-variant/60 font-label-bold mt-1 block">8 HOURS AGO</span>
+</div>
+</div>
+</div>
+<button class="mt-auto w-full py-md border border-outline-variant/30 rounded-xl font-label-bold text-[12px] hover:bg-surface-variant transition-colors">VIEW ALL LOGS</button>
+</div>
+</div>
+</main>
+<!-- MOBILE NAVIGATION (HIDDEN ON DESKTOP) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full h-16 bg-surface-container-low/90 backdrop-blur-xl border-t border-outline-variant/30 flex justify-around items-center z-50 px-md">
+<a class="text-on-surface-variant flex flex-col items-center gap-xs" href="#">
+<span class="material-symbols-outlined text-[24px]">dashboard</span>
+<span class="text-[10px] font-label-bold">Home</span>
+</a>
+<a class="text-primary flex flex-col items-center gap-xs" href="#">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">school</span>
+<span class="text-[10px] font-label-bold">Campuses</span>
+</a>
+<a class="text-on-surface-variant flex flex-col items-center gap-xs" href="#">
+<span class="material-symbols-outlined text-[24px]">storefront</span>
+<span class="text-[10px] font-label-bold">Vendors</span>
+</a>
+<a class="text-on-surface-variant flex flex-col items-center gap-xs" href="#">
+<span class="material-symbols-outlined text-[24px]">settings</span>
+<span class="text-[10px] font-label-bold">Settings</span>
+</a>
+</nav>
+<script>
+        // Micro-interactions and effects
+        document.querySelectorAll('tr').forEach(row => {
+            row.addEventListener('click', () => {
+                row.classList.add('bg-primary-container/5');
+                setTimeout(() => row.classList.remove('bg-primary-container/5'), 400);
+            });
+        });
+
+        // Search highlight effect
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput.addEventListener('focus', () => {
+            searchInput.parentElement.classList.add('ring-1', 'ring-primary');
+        });
+        searchInput.addEventListener('blur', () => {
+            searchInput.parentElement.classList.remove('ring-1', 'ring-primary');
+        });
+    </script>
+</body></html>

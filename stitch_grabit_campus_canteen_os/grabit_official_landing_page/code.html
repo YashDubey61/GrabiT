@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GrabIt | Campus Food at Warp Speed</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800;900&amp;family=Sora:wght@300;400;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&amp;family=Sora:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(30, 30, 30, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(39, 39, 42, 1);
+        }
+        .orange-glow {
+            text-shadow: 0 0 20px rgba(255, 109, 0, 0.4);
+        }
+        body {
+            background-color: #000000;
+            color: #e2e1eb;
+            overflow-x: hidden;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 16px;
+        }
+        @media (max-width: 768px) {
+            .bento-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "outline": "#a98a7c",
+                      "on-secondary-fixed-variant": "#474646",
+                      "on-secondary-fixed": "#1c1b1b",
+                      "on-error-container": "#ffdad6",
+                      "primary-container": "#ff6d00",
+                      "inverse-primary": "#9f4200",
+                      "tertiary-fixed": "#e5e2e1",
+                      "inverse-on-surface": "#2f3037",
+                      "tertiary-fixed-dim": "#c8c6c5",
+                      "surface-container-low": "#1a1b22",
+                      "surface-tint": "#ffb692",
+                      "surface-container-high": "#282a31",
+                      "on-surface": "#e2e1eb",
+                      "secondary-container": "#4a4949",
+                      "secondary-fixed": "#e5e2e1",
+                      "on-tertiary": "#303030",
+                      "surface-container-highest": "#33343c",
+                      "on-primary": "#562000",
+                      "on-secondary-container": "#bab8b7",
+                      "surface-variant": "#33343c",
+                      "on-tertiary-fixed": "#1b1b1c",
+                      "secondary": "#c8c6c5",
+                      "primary-fixed-dim": "#ffb692",
+                      "on-primary-fixed": "#341100",
+                      "surface": "#12131a",
+                      "outline-variant": "#594136",
+                      "on-tertiary-container": "#323131",
+                      "tertiary": "#c8c6c5",
+                      "primary": "#ffb692",
+                      "on-surface-variant": "#e2bfb0",
+                      "on-primary-container": "#582100",
+                      "surface-container": "#1e1f26",
+                      "primary-fixed": "#ffdbcb",
+                      "on-secondary": "#313030",
+                      "surface-bright": "#383940",
+                      "error-container": "#93000a",
+                      "on-background": "#e2e1eb",
+                      "surface-container-lowest": "#0c0e14",
+                      "background": "#12131a",
+                      "on-error": "#690005",
+                      "error": "#ffb4ab",
+                      "tertiary-container": "#9b9999",
+                      "secondary-fixed-dim": "#c8c6c5",
+                      "on-tertiary-fixed-variant": "#474746",
+                      "inverse-surface": "#e2e1eb",
+                      "on-primary-fixed-variant": "#7a3000",
+                      "surface-dim": "#12131a"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "unit": "4px",
+                      "sm": "8px",
+                      "lg": "24px",
+                      "xs": "4px",
+                      "margin-desktop": "64px",
+                      "gutter": "16px",
+                      "margin-mobile": "20px",
+                      "xl": "40px",
+                      "md": "16px"
+              },
+              "fontFamily": {
+                      "headline-md": ["Montserrat"],
+                      "headline-xl": ["Montserrat"],
+                      "headline-lg-mobile": ["Montserrat"],
+                      "body-sm": ["Sora"],
+                      "label-bold": ["Sora"],
+                      "body-md": ["Sora"],
+                      "headline-lg": ["Montserrat"],
+                      "body-lg": ["Sora"]
+              },
+              "fontSize": {
+                      "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                      "headline-xl": ["40px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                      "headline-lg-mobile": ["28px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                      "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                      "label-bold": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                      "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                      "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="font-body-md text-on-surface">
+<!-- Top Navigation -->
+<nav class="fixed top-0 left-0 right-0 z-[100] flex justify-between items-center h-16 px-6 lg:px-margin-desktop bg-black/60 backdrop-blur-xl">
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-primary-container font-black tracking-tighter">GrabIt</span>
+</div>
+<div class="hidden md:flex items-center gap-lg">
+<a class="font-label-bold text-on-surface hover:text-primary-container transition-colors uppercase" href="#">Student</a>
+<a class="font-label-bold text-on-surface hover:text-primary-container transition-colors uppercase" href="#">Vendors</a>
+<a class="font-label-bold text-on-surface hover:text-primary-container transition-colors uppercase" href="#">Pricing</a>
+</div>
+<div class="flex items-center gap-md">
+<button class="hidden sm:block font-label-bold text-on-surface px-md py-sm rounded-lg hover:bg-surface-variant transition-colors uppercase">Login</button>
+<button class="bg-primary-container text-on-primary-container font-headline-md text-sm px-lg py-sm rounded-full font-extrabold uppercase tracking-widest active:scale-95 transition-transform">Get Started</button>
+</div>
+</nav>
+<!-- Hero Section -->
+<header class="relative min-h-screen flex items-center pt-24 overflow-hidden">
+
+<div class="container mx-auto px-margin-mobile lg:px-margin-desktop relative z-10 grid lg:grid-cols-2 gap-xl items-center">
+<div class="space-y-lg">
+<div class="inline-flex items-center gap-2 px-md py-xs bg-primary-container/10 border border-primary-container/30 rounded-full">
+<span class="material-symbols-outlined text-primary-container text-[18px]">bolt</span>
+<span class="font-label-bold text-primary-container text-[11px] uppercase tracking-[0.2em]">New: GrabIt 2.0 Live on Campus</span>
+</div>
+<h1 class="font-headline-xl text-[48px] md:text-[64px] lg:text-[80px] leading-[0.9] font-black text-on-surface">
+                    When hunger hits,<br/>
+<span class="text-primary-container orange-glow">GrabIt.</span>
+</h1>
+<p class="font-body-lg text-secondary-fixed max-w-xl">
+                    The ultimate stealth food ordering app designed for campus life. Skip the queue, pay with your digital wallet, and get your food before the next lecture starts.
+                </p>
+<div class="flex flex-col sm:flex-row gap-md pt-md">
+<button class="bg-primary-container text-on-primary-container font-headline-md text-lg px-xl py-lg rounded-xl font-extrabold flex items-center justify-center gap-md hover:shadow-[0_0_30px_rgba(255,109,0,0.4)] transition-all active:scale-95 group">
+                        Download App
+                        <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+<button class="border-2 border-on-surface text-on-surface font-headline-md text-lg px-xl py-lg rounded-xl font-extrabold hover:bg-on-surface hover:text-black transition-all active:scale-95">
+                        Partner with us
+                    </button>
+</div>
+<div class="flex items-center gap-md pt-lg">
+<div class="flex -space-x-4">
+<img class="w-12 h-12 rounded-full border-2 border-black object-cover" data-alt="Close up portrait of a smiling young college student with a vibrant campus background, holding a smartphone, high-energy aesthetic with Safety Orange color accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1ujAyeQjKkH7gWKKsPq5PFXODV6jHwaJXfiBxzbxQT4SO6jplNrwwkpMto5Pz97BBhdsmaw1O5a1tv1JuwHwnrscTa-oMtqjHSdDo34kNLxaNLJoJCdcHULi1gc22TO7KnV0phv8kkZkEJrJEgPrSuX9QOevpeq3kdmEtAt52seZQwmo9ofvvrG8PN-xbpyTPsPlso5WSjcqnyR-8G9-jJtCqqnhU5Sks9YCPFQNMj3B9Q3v8BlAj"/>
+<img class="w-12 h-12 rounded-full border-2 border-black object-cover" data-alt="Portrait of a female student in a library setting, looking satisfied while holding a takeout coffee cup, modern campus lifestyle photography, dark mode styling." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuGGLATdPBFwlVh-OwDsY1N4Nf3VQfLeEE9TjwHdxvP7wzfthBjivQsJyTrpKgw-AF4QXfy7YWaMe7VhMhhzqDCmkw1IYKF2_X1VlKFG3_zT5NefzK7WBkGTgJSS5sPbZIbaF71qc06LkNeiicDt54UL8AKnwASwsvhE03wHdaXWPWwRkQDmzCYRiluJsIqOeNmrXjQo-Ujbr1wttepcQUr7dBI8IhD3z5IMubYOmRfL2S0hvRzP6j"/>
+<img class="w-12 h-12 rounded-full border-2 border-black object-cover" data-alt="Diverse group of university students laughing together in a common area, natural sunlight, cinematic lighting, modern collegiate atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD34q2hHzpo7aIfmV7kvikd_gz_RoDWdyV29U-yvt1t8FbpqFDKat18A0gCIP-vkEWoAnncU3gyoxteCuf5Ntn9T-9CF8MjdHAn-5swaCTNO2qHPSJ1biiUIW2T8Va7zUZVlu5M6W_dG0KqAVg8ObHg9ENLwwFTDeTqlIALw4XVEh7iaMUTP3sWvXK_pgKScLl2lXqR9uBKvXQqN_vdw5PQVCRzE4A8KjhWAo26fhqAQ6vdJAeGkM9L"/>
+</div>
+<span class="font-body-sm text-secondary-fixed">Join 15,000+ students already grabbing it.</span>
+</div>
+</div>
+<div class="relative hidden lg:block">
+<div class="absolute -top-20 -right-20 w-80 h-80 bg-primary-container/20 blur-[120px] rounded-full"></div>
+<div class="glass-card p-4 rounded-[40px] transform rotate-3 hover:rotate-0 transition-transform duration-500 max-w-sm mx-auto shadow-2xl relative z-10">
+<img class="w-full h-auto rounded-[32px]" data-alt="High-resolution mockup of a premium food ordering mobile app interface on a dark screen, showcasing vibrant food photography of a gourmet burger and an orange checkout button, sleek UI/UX design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCiniHJLh_lHHwBLzWH9y6cc9d4XJUhDOBngyBDtgNruIG22uqUDJAoURjyqMURuPP4u2mkMMGrAyzVG9e8SL5Dd693ScKynXX7IP60woft0N0v6BjWXKHgvPsz2-vIuJy8mG86tDc6oiY1NqSSK4OhFRHaPQAwcipy_hxxTOa_pdSfcOohTG0o_SOL84wXuxogdg8OdufTXWBzDnHC-rde5mos4Q-lDbN34o1B5_Uw3_8kM9j2JUao"/>
+</div>
+<!-- Floating Elements -->
+<div class="absolute top-1/4 -left-12 glass-card p-md rounded-2xl flex items-center gap-sm animate-bounce">
+<span class="material-symbols-outlined text-primary-container" style="font-variation-settings: 'FILL' 1;">stars</span>
+<span class="font-label-bold">Order Received</span>
+</div>
+<div class="absolute bottom-1/4 -right-8 glass-card p-md rounded-2xl flex items-center gap-sm delay-700 animate-pulse">
+<span class="material-symbols-outlined text-primary-container">schedule</span>
+<span class="font-label-bold">2 Min Ready</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Bento Features Section -->
+<section class="py-xl bg-black px-margin-mobile lg:px-margin-desktop">
+<div class="container mx-auto">
+<div class="mb-xl">
+<h2 class="font-headline-lg text-primary-container uppercase tracking-widest mb-sm">Unfair Advantage</h2>
+<p class="font-headline-xl max-w-2xl">Re-engineered for the modern student athlete and late-night scholar.</p>
+</div>
+<div class="bento-grid h-auto lg:h-[700px]">
+<!-- Feature 1: Stealth -->
+<div class="col-span-4 lg:col-span-8 glass-card rounded-3xl p-lg overflow-hidden relative group">
+<div class="relative z-10 flex flex-col h-full justify-between">
+<div>
+<span class="material-symbols-outlined text-primary-container text-4xl mb-md">visibility_off</span>
+<h3 class="font-headline-lg mb-sm">Classroom Stealth Ordering</h3>
+<p class="font-body-md text-secondary-fixed max-w-md">Our silent UI and haptic-only notifications mean you can secure your lunch while still paying attention to the lecture.</p>
+</div>
+<div class="pt-lg">
+<button class="font-label-bold text-primary-container flex items-center gap-2 group-hover:gap-4 transition-all">
+                                EXPLORE STEALTH MODE <span class="material-symbols-outlined">east</span>
+</button>
+</div>
+</div>
+<div class="absolute bottom-0 right-0 w-1/2 h-full opacity-40 group-hover:opacity-80 transition-opacity">
+<img class="w-full h-full object-cover" data-alt="Candid shot of a student in a dark lecture hall using a glowing smartphone discreetly, focus on the smartphone screen showing the GrabIt app, cinematic lighting with orange lens flares." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCO9fQg1GLCdbip4s5t7v62cycsCO2pq8Qm69XApSngB2U_uE4swKcrWlYPJOv1HGvOocaJWr9IxHDtGmqJiVLHAJz6wIDSFHiFHQRQ1Ky2SMY26m4adQ7xd18bDcJq3cKI-qRBsa4JkCrPY4v5KvJjD6wWAy0XnjuGGivrjl44Zpl0jp-JTTi_4HjYX3HmG-btVZoYCVv8oKNBr8Fs4YIczk8-1foFuN_LsqcB2oL7Tp22pcNfm_Ev"/>
+</div>
+</div>
+<!-- Feature 2: Wait Time -->
+<div class="col-span-4 glass-card rounded-3xl p-lg flex flex-col justify-center items-center text-center group border-primary-container/20">
+<div class="w-24 h-24 bg-primary-container rounded-full flex items-center justify-center mb-lg group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-black text-4xl" style="font-variation-settings: 'wght' 700;">timer_off</span>
+</div>
+<h3 class="font-headline-md mb-sm">Zero Wait Time</h3>
+<p class="font-body-sm text-secondary-fixed">Predictive preparation algorithms ensure your meal is ready exactly as you arrive. No lines, no stress.</p>
+</div>
+<!-- Feature 3: Digital Wallet -->
+<div class="col-span-4 glass-card rounded-3xl p-lg flex flex-col justify-between overflow-hidden relative">
+<div class="relative z-10">
+<h3 class="font-headline-md mb-sm">Digital Wallet</h3>
+<p class="font-body-sm text-secondary-fixed">One-tap crypto, student credits, or card payments. Secure, fast, and unified.</p>
+</div>
+<div class="mt-md relative z-10">
+<div class="h-32 bg-gradient-to-tr from-primary-container/40 to-transparent rounded-xl border border-white/10 p-md flex flex-col justify-end">
+<div class="font-headline-md text-sm">**** 4421</div>
+<div class="flex justify-between items-center">
+<span class="text-[10px] font-label-bold opacity-60">VAL BALANCE</span>
+<span class="font-headline-md text-primary-container">$42.00</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Feature 4: High Quality Food -->
+<div class="col-span-4 lg:col-span-8 glass-card rounded-3xl overflow-hidden relative group">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="Macro photography of a delicious, steaming hot campus breakfast burrito with melted cheese and fresh salsa, vibrant colors, safety orange background tones, gourmet food styling." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDAtr8OZgRwOgTgFTiJYarO_wqMR0o961ikN78OdZnO9W0zK2MsIhRU8igrwZAEsX1OfQE4MnlknbidLvOYecTAROkHaVJBTSzI-RaXqybG-oYJgh51-hZjWyT7Ok-7AVzi-2WhDBFcSfnnGO2pxHfv_xa2w6sdk7C7YOdptJuJnFGmXa0KsT9u7TW9W-Hl2OB5nEMRVIdT7UuWBfNiddOVpgoDL0OktT62X6IdqXxhc259tKmKhaxB')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
+<div class="absolute bottom-lg left-lg">
+<h3 class="font-headline-lg">Verified Campus Vendors</h3>
+<p class="font-body-md text-secondary-fixed">Only the best local kitchens, vetted for speed and quality.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Vendor Section -->
+<section class="py-xl bg-surface-container-lowest">
+<div class="container mx-auto px-margin-mobile lg:px-margin-desktop grid lg:grid-cols-2 gap-xl items-center">
+<div class="order-2 lg:order-1">
+<div class="glass-card rounded-[32px] p-lg border-outline-variant shadow-2xl">
+<div class="flex items-center justify-between mb-lg">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 bg-primary-container/20 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-container">dashboard</span>
+</div>
+<div>
+<h4 class="font-headline-md text-sm">Vendor Dashboard</h4>
+<p class="text-[10px] font-label-bold opacity-50 uppercase">Live Analytics</p>
+</div>
+</div>
+<div class="px-md py-xs bg-green-500/20 text-green-400 rounded-full text-[10px] font-bold">SYSTEM ACTIVE</div>
+</div>
+<div class="space-y-md">
+<div class="grid grid-cols-3 gap-md">
+<div class="bg-surface-container rounded-xl p-md">
+<div class="text-[10px] opacity-60 mb-1">ORDERS</div>
+<div class="font-headline-md text-primary-container">142</div>
+</div>
+<div class="bg-surface-container rounded-xl p-md">
+<div class="text-[10px] opacity-60 mb-1">REVENUE</div>
+<div class="font-headline-md text-primary-container">$2.4k</div>
+</div>
+<div class="bg-surface-container rounded-xl p-md">
+<div class="text-[10px] opacity-60 mb-1">GROWTH</div>
+<div class="font-headline-md text-primary-container">+18%</div>
+</div>
+</div>
+<div class="h-40 bg-surface-container-high rounded-xl flex items-end p-md gap-2">
+<div class="flex-1 bg-primary-container/30 h-[40%] rounded-t-sm"></div>
+<div class="flex-1 bg-primary-container/30 h-[60%] rounded-t-sm"></div>
+<div class="flex-1 bg-primary-container/30 h-[50%] rounded-t-sm"></div>
+<div class="flex-1 bg-primary-container h-[90%] rounded-t-sm"></div>
+<div class="flex-1 bg-primary-container/30 h-[70%] rounded-t-sm"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="order-1 lg:order-2 space-y-lg">
+<h2 class="font-headline-xl">Scale Your <span class="text-primary-container">Campus Canteen</span></h2>
+<p class="font-body-lg text-secondary-fixed">Ditch the paper tickets and chaotic queues. GrabIt Vendor Console gives you total control over your kitchen logistics, peak-hour management, and financial reporting.</p>
+<ul class="space-y-md">
+<li class="flex items-start gap-md">
+<span class="material-symbols-outlined text-primary-container">check_circle</span>
+<div>
+<p class="font-headline-md text-sm">Automated Order Throttling</p>
+<p class="font-body-sm opacity-60">Prevent kitchen burnout during the 12 PM rush.</p>
+</div>
+</li>
+<li class="flex items-start gap-md">
+<span class="material-symbols-outlined text-primary-container">check_circle</span>
+<div>
+<p class="font-headline-md text-sm">Instant Payouts</p>
+<p class="font-body-sm opacity-60">Access your earnings daily with zero hidden fees.</p>
+</div>
+</li>
+<li class="flex items-start gap-md">
+<span class="material-symbols-outlined text-primary-container">check_circle</span>
+<div>
+<p class="font-headline-md text-sm">Loyalty Program Engine</p>
+<p class="font-body-sm opacity-60">Reward your regulars automatically.</p>
+</div>
+</li>
+</ul>
+<button class="bg-on-surface text-black font-headline-md text-md px-xl py-lg rounded-xl font-extrabold hover:bg-primary-container hover:text-on-primary-container transition-all active:scale-95">
+                    Become a Partner
+                </button>
+</div>
+</div>
+</section>
+<!-- Testimonials -->
+<section class="py-xl bg-black overflow-hidden">
+<div class="container mx-auto px-margin-mobile lg:px-margin-desktop">
+<h2 class="font-headline-xl text-center mb-xl">Voices from the <span class="text-primary-container">Field</span></h2>
+<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-lg">
+<!-- Testimonial 1 -->
+<div class="glass-card p-lg rounded-3xl relative">
+<span class="material-symbols-outlined text-primary-container/20 text-6xl absolute top-4 right-4">format_quote</span>
+<p class="font-body-lg italic mb-lg relative z-10">"GrabIt changed my life. I used to spend 20 minutes of my break standing in line. Now I just grab my bag and go. It's stealthy, fast, and works every time."</p>
+<div class="flex items-center gap-md">
+<img class="w-12 h-12 rounded-full object-cover" data-alt="Portrait of a young tech-savvy university student, professional lighting, modern student fashion, dark-toned background with orange accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNFJJe--1wDtzpM1vHpfSOBHPeWlkw2KpOJ7fp9X15-Rbeyw6_nUC_bzdmCURnFRPiBbGx65j6JdpCC76IsugF73DtncHOCY1J1Z2uiMrz74PAySYXx4UUkZaLD4mYFnqdceYWrdhKCqdmKolBhtbrBsaRFOxMhkKudgZB8tIvRDa7ytGG_3LErFOPnYuJBx-qDWO9JGuu5ZOkXdxfiEj9rqi3c1O41GzskW_x4GItai04wB_VqdJR"/>
+<div>
+<p class="font-headline-md text-sm">Alex Rivera</p>
+<p class="text-[10px] font-label-bold opacity-50">COMPUTER SCIENCE SENIOR</p>
+</div>
+</div>
+</div>
+<!-- Testimonial 2 -->
+<div class="glass-card p-lg rounded-3xl border-primary-container/30 scale-105 z-10 relative">
+<span class="material-symbols-outlined text-primary-container/20 text-6xl absolute top-4 right-4">format_quote</span>
+<p class="font-body-lg italic mb-lg relative z-10">"As a vendor, managing the lunch rush was a nightmare. GrabIt's dashboard smoothed out our prep time and increased our daily sales by 40%. The best campus partner we've ever had."</p>
+<div class="flex items-center gap-md">
+<img class="w-12 h-12 rounded-full object-cover" data-alt="Professional portrait of a middle-aged canteen owner in a modern kitchen setting, friendly expression, wearing a clean apron, high-contrast professional photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-kqODSg07R0oiW-12qxHNIze_tjSlk1aTGiUAVOPJvD2U6jljurNHRZkRQbME4bWzpnoFZk84xG3qckcSsBHiVm85qRDt1o73Rc7U_SjSBgWcHNSeOxgm9JmytvZ3-dY6JRWdGewCGRYAgjxrCVlJhNBcBIjsPSMxq7ZBR5KTxaFasUSe2v_eYW0vjJ275tuQNTWZT9nTIfoUgllXrKrYf3lJV8z2K_cRZEkOO5l0hIqrbRZEI_-t"/>
+<div>
+<p class="font-headline-md text-sm">Sanjay Gupta</p>
+<p class="text-[10px] font-label-bold opacity-50">OWNER, 'THE CURRY BOWL'</p>
+</div>
+</div>
+</div>
+<!-- Testimonial 3 -->
+<div class="glass-card p-lg rounded-3xl relative">
+<span class="material-symbols-outlined text-primary-container/20 text-6xl absolute top-4 right-4">format_quote</span>
+<p class="font-body-lg italic mb-lg relative z-10">"The digital wallet integration is flawless. I love that I can track my spending and get my morning coffee without ever reaching for my physical cards."</p>
+<div class="flex items-center gap-md">
+<img class="w-12 h-12 rounded-full object-cover" data-alt="Portrait of a confident young female athlete on campus, wearing varsity jacket, athletic lighting, modern collegiate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAL_2Z0T3YMmIA65H4t9CvmCmNJFHy7Mnu7TDZQ4p8B6hfNhXuYB76eLdi3hjUpFjU_7q_iN5PadC_ubYwKr46Z-o8c1Ykl3rTU2dTeDrTJd_1nyKX1PzC3VU7JlQeW9R3je8liP8kL9pm3ouxGDjXhoXFXPxCE4ypbawynM6lL6hCFkhw_bnVPVY3ko9HZn_G4t4TSg-oDfYMxuolgtjuWr3nlK1Ziwj1QNpyhbJTrwGLoi7wbr8tO"/>
+<div>
+<p class="font-headline-md text-sm">Maya Chen</p>
+<p class="text-[10px] font-label-bold opacity-50">VARSITY TRACK &amp; FIELD</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- CTA Section -->
+<section class="py-24 px-margin-mobile relative overflow-hidden">
+<div class="absolute inset-0 bg-primary-container"></div>
+<div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle at center, #000 1px, transparent 1px); background-size: 24px 24px;"></div>
+<div class="container mx-auto relative z-10 text-center space-y-lg">
+<h2 class="font-headline-xl text-black text-[40px] md:text-[60px] leading-tight">Ready to reclaim your <br class="hidden md:block"/>campus break?</h2>
+<div class="flex flex-col sm:flex-row gap-md justify-center items-center">
+<button class="bg-black text-on-surface font-headline-md text-lg px-xl py-lg rounded-xl font-extrabold flex items-center gap-md hover:scale-105 transition-all">
+                    Get the App
+                    <span class="material-symbols-outlined">download</span>
+</button>
+<button class="border-2 border-black text-black font-headline-md text-lg px-xl py-lg rounded-xl font-extrabold hover:bg-black hover:text-primary-container transition-all">
+                    Register Vendor
+                </button>
+</div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="bg-black py-xl border-t border-outline-variant">
+<div class="container mx-auto px-margin-mobile lg:px-margin-desktop">
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-xl mb-xl">
+<div class="col-span-2 space-y-md">
+<span class="font-headline-md text-primary-container font-black tracking-tighter text-3xl">GrabIt</span>
+<p class="font-body-sm text-secondary-fixed max-w-xs">Building the future of campus logistics, one meal at a time. Join the stealth movement.</p>
+<div class="flex gap-md">
+<a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface hover:bg-primary-container hover:text-black transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">public</span>
+</a>
+<a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface hover:bg-primary-container hover:text-black transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">alternate_email</span>
+</a>
+<a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface hover:bg-primary-container hover:text-black transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">smartphone</span>
+</a>
+</div>
+</div>
+<div class="space-y-md">
+<h5 class="font-label-bold text-on-surface uppercase">Product</h5>
+<ul class="space-y-sm font-body-sm text-secondary-fixed">
+<li><a class="hover:text-primary-container transition-colors" href="#">Download App</a></li>
+<li><a class="hover:text-primary-container transition-colors" href="#">Stealth Mode</a></li>
+<li><a class="hover:text-primary-container transition-colors" href="#">Digital Wallet</a></li>
+<li><a class="hover:text-primary-container transition-colors" href="#">Safety Protocols</a></li>
+</ul>
+</div>
+<div class="space-y-md">
+<h5 class="font-label-bold text-on-surface uppercase">Company</h5>
+<ul class="space-y-sm font-body-sm text-secondary-fixed">
+<li><a class="hover:text-primary-container transition-colors" href="#">About Us</a></li>
+<li><a class="hover:text-primary-container transition-colors" href="#">Careers</a></li>
+<li><a class="hover:text-primary-container transition-colors" href="#">Partners</a></li>
+<li><a class="hover:text-primary-container transition-colors" href="#">Press Kit</a></li>
+</ul>
+</div>
+<div class="space-y-md">
+<h5 class="font-label-bold text-on-surface uppercase">Legal</h5>
+<ul class="space-y-sm font-body-sm text-secondary-fixed">
+<li><a class="hover:text-primary-container transition-colors" href="#">Privacy Policy</a></li>
+<li><a class="hover:text-primary-container transition-colors" href="#">Terms of Service</a></li>
+<li><a class="hover:text-primary-container transition-colors" href="#">Cookie Policy</a></li>
+<li><a class="hover:text-primary-container transition-colors" href="#">Refunds</a></li>
+</ul>
+</div>
+<div class="space-y-md">
+<h5 class="font-label-bold text-on-surface uppercase">Support</h5>
+<ul class="space-y-sm font-body-sm text-secondary-fixed">
+<li><a class="hover:text-primary-container transition-colors" href="#">Help Center</a></li>
+<li><a class="hover:text-primary-container transition-colors" href="#">Contact Us</a></li>
+<li><a class="hover:text-primary-container transition-colors" href="#">Live Chat</a></li>
+<li><a class="hover:text-primary-container transition-colors" href="#">System Status</a></li>
+</ul>
+</div>
+</div>
+<div class="pt-lg border-t border-outline-variant flex flex-col md:flex-row justify-between items-center gap-md">
+<p class="font-body-sm text-secondary-fixed opacity-60">© 2024 GrabIt Technologies Inc. Built for the hustle.</p>
+<div class="flex items-center gap-md">
+<img class="h-8 opacity-60 hover:opacity-100 transition-opacity" data-alt="Small grayscale icon of App Store download button, minimalist style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUaIlI-OI0N2qyEuKykmEdW-ip09eHXsV2jZxSmOgjACDfuueU6zmURbEvW6uGt5PfAL6b2Rpthopu_5-R3PLpaTGlbdS8wfsVZl5c1pi-ak6_HY1Tzi3MEIGMGMDKklUvJNUcWXpB-0ep1ZYBogtYq0W5oYdWRmMUWez0o6IbviWV83AtWDua26qxZA0Hl0VvvMzxgIPo9cbCpjvG3iab9fxlOzHcQXPf_OILZdgJYrTJ8xZdy3yX"/>
+<img class="h-8 opacity-60 hover:opacity-100 transition-opacity" data-alt="Small grayscale icon of Google Play download button, minimalist style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVI8HqtxoEXq1khPt0YylUcbFoxSsJZ97lEIlHgELFdV9Wu3kvXot8ntwh3Ti5MxDSm1YTKjqfMIco06olphnCPJjY7EXVlpkEkhw9QHzpuW2vUj85Y-Z_YkjKWUkBysQnEasRhGlP1z45rYy7c2N8xZgpldipFYrZlLw1lWN37k7vekeT2g2jO1SQMwe-4LZu1NlY_alWHlivB_gz2dNQxNrZgt4gAUi152ZVi3HTxZdTpx_BM987"/>
+</div>
+</div>
+</div>
+</footer>
+<script>
+        // Micro-interaction for the navigation
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 50) {
+                nav.classList.add('bg-black/90', 'h-14');
+                nav.classList.remove('h-16');
+            } else {
+                nav.classList.remove('bg-black/90', 'h-14');
+                nav.classList.add('h-16');
+            }
+        });
+
+        // Hover effects for Bento cards
+        const bentoCards = document.querySelectorAll('.glass-card');
+        bentoCards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.borderColor = 'rgba(255, 109, 0, 0.4)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.borderColor = 'rgba(39, 39, 42, 1)';
+            });
+        });
+    </script>
+</body></html>

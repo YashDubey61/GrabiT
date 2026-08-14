@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>GrabIt Vendor Analytics</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&amp;family=Sora:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary": "#c8c6c5",
+                    "on-secondary-container": "#bab8b7",
+                    "error": "#ffb4ab",
+                    "surface-container": "#1a1b1e",
+                    "on-error": "#690005",
+                    "on-primary-fixed": "#341100",
+                    "surface-dim": "#000000",
+                    "error-container": "#93000a",
+                    "secondary-fixed-dim": "#c8c6c5",
+                    "on-primary": "#562000",
+                    "inverse-primary": "#9f4200",
+                    "on-tertiary-fixed": "#1b1b1c",
+                    "on-surface-variant": "#e2bfb0",
+                    "surface-container-lowest": "#000000",
+                    "outline": "#a98a7c",
+                    "on-tertiary": "#303030",
+                    "inverse-on-surface": "#2f3037",
+                    "surface-bright": "#1e1f26",
+                    "on-error-container": "#ffdad6",
+                    "on-background": "#fdfcff",
+                    "primary": "#ffb692",
+                    "surface-container-low": "#0d0e11",
+                    "secondary": "#c8c6c5",
+                    "primary-fixed": "#ffdbcb",
+                    "tertiary-container": "#9b9999",
+                    "tertiary-fixed-dim": "#c8c6c5",
+                    "inverse-surface": "#e2e1eb",
+                    "outline-variant": "#594136",
+                    "surface": "#000000",
+                    "surface-container-high": "#232429",
+                    "on-secondary": "#313030",
+                    "surface-tint": "#ffb692",
+                    "on-secondary-fixed-variant": "#474646",
+                    "on-secondary-fixed": "#1c1b1b",
+                    "tertiary-fixed": "#e5e2e1",
+                    "on-tertiary-container": "#323131",
+                    "on-primary-container": "#582100",
+                    "on-tertiary-fixed-variant": "#474746",
+                    "background": "#000000",
+                    "surface-container-highest": "#2d2e35",
+                    "surface-variant": "#232429",
+                    "primary-container": "#ff6d00",
+                    "secondary-fixed": "#e5e2e1",
+                    "on-primary-fixed-variant": "#7a3000",
+                    "on-surface": "#fdfcff",
+                    "secondary-container": "#4a4949",
+                    "primary-fixed-dim": "#ffb692"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-desktop": "64px",
+                    "margin-mobile": "20px",
+                    "gutter": "16px",
+                    "md": "16px",
+                    "xs": "4px",
+                    "unit": "4px",
+                    "xl": "40px",
+                    "lg": "24px",
+                    "sm": "8px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Montserrat"],
+                    "body-lg": ["Sora"],
+                    "label-bold": ["Sora"],
+                    "headline-xl": ["Montserrat"],
+                    "body-sm": ["Sora"],
+                    "headline-md": ["Montserrat"],
+                    "headline-lg-mobile": ["Montserrat"],
+                    "body-md": ["Sora"]
+            },
+            "fontSize": {
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "label-bold": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-xl": ["40px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #000000;
+            color: #fdfcff;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-card {
+            background: rgba(26, 27, 30, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(89, 65, 54, 0.25);
+        }
+        .safety-orange-glow {
+            box-shadow: 0 0 24px rgba(255, 109, 0, 0.2);
+        }
+        ::-webkit-scrollbar { display: none; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="font-body-md text-on-background">
+<!-- Top App Bar -->
+<header class="sticky top-0 z-[60] bg-black/80 backdrop-blur-md flex justify-between items-center w-full px-margin-mobile h-16">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-container">location_on</span>
+<h1 class="text-headline-md font-headline-md font-extrabold text-primary-container tracking-tight">GrabIt</h1>
+</div>
+<button class="active:scale-95 transition-transform duration-150">
+<span class="material-symbols-outlined text-on-surface-variant">qr_code_scanner</span>
+</button>
+</header>
+<main class="px-margin-mobile pb-32">
+<!-- Dashboard Header -->
+<section class="mt-6 mb-8">
+<h2 class="text-headline-lg-mobile font-headline-lg-mobile text-on-surface">Vendor Insights</h2>
+<p class="text-body-sm text-on-surface-variant">Real-time performance tracking</p>
+</section>
+<!-- Primary Metric (Today's Sales) -->
+<div class="glass-card p-6 rounded-xl mb-6 relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary-container/10 blur-3xl -mr-16 -mt-16"></div>
+<p class="text-label-bold font-label-bold text-on-surface-variant uppercase tracking-widest mb-1">Today's Sales</p>
+<div class="flex items-baseline gap-2">
+<span class="text-headline-xl font-headline-xl text-primary-container">$1,284.50</span>
+<span class="text-body-sm text-green-400 flex items-center font-bold">
+<span class="material-symbols-outlined text-sm">trending_up</span> 12%
+                </span>
+</div>
+<div class="mt-4 flex items-center gap-2">
+<div class="flex-1 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary-container w-[75%] rounded-full"></div>
+</div>
+<span class="text-label-bold font-label-bold text-on-surface-variant">Goal: $1.5k</span>
+</div>
+</div>
+<!-- Bento Stats Grid -->
+<section class="grid grid-cols-2 gap-4 mb-8">
+<div class="glass-card p-4 rounded-xl flex flex-col justify-between h-32">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-primary-container/60">receipt_long</span>
+<span class="text-label-bold font-label-bold text-on-surface-variant">Orders</span>
+</div>
+<div>
+<p class="text-headline-md font-headline-md text-on-surface">142</p>
+<p class="text-body-sm text-on-surface-variant">Total Today</p>
+</div>
+</div>
+<div class="glass-card p-4 rounded-xl flex flex-col justify-between h-32">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-primary-container/60">timer</span>
+<span class="text-label-bold font-label-bold text-on-surface-variant">Prep Time</span>
+</div>
+<div>
+<p class="text-headline-md font-headline-md text-on-surface">8.4<span class="text-body-sm ml-1">min</span></p>
+<p class="text-body-sm text-on-surface-variant">Average</p>
+</div>
+</div>
+</section>
+<!-- Payout Ledger Section -->
+<section class="mb-8">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-headline-md font-headline-md text-on-surface">Payout Ledger</h3>
+<button class="flex items-center gap-1 text-primary-container hover:opacity-80 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-lg">download</span>
+<span class="text-label-bold font-label-bold">Download History</span>
+</button>
+</div>
+<div class="space-y-3">
+<!-- Ledger Item 1 -->
+<div class="glass-card p-4 rounded-xl flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">account_balance_wallet</span>
+</div>
+<div>
+<p class="text-body-md font-bold text-on-surface">Weekly Settlement</p>
+<p class="text-body-sm text-on-surface-variant">Oct 24 - Oct 31</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-body-md font-bold text-on-surface">$4,820.00</p>
+<div class="flex items-center justify-end gap-1">
+<div class="w-2 h-2 rounded-full bg-green-500"></div>
+<span class="text-label-bold font-label-bold text-on-surface-variant">Settled</span>
+</div>
+</div>
+</div>
+<!-- Ledger Item 2 -->
+<div class="glass-card p-4 rounded-xl flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">pending_actions</span>
+</div>
+<div>
+<p class="text-body-md font-bold text-on-surface">Current Balance</p>
+<p class="text-body-sm text-on-surface-variant">Nov 01 - Present</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-body-md font-bold text-on-surface">$1,284.50</p>
+<div class="flex items-center justify-end gap-1">
+<div class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></div>
+<span class="text-label-bold font-label-bold text-on-surface-variant">Pending</span>
+</div>
+</div>
+</div>
+<!-- Ledger Item 3 -->
+<div class="glass-card p-4 rounded-xl flex items-center justify-between opacity-70">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">account_balance_wallet</span>
+</div>
+<div>
+<p class="text-body-md font-bold text-on-surface">Weekly Settlement</p>
+<p class="text-body-sm text-on-surface-variant">Oct 17 - Oct 23</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-body-md font-bold text-on-surface">$5,102.15</p>
+<div class="flex items-center justify-end gap-1">
+<div class="w-2 h-2 rounded-full bg-green-500"></div>
+<span class="text-label-bold font-label-bold text-on-surface-variant">Settled</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Quick Actions / Promotions -->
+<section class="glass-card p-5 rounded-2xl border-primary-container/20 bg-gradient-to-br from-surface-container to-black flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-primary-container/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-container" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<div class="flex-1">
+<h4 class="text-body-md font-bold text-on-surface">Boost Sales?</h4>
+<p class="text-body-sm text-on-surface-variant leading-tight">Start a "Lunch Rush" promo for 20% more visibility.</p>
+</div>
+<button class="bg-primary-container text-on-primary-container px-4 py-2 rounded-lg text-label-bold font-label-bold active:scale-95 transition-all">
+                Create
+            </button>
+</section>
+</main>
+<!-- Bottom Navigation Shell -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 py-3 pb-safe bg-black/90 backdrop-blur-xl z-50 rounded-t-xl shadow-2xl border-t border-outline-variant/30">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-label-bold font-label-bold">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="text-label-bold font-label-bold">Orders</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary-container bg-primary-container/10 rounded-xl px-3 py-1 scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+<span class="text-label-bold font-label-bold">Wallet</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="text-label-bold font-label-bold">Profile</span>
+</a>
+</nav>
+<script>
+        // Micro-interactions for interaction feedback
+        document.querySelectorAll('button, a').forEach(el => {
+            el.addEventListener('click', () => {
+                const ripple = document.createElement('div');
+                ripple.style.position = 'absolute';
+                ripple.style.width = '2px';
+                ripple.style.height = '2px';
+                ripple.style.background = 'rgba(255, 109, 0, 0.2)';
+                ripple.style.borderRadius = '50%';
+                ripple.style.transform = 'scale(1)';
+                ripple.style.transition = 'transform 0.4s ease-out, opacity 0.4s ease-out';
+                ripple.style.pointerEvents = 'none';
+            });
+        });
+    </script>
+</body></html>
