@@ -1,14 +1,16 @@
 {
-  "name": "tmp-grabit",
+  "name": "grabit",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.47.0",
     "next": "16.3.0",
     "react": "19.2.8",
     "react-dom": "19.2.8"
