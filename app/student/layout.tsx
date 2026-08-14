@@ -1,5 +1,6 @@
 import { RoleShellTabBar, type NavItem } from "@/components/shared/RoleShellNav";
 import { CartProvider } from "@/lib/cart/CartContext";
+import { OrderProvider } from "@/lib/orders/OrderContext";
 
 const STUDENT_NAV: NavItem[] = [
   { label: "Home", href: "/student", icon: "storefront" },
@@ -14,7 +15,9 @@ const STUDENT_NAV: NavItem[] = [
 //
 // CartProvider is mounted here (Day 3) rather than per-page so Menu and
 // Checkout — both under this layout — share one cart instance instead of
-// each holding its own copy.
+// each holding its own copy. OrderProvider (Day 4) follows the same
+// reasoning: Checkout creates orders, Track Order (and Day 5's Order
+// History) reads them — one store, not one per route.
 export default function StudentLayout({
   children,
 }: {
@@ -22,10 +25,12 @@ export default function StudentLayout({
 }) {
   return (
     <CartProvider>
-      <div className="min-h-dvh bg-background pb-20">
-        {children}
-        <RoleShellTabBar items={STUDENT_NAV} />
-      </div>
+      <OrderProvider>
+        <div className="min-h-dvh bg-background pb-20">
+          {children}
+          <RoleShellTabBar items={STUDENT_NAV} />
+        </div>
+      </OrderProvider>
     </CartProvider>
   );
 }

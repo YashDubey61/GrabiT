@@ -1,17 +1,8 @@
-/**
- * The approved Checkout export shows a flat "Platform Fee ₹5" line
- * regardless of order size. This is a display-only mock value — explicitly
- * NOT the PRD §8 platform-fee formula (free ≤₹30, flat ₹3.50 split above
- * that). Per the Day 3 brief, the real fee logic is not implemented yet;
- * this constant exists only so the approved screen's bill breakdown
- * renders correctly in the mock flow.
- */
-const MOCK_PLATFORM_FEE = 5;
+import { getMockPlatformFee } from "@/lib/cart/calculations";
 
-export function getMockPlatformFee(subtotal: number): number {
-  return subtotal > 0 ? MOCK_PLATFORM_FEE : 0;
-}
-
+// getMockPlatformFee moved to lib/cart/calculations.ts on Day 4 so order
+// creation (lib/orders/OrderContext.tsx) uses the identical number this
+// component displays — see that file for the "not the real PRD formula" note.
 export function CheckoutBillDetails({ subtotal }: { subtotal: number }) {
   const fee = getMockPlatformFee(subtotal);
   const total = subtotal + fee;

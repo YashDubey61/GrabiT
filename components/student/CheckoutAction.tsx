@@ -1,19 +1,25 @@
-"use client";
-
-import { useState } from "react";
-import { getMockPlatformFee } from "@/components/student/CheckoutBillDetails";
+import { getMockPlatformFee } from "@/lib/cart/calculations";
 
 /**
  * Fixed bottom bar — "Total Payable" + "Pay & Place Order", matching the
- * approved export. The button is a real, clickable UI element (per Day 3
- * step 9, "implement the UI only") but does nothing beyond toggling a
- * local note — no order is created, no payment API is called, no success
- * state is faked. Total is derived from `subtotal` via the same
- * getMockPlatformFee used in CheckoutBillDetails — one source of truth,
- * not a second copy of the math.
+ * approved export. Presentational only: order creation, validation, and
+ * navigation live in app/student/checkout/page.tsx (via useOrders/useCart)
+ * — this component just renders the total and forwards a click.
+ *
+ * Day 4 update: the button now actually creates a mock local order
+ * (see lib/orders/OrderContext.tsx) instead of Day 3's inert
+ * acknowledgement note. Still no Razorpay, no Supabase, no real payment —
+ * "mock order" is explicit in the code, not implied.
  */
-export function CheckoutAction({ subtotal }: { subtotal: number }) {
-  const [acknowledged, setAcknowledged] = useState(false);
+export function CheckoutAction({
+  subtotal,
+  onPlaceOrder,
+  error,
+}: {
+  subtotal: number;
+  onPlaceOrder: () => void;
+  error?: string | null;
+}) {
   const total = subtotal + getMockPlatformFee(subtotal);
 
   return (
@@ -41,18 +47,21 @@ export function CheckoutAction({ subtotal }: { subtotal: number }) {
 
         <button
           type="button"
-          onClick={() => setAcknowledged(true)}
+          onClick={onPlaceOrder}
           className="w-full rounded-xl bg-primary py-4 text-body font-800 uppercase tracking-wide text-on-primary shadow-xl shadow-primary/20 transition-transform active:scale-95"
         >
           Pay &amp; Place Order
         </button>
 
-        {acknowledged && (
-          <p role="status" className="text-center text-caption text-muted">
-            This is a mock checkout — no payment was processed and no order
-            was placed. Real payment integration comes in a later phase.
+        {error && (
+          <p role="alert" className="text-center text-caption text-danger">
+            {error}
           </p>
         )}
+
+        <p className="text-center text-[11px] text-faint">
+          Mock checkout — no real payment is processed.
+        </p>
       </div>
     </div>
   );
