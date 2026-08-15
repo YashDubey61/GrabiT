@@ -1,0 +1,20 @@
+{
+  "crons": [
+    {
+      "path": "/api/internal/workflows/run?cadence=HIGH",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/internal/workflows/run?cadence=MEDIUM",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/internal/workflows/run?cadence=DAILY",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/internal/incidents/sla",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}

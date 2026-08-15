@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>GrabIt - The Main Canteen</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&amp;family=Sora:wght@400;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&amp;family=Sora:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-secondary-fixed-variant": "#474646",
+            "primary-container": "#ff6d00",
+            "on-tertiary": "#303030",
+            "inverse-primary": "#9f4200",
+            "surface-container-low": "#0a0a0a",
+            "primary-fixed-dim": "#ffb692",
+            "tertiary-container": "#9b9999",
+            "surface-dim": "#000000",
+            "on-primary-fixed-variant": "#7a3000",
+            "outline": "#a98a7c",
+            "on-error": "#690005",
+            "on-background": "#ffffff",
+            "secondary-container": "#1a1a1a",
+            "primary": "#ffb692",
+            "secondary-fixed": "#e5e2e1",
+            "on-error-container": "#ffdad6",
+            "tertiary": "#c8c6c5",
+            "on-surface": "#ffffff",
+            "on-primary": "#ffffff",
+            "secondary": "#c8c6c5",
+            "tertiary-fixed": "#e5e2e1",
+            "on-surface-variant": "#e2bfb0",
+            "on-secondary": "#313030",
+            "on-secondary-container": "#bab8b7",
+            "on-secondary-fixed": "#1c1b1b",
+            "inverse-on-surface": "#2f3037",
+            "outline-variant": "#333333",
+            "surface-container": "#121212",
+            "surface-variant": "#1a1a1a",
+            "on-tertiary-fixed-variant": "#474746",
+            "background": "#000000",
+            "surface-bright": "#1e1e1e",
+            "error": "#ffb4ab",
+            "primary-fixed": "#ffdbcb",
+            "error-container": "#93000a",
+            "on-tertiary-container": "#323131",
+            "surface": "#000000",
+            "on-tertiary-fixed": "#1b1b1c",
+            "surface-container-highest": "#1e1e1e",
+            "on-primary-container": "#ffffff",
+            "inverse-surface": "#e2e1eb",
+            "surface-container-high": "#121212",
+            "secondary-fixed-dim": "#c8c6c5",
+            "surface-tint": "#ffb692",
+            "surface-container-lowest": "#000000",
+            "tertiary-fixed-dim": "#c8c6c5",
+            "on-primary-fixed": "#341100"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "lg": "24px",
+            "gutter": "16px",
+            "sm": "8px",
+            "unit": "4px",
+            "md": "16px",
+            "xs": "4px",
+            "xl": "40px",
+            "margin-mobile": "20px",
+            "margin-desktop": "64px"
+          },
+          "fontFamily": {
+            "headline-lg": ["Montserrat"],
+            "body-lg": ["Sora"],
+            "label-bold": ["Sora"],
+            "headline-md": ["Montserrat"],
+            "headline-xl": ["Montserrat"],
+            "body-md": ["Sora"],
+            "body-sm": ["Sora"],
+            "headline-lg-mobile": ["Montserrat"]
+          },
+          "fontSize": {
+            "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+            "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+            "label-bold": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+            "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}],
+            "headline-xl": ["40px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+            "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+            "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+            "headline-lg-mobile": ["28px", {"lineHeight": "1.2", "fontWeight": "700"}]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      background-color: #000000;
+      color: #ffffff;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .glass-nav {
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .safety-orange-shadow {
+      box-shadow: 0 4px 24px rgba(255, 109, 0, 0.4);
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="font-body-md text-on-surface selection:bg-primary-container selection:text-on-primary-container">
+<!-- Top App Bar -->
+<header class="fixed top-0 left-0 w-full h-16 flex items-center justify-between px-margin-mobile bg-background z-50">
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container active:scale-95 transition-transform border border-white/5">
+<span class="material-symbols-outlined text-on-surface">arrow_back</span>
+</button>
+<h1 class="text-headline-md-mobile font-headline-md tracking-tight text-on-surface truncate">The Main Canteen</h1>
+</div>
+<div class="flex items-center gap-2">
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container active:scale-95 transition-transform border border-white/5">
+<span class="material-symbols-outlined text-on-surface">search</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container active:scale-95 transition-transform border border-white/5">
+<span class="material-symbols-outlined text-on-surface">info</span>
+</button>
+</div>
+</header>
+<main class="pt-20 pb-40 px-margin-mobile min-h-screen">
+<!-- Stall Info Section -->
+<section class="mb-lg p-md rounded-xl bg-surface-container-high border border-outline-variant/30">
+<div class="flex justify-between items-start mb-sm">
+<div>
+<div class="flex items-center gap-2 mb-xs">
+<span class="material-symbols-outlined text-primary-container text-[20px]">timer</span>
+<span class="text-label-bold font-label-bold text-on-surface-variant uppercase tracking-wider">Avg prep time: 10 mins</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-yellow-500 text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-body-md font-bold text-on-surface">4.5</span>
+<span class="text-body-sm text-on-surface-variant">(200+ ratings)</span>
+</div>
+</div>
+<div class="bg-primary-container/20 px-3 py-1 rounded-full border border-primary-container/40">
+<span class="text-label-bold font-label-bold text-primary-container uppercase">Open Now</span>
+</div>
+</div>
+<p class="text-body-sm text-on-surface-variant leading-relaxed">Delicious campus classics, from steaming dosas to quick bites, prepared with stealth speed for students on the move.</p>
+</section>
+<!-- Category Tabs (Horizontal Scroll) -->
+<div class="sticky top-16 z-40 bg-background/95 backdrop-blur-sm -mx-margin-mobile px-margin-mobile py-4 mb-md scrollbar-hide overflow-x-auto flex gap-3">
+<button class="px-5 py-2.5 rounded-full bg-primary-container text-white font-label-bold whitespace-nowrap transition-all scale-100 active:scale-95 shadow-lg shadow-primary-container/20">All</button>
+<button class="px-5 py-2.5 rounded-full bg-surface-container text-on-surface-variant font-label-bold whitespace-nowrap transition-all border border-white/5 hover:bg-surface-variant">Breakfast</button>
+<button class="px-5 py-2.5 rounded-full bg-surface-container text-on-surface-variant font-label-bold whitespace-nowrap transition-all border border-white/5 hover:bg-surface-variant">Main Course</button>
+<button class="px-5 py-2.5 rounded-full bg-surface-container text-on-surface-variant font-label-bold whitespace-nowrap transition-all border border-white/5 hover:bg-surface-variant">Drinks</button>
+<button class="px-5 py-2.5 rounded-full bg-surface-container text-on-surface-variant font-label-bold whitespace-nowrap transition-all border border-white/5 hover:bg-surface-variant">Snacks</button>
+</div>
+<!-- Menu Items Grid (Bento Style Variation) -->
+<div class="grid grid-cols-1 gap-4">
+<!-- Item 1 -->
+<div class="group flex items-center gap-4 p-md rounded-xl bg-surface-container border border-outline-variant/30 active:bg-surface-variant transition-colors relative overflow-hidden">
+<div class="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-surface-container-highest ring-1 ring-white/5">
+<img alt="Masala Dosa" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDX6JyNsv-GTLYokghVcMG4VNdnMvHrdEd9DyeW-t_AFllfu7qCx30rL8PzN-y0SlV0-15qqMfZbrvmTdVmPocOmS1PCJH3-eGXeiU6vDmnLZCijXEQVAGrFmV8digQ8B0Hz8LxkckHhiqn7M20Ze999D6GutXz4OzwwQOTE1H--omqYYoQXal3JiCyirL2gEA3W4OQ7flcVTS0ihFHDd33zxdqgSjd5vGAHVrmuOE2dUjWqk3A8xUr"/>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-2 mb-1">
+<span class="w-3 h-3 border border-green-600 flex items-center justify-center p-0.5"><span class="w-1.5 h-1.5 rounded-full bg-green-600"></span></span>
+<h3 class="font-headline-md text-body-lg text-on-surface truncate">Masala Dosa</h3>
+</div>
+<p class="text-body-sm text-on-surface-variant line-clamp-2 mb-2">Crispy crepe filled with spiced potato mash, served with chutney.</p>
+<div class="flex justify-between items-center">
+<span class="text-headline-md text-primary-container">₹45</span>
+<button class="h-9 px-6 rounded-lg bg-primary-container text-white text-label-bold font-label-bold flex items-center gap-2 safety-orange-shadow active:scale-95 transition-all">
+              ADD
+              <span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="group flex items-center gap-4 p-md rounded-xl bg-surface-container border border-outline-variant/30 active:bg-surface-variant transition-colors relative overflow-hidden">
+<div class="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-surface-container-highest ring-1 ring-white/5">
+<img alt="Veg Burger" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZBzLTcW8jMglof_WJYCishy5utlKfXNXx-fTlOXX7hEvRNJPaSTWNOpM4cXPjrfaKLcIn9aUftSkcSNLIJna0JusFxXKpuaMNog2ErNm3n7wuG9OLaMZAZjnReZ8TFyk2AWt07t8jJOzUuy88-FvyMLC3In-UR1Lov7nFSKWvv8xONyeErA7Z3ex23x8c2voEdWYJBcWsb-Tj192p4EZc6477IIpd7g_C95TCG2ZOo505Ui8aXozl"/>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-2 mb-1">
+<span class="w-3 h-3 border border-green-600 flex items-center justify-center p-0.5"><span class="w-1.5 h-1.5 rounded-full bg-green-600"></span></span>
+<h3 class="font-headline-md text-body-lg text-on-surface truncate">Veg Burger</h3>
+</div>
+<p class="text-body-sm text-on-surface-variant line-clamp-2 mb-2">Signature campus burger with special herb mayo and fries.</p>
+<div class="flex justify-between items-center">
+<span class="text-headline-md text-primary-container">₹80</span>
+<button class="h-9 px-6 rounded-lg bg-primary-container text-white text-label-bold font-label-bold flex items-center gap-2 safety-orange-shadow active:scale-95 transition-all">
+              ADD
+              <span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="group flex items-center gap-4 p-md rounded-xl bg-surface-container border border-outline-variant/30 active:bg-surface-variant transition-colors relative overflow-hidden">
+<div class="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-surface-container-highest ring-1 ring-white/5">
+<img alt="Schezwan Rice" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdNpt1gEzH4qcAuM8yKr5JWRqEBS0xxyfmem88ZYAU5j_mcq-ew8Jl3v9qBq87RHvxNdHbu3fZ4db2Lk_rIyYz6ku2lSBfce48Cf_h5h6vkaJE0sB-de4ji7ucebmLhfCuG5nQtWIHFqdDsuJyUOEOCdmyILthk0xNMaezgkELTWHaqItC32mXgtPdJ4-1Y_wNf5oRaIExq5EruV9PMPLO4ODQ2KJTEk6g10z-nbladCnhJ_hsDjcK"/>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-2 mb-1">
+<span class="w-3 h-3 border border-green-600 flex items-center justify-center p-0.5"><span class="w-1.5 h-1.5 rounded-full bg-green-600"></span></span>
+<h3 class="font-headline-md text-body-lg text-on-surface truncate">Schezwan Rice</h3>
+</div>
+<p class="text-body-sm text-on-surface-variant line-clamp-2 mb-2">Spicy Indo-Chinese style rice with exotic veggies.</p>
+<div class="flex justify-between items-center">
+<span class="text-headline-md text-primary-container">₹110</span>
+<button class="h-9 px-6 rounded-lg bg-primary-container text-white text-label-bold font-label-bold flex items-center gap-2 safety-orange-shadow active:scale-95 transition-all">
+              ADD
+              <span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Item 4 (Drink) -->
+<div class="group flex items-center gap-4 p-md rounded-xl bg-surface-container border border-outline-variant/30 active:bg-surface-variant transition-colors relative overflow-hidden">
+<div class="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-surface-container-highest ring-1 ring-white/5">
+<img alt="Cold Coffee" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAhKOJWRDHE5pHgAsBGCCXoNBOmE7bJJmrnw4tTzLXCa7eCU6qN5513PNZsOOCcATIqrLB-Zx1zq5Bd21hKjVBKTiea0cPn0u8Cd67Ws_lYJbhnd4ZMf51Cxfg_c0chou_X1e4llEh8hKC0WYVfpsMyLWIUYN9es7uIOdkPymbMyUMNqgCdxH4CoWIP8rggBDHghe8mXFA2qCjAX-wbUziWKentmo04z7Z62IT5mVSwuWgKU1rh04aq"/>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-2 mb-1">
+<span class="w-3 h-3 border border-green-600 flex items-center justify-center p-0.5"><span class="w-1.5 h-1.5 rounded-full bg-green-600"></span></span>
+<h3 class="font-headline-md text-body-lg text-on-surface truncate">Cold Coffee</h3>
+</div>
+<p class="text-body-sm text-on-surface-variant line-clamp-2 mb-2">Chilled creamy coffee with a hint of dark chocolate.</p>
+<div class="flex justify-between items-center">
+<span class="text-headline-md text-primary-container">₹60</span>
+<button class="h-9 px-6 rounded-lg bg-primary-container text-white text-label-bold font-label-bold flex items-center gap-2 safety-orange-shadow active:scale-95 transition-all">
+              ADD
+              <span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Floating View Cart Bar -->
+<div class="fixed bottom-[88px] left-margin-mobile right-margin-mobile z-[60] animate-bounce-in">
+<button class="w-full h-14 bg-primary-container rounded-xl flex items-center justify-between px-lg safety-orange-shadow active:scale-[0.98] transition-transform">
+<div class="flex items-center gap-3 text-white">
+<span class="material-symbols-outlined font-bold">shopping_bag</span>
+<div class="text-left">
+<p class="text-label-bold font-label-bold leading-tight uppercase">1 item</p>
+<p class="font-headline-md text-body-md leading-tight">The Main Canteen</p>
+</div>
+</div>
+<div class="flex items-center gap-2 text-white">
+<span class="font-headline-md text-headline-md">₹45</span>
+<span class="material-symbols-outlined">arrow_forward_ios</span>
+</div>
+</button>
+</div>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 w-full glass-nav bg-surface-container/90 z-50 flex justify-around items-center px-4 py-3 pb-safe rounded-t-2xl border-t border-white/10 shadow-2xl">
+<a class="flex flex-col items-center justify-center text-primary-container bg-primary-container/10 rounded-xl px-3 py-1 scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="text-label-bold font-label-bold">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="text-label-bold font-label-bold">Orders</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="text-label-bold font-label-bold">Wallet</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="text-label-bold font-label-bold">Profile</span>
+</a>
+</nav>
+<script>
+    // Micro-interactions for category selection
+    const categoryButtons = document.querySelectorAll('.scrollbar-hide button');
+    categoryButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        categoryButtons.forEach(b => {
+          b.classList.remove('bg-primary-container', 'text-white', 'shadow-lg', 'shadow-primary-container/20');
+          b.classList.add('bg-surface-container', 'text-on-surface-variant');
+        });
+        btn.classList.add('bg-primary-container', 'text-white', 'shadow-lg', 'shadow-primary-container/20');
+        btn.classList.remove('bg-surface-container', 'text-on-surface-variant');
+      });
+    });
+
+    // Simple scroll animation for header shadow
+    window.addEventListener('scroll', () => {
+      const header = document.querySelector('header');
+      if (window.scrollY > 10) {
+        header.classList.add('shadow-xl', 'bg-background/95', 'backdrop-blur-md', 'border-b', 'border-white/5');
+      } else {
+        header.classList.remove('shadow-xl', 'bg-background/95', 'backdrop-blur-md', 'border-b', 'border-white/5');
+      }
+    });
+  </script>
+</body></html>

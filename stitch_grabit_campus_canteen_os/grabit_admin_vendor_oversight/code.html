@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vendor Oversight | GrabIt Console</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Sora:wght@400;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&family=Sora:wght@100..900&display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .fill-icon {
+            font-variation-settings: 'FILL' 1;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #12131a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #33343c;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff6d00;
+        }
+        .kinetic-card {
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .kinetic-card:active {
+            transform: scale(0.98);
+        }
+        .glass-nav {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed-dim": "#c8c6c5",
+                    "on-error": "#690005",
+                    "on-secondary-container": "#bab8b7",
+                    "primary-fixed-dim": "#ffb692",
+                    "secondary": "#c8c6c5",
+                    "on-primary": "#562000",
+                    "background": "#12131a",
+                    "surface-container-low": "#1a1b22",
+                    "inverse-on-surface": "#2f3037",
+                    "surface-variant": "#33343c",
+                    "surface-container": "#1e1f26",
+                    "tertiary-container": "#9b9999",
+                    "on-tertiary": "#303030",
+                    "surface-tint": "#ffb692",
+                    "on-error-container": "#ffdad6",
+                    "on-secondary": "#313030",
+                    "on-secondary-fixed-variant": "#474646",
+                    "surface-container-lowest": "#0c0e14",
+                    "primary-fixed": "#ffdbcb",
+                    "primary-container": "#ff6d00",
+                    "outline-variant": "#594136",
+                    "inverse-surface": "#e2e1eb",
+                    "on-tertiary-fixed-variant": "#474746",
+                    "on-secondary-fixed": "#1c1b1b",
+                    "error": "#ffb4ab",
+                    "on-tertiary-container": "#323131",
+                    "inverse-primary": "#9f4200",
+                    "on-tertiary-fixed": "#1b1b1c",
+                    "surface-container-highest": "#33343c",
+                    "secondary-fixed-dim": "#c8c6c5",
+                    "on-surface-variant": "#e2bfb0",
+                    "on-primary-container": "#582100",
+                    "secondary-fixed": "#e5e2e1",
+                    "on-primary-fixed": "#341100",
+                    "surface-bright": "#383940",
+                    "on-surface": "#e2e1eb",
+                    "on-background": "#e2e1eb",
+                    "on-primary-fixed-variant": "#7a3000",
+                    "surface-container-high": "#282a31",
+                    "tertiary": "#c8c6c5",
+                    "outline": "#a98a7c",
+                    "surface-dim": "#12131a",
+                    "surface": "#12131a",
+                    "secondary-container": "#4a4949",
+                    "error-container": "#93000a",
+                    "primary": "#ffb692",
+                    "tertiary-fixed": "#e5e2e1"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "margin-mobile": "20px",
+                    "xl": "40px",
+                    "unit": "4px",
+                    "md": "16px",
+                    "gutter": "16px",
+                    "lg": "24px",
+                    "margin-desktop": "64px",
+                    "sm": "8px"
+            },
+            "fontFamily": {
+                    "headline-xl": ["Montserrat"],
+                    "headline-md": ["Montserrat"],
+                    "body-sm": ["Sora"],
+                    "headline-lg": ["Montserrat"],
+                    "body-md": ["Sora"],
+                    "label-bold": ["Sora"],
+                    "body-lg": ["Sora"],
+                    "headline-lg-mobile": ["Montserrat"]
+            },
+            "fontSize": {
+                    "headline-xl": ["40px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "label-bold": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "1.2", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md overflow-x-hidden">
+<!-- SIDE NAVIGATION SHELL -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant flex flex-col h-full p-md z-[60]">
+<div class="mb-lg">
+<h1 class="font-headline-md text-headline-md text-primary font-extrabold tracking-tight">GrabIt Admin</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant/70">System Root</p>
+</div>
+<nav class="flex-1 space-y-sm">
+<!-- Dashboard -->
+<a class="flex items-center gap-md p-sm text-on-surface-variant font-body-sm hover:bg-surface-variant/50 transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">dashboard</span>
+<span>Dashboard</span>
+</a>
+<!-- Campuses -->
+<a class="flex items-center gap-md p-sm text-on-surface-variant font-body-sm hover:bg-surface-variant/50 transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">school</span>
+<span>Campuses</span>
+</a>
+<!-- Vendors - ACTIVE -->
+<a class="flex items-center gap-md p-sm text-primary font-label-bold bg-primary-container/10 rounded-lg group" href="#">
+<span class="material-symbols-outlined fill-icon">storefront</span>
+<span>Vendors</span>
+</a>
+<!-- Logistics -->
+<a class="flex items-center gap-md p-sm text-on-surface-variant font-body-sm hover:bg-surface-variant/50 transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">local_shipping</span>
+<span>Logistics</span>
+</a>
+<!-- Health -->
+<a class="flex items-center gap-md p-sm text-on-surface-variant font-body-sm hover:bg-surface-variant/50 transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">monitor_heart</span>
+<span>Health</span>
+</a>
+<!-- Settings -->
+<a class="flex items-center gap-md p-sm text-on-surface-variant font-body-sm hover:bg-surface-variant/50 transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="mt-auto pt-lg border-t border-outline-variant/30">
+<div class="flex items-center gap-sm mb-md">
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-container">
+<img class="w-full h-full object-cover" data-alt="A cinematic, high-contrast portrait of a tech-savvy Indian administrator in a dark, neon-lit campus control room. The lighting is dominated by safety orange and deep gunmetal tones, reflecting a kinetic stealth aesthetic. The user's expression is focused and professional, perfectly fitting the Gen-Z campus food delivery ecosystem." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDp0UC7dpD4OUKonC4W287WPg0Gnic80gYNaQUlT5JeKVdN9Qi2mZGcvFp3hdZ05VTrWmjRr-Twvu8fFinGwpcdg0gPV1peTnf5OPY7ytoGnVZ1f_q1Op19HPKnEO3X1GvKha2kWOQqpSRkpPyRjGByLCeqU7qcar10tg5xTuhvKY_nuw8tk-fA7oJzUcBXhBRktsp1XTnf94v1SNBiI-7XR0F0i1Y6PtSMwdTnJwHi4QisCMfCh7_R"/>
+</div>
+<div>
+<p class="font-label-bold text-on-surface">Admin User</p>
+<p class="text-[10px] text-on-surface-variant">Profile Settings</p>
+</div>
+</div>
+<button class="w-full py-sm bg-primary-container text-on-primary-container font-label-bold rounded-lg kinetic-card">
+                Global Report
+            </button>
+</div>
+</aside>
+<!-- MAIN CONTENT WRAPPER -->
+<main class="ml-64 min-h-screen relative">
+<!-- TOP NAV BAR -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant flex justify-between items-center h-16 px-lg">
+<div class="flex items-center gap-md">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="bg-surface-container-low border-none rounded-full pl-10 pr-lg py-xs text-body-sm w-64 focus:ring-1 focus:ring-primary-container transition-all" placeholder="Search vendors, campus..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-lg">
+<div class="flex gap-md">
+<button class="text-on-surface-variant hover:text-primary transition-all scale-98 active:scale-95 duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-all scale-98 active:scale-95 duration-200">
+<span class="material-symbols-outlined">help</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-all scale-98 active:scale-95 duration-200">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+<div class="h-6 w-[1px] bg-outline-variant"></div>
+<span class="font-headline-md text-primary font-black">GrabIt Console</span>
+</div>
+</header>
+<!-- CANVAS AREA -->
+<div class="pt-24 px-lg pb-xl max-w-7xl mx-auto">
+<!-- HEADER SECTION -->
+<section class="flex flex-col md:flex-row md:items-end justify-between gap-lg mb-xl">
+<div>
+<h2 class="font-headline-xl text-headline-xl text-on-surface mb-xs">Vendor Oversight</h2>
+<p class="text-on-surface-variant font-body-md max-w-xl">Manage commission structures, platform fee tiers, and verify vendor menu updates across all active campus locations.</p>
+</div>
+<div class="flex gap-md">
+<div class="bg-surface-container p-md rounded-xl border border-outline-variant/30 flex flex-col min-w-[140px]">
+<span class="text-[10px] uppercase tracking-widest text-on-surface-variant mb-xs">Platform Fee Avg</span>
+<span class="text-headline-md text-primary-container">₹3.80</span>
+</div>
+<div class="bg-surface-container p-md rounded-xl border border-outline-variant/30 flex flex-col min-w-[140px]">
+<span class="text-[10px] uppercase tracking-widest text-on-surface-variant mb-xs">Pending Reviews</span>
+<span class="text-headline-md text-error">12</span>
+</div>
+</div>
+</section>
+<!-- ASYMMETRIC GRID LAYOUT -->
+<div class="grid grid-cols-12 gap-lg items-start">
+<!-- VENDOR LISTING - LEFT COL (8 COLS) -->
+<div class="col-span-12 lg:col-span-8 space-y-xl">
+<!-- CAMPUS GROUP: NORTH CAMPUS -->
+<div class="space-y-md">
+<div class="flex items-center gap-md border-b border-outline-variant pb-xs">
+<span class="material-symbols-outlined text-primary-container">location_on</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">North Campus HUB</h3>
+<span class="text-body-sm text-on-surface-variant ml-auto">4 Active Vendors</span>
+</div>
+<div class="grid grid-cols-1 gap-md">
+<!-- Vendor Card 1 -->
+<div class="bg-surface-container-high rounded-xl p-lg border border-outline-variant/20 flex items-center gap-lg hover:border-primary-container/50 transition-all group kinetic-card">
+<div class="w-16 h-16 rounded-lg bg-surface-variant flex-shrink-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-headline-md text-primary-container">fastfood</span>
+</div>
+<div class="flex-1">
+<h4 class="font-headline-md text-on-surface text-body-lg">Street Bites Express</h4>
+<p class="text-body-sm text-on-surface-variant">Fast Food & Snacks</p>
+</div>
+<div class="flex flex-col items-end gap-sm">
+<div class="flex items-center gap-xs">
+<span class="text-xs text-on-surface-variant">Comm:</span>
+<input class="w-12 bg-background border border-outline-variant rounded px-1 py-xs text-xs text-center text-primary-container focus:ring-1 focus:ring-primary font-bold" type="text" value="7%"/>
+</div>
+<div class="flex items-center gap-sm">
+<span class="text-xs text-on-surface-variant">Tier:</span>
+<div class="flex bg-background p-1 rounded-full border border-outline-variant">
+<button class="px-3 py-1 rounded-full text-[10px] font-bold bg-primary-container text-on-primary-container">STD</button>
+<button class="px-3 py-1 rounded-full text-[10px] font-bold text-on-surface-variant hover:text-on-surface">PREM</button>
+</div>
+</div>
+</div>
+<div class="h-10 w-[1px] bg-outline-variant/30"></div>
+<button class="text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<!-- Vendor Card 2 -->
+<div class="bg-surface-container-high rounded-xl p-lg border border-outline-variant/20 flex items-center gap-lg hover:border-primary-container/50 transition-all group kinetic-card">
+<div class="w-16 h-16 rounded-lg bg-surface-variant flex-shrink-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-headline-md text-primary-container">coffee</span>
+</div>
+<div class="flex-1">
+<h4 class="font-headline-md text-on-surface text-body-lg">The Caffeine Lab</h4>
+<p class="text-body-sm text-on-surface-variant">Beverages & Pastries</p>
+</div>
+<div class="flex flex-col items-end gap-sm">
+<div class="flex items-center gap-xs">
+<span class="text-xs text-on-surface-variant">Comm:</span>
+<input class="w-12 bg-background border border-outline-variant rounded px-1 py-xs text-xs text-center text-primary-container focus:ring-1 focus:ring-primary font-bold" type="text" value="5%"/>
+</div>
+<div class="flex items-center gap-sm">
+<span class="text-xs text-on-surface-variant">Tier:</span>
+<div class="flex bg-background p-1 rounded-full border border-outline-variant">
+<button class="px-3 py-1 rounded-full text-[10px] font-bold text-on-surface-variant">STD</button>
+<button class="px-3 py-1 rounded-full text-[10px] font-bold bg-primary-container text-on-primary-container">PREM</button>
+</div>
+</div>
+</div>
+<div class="h-10 w-[1px] bg-outline-variant/30"></div>
+<button class="text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+<!-- CAMPUS GROUP: SOUTH QUAD -->
+<div class="space-y-md">
+<div class="flex items-center gap-md border-b border-outline-variant pb-xs">
+<span class="material-symbols-outlined text-primary-container">map</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">South Quad Dining</h3>
+<span class="text-body-sm text-on-surface-variant ml-auto">2 Active Vendors</span>
+</div>
+<div class="grid grid-cols-1 gap-md">
+<!-- Vendor Card 3 -->
+<div class="bg-surface-container-high rounded-xl p-lg border border-outline-variant/20 flex items-center gap-lg hover:border-primary-container/50 transition-all group kinetic-card">
+<div class="w-16 h-16 rounded-lg bg-surface-variant flex-shrink-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-headline-md text-primary-container">ramen_dining</span>
+</div>
+<div class="flex-1">
+<h4 class="font-headline-md text-on-surface text-body-lg">Wok N Roll</h4>
+<p class="text-body-sm text-on-surface-variant">Pan-Asian Cuisine</p>
+</div>
+<div class="flex flex-col items-end gap-sm">
+<div class="flex items-center gap-xs">
+<span class="text-xs text-on-surface-variant">Comm:</span>
+<input class="w-12 bg-background border border-outline-variant rounded px-1 py-xs text-xs text-center text-primary-container focus:ring-1 focus:ring-primary font-bold" type="text" value="8%"/>
+</div>
+<div class="flex items-center gap-sm">
+<span class="text-xs text-on-surface-variant">Tier:</span>
+<div class="flex bg-background p-1 rounded-full border border-outline-variant">
+<button class="px-3 py-1 rounded-full text-[10px] font-bold bg-primary-container text-on-primary-container">STD</button>
+<button class="px-3 py-1 rounded-full text-[10px] font-bold text-on-surface-variant">PREM</button>
+</div>
+</div>
+</div>
+<div class="h-10 w-[1px] bg-outline-variant/30"></div>
+<button class="text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- APPROVAL QUEUE - RIGHT COL (4 COLS) -->
+<div class="col-span-12 lg:col-span-4 sticky top-24">
+<div class="bg-surface-container rounded-2xl border border-outline-variant overflow-hidden shadow-2xl">
+<div class="bg-surface-container-high p-lg flex justify-between items-center border-b border-outline-variant">
+<div>
+<h3 class="font-headline-md text-on-surface text-body-lg">Approval Queue</h3>
+<p class="text-[10px] uppercase tracking-widest text-primary-container font-bold">12 Pending Verifications</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant">history_edu</span>
+</div>
+<div class="p-md space-y-md max-h-[600px] overflow-y-auto">
+<!-- Request Item 1 -->
+<div class="bg-background rounded-xl p-md border border-outline-variant/20 space-y-md group hover:bg-surface-variant/10 transition-colors">
+<div class="flex items-start justify-between">
+<div class="flex gap-sm items-center">
+<div class="w-8 h-8 rounded-full bg-primary-container/20 flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-sm">restaurant_menu</span>
+</div>
+<div>
+<p class="text-body-sm font-label-bold text-on-surface">Curry Leaf</p>
+<p class="text-[10px] text-on-surface-variant">Menu Update • 2h ago</p>
+</div>
+</div>
+<span class="bg-primary-container/20 text-primary-container px-2 py-0.5 rounded text-[10px] font-bold">PRICE INC</span>
+</div>
+<div class="bg-surface-container-lowest p-sm rounded-lg text-xs space-y-xs font-body-sm text-on-surface-variant">
+<div class="flex justify-between">
+<span>Paneer Tikka</span>
+<span class="text-on-surface">₹120 → <span class="text-primary">₹145</span></span>
+</div>
+<div class="flex justify-between">
+<span>Butter Naan</span>
+<span class="text-on-surface">₹35 → <span class="text-primary">₹45</span></span>
+</div>
+</div>
+<div class="flex gap-sm">
+<button class="flex-1 py-xs bg-primary-container text-on-primary-container text-[11px] font-bold rounded hover:brightness-110 transition-all">APPROVE</button>
+<button class="px-3 py-xs border border-outline text-on-surface text-[11px] font-bold rounded hover:bg-error/10 hover:text-error transition-all">REJECT</button>
+</div>
+</div>
+<!-- Request Item 2 -->
+<div class="bg-background rounded-xl p-md border border-outline-variant/20 space-y-md group hover:bg-surface-variant/10 transition-colors">
+<div class="flex items-start justify-between">
+<div class="flex gap-sm items-center">
+<div class="w-8 h-8 rounded-full bg-primary-container/20 flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-sm">add_circle</span>
+</div>
+<div>
+<p class="text-body-sm font-label-bold text-on-surface">The Caffeine Lab</p>
+<p class="text-[10px] text-on-surface-variant">New Category • 5h ago</p>
+</div>
+</div>
+<span class="bg-tertiary-container/20 text-on-surface-variant px-2 py-0.5 rounded text-[10px] font-bold">CONTENT</span>
+</div>
+<p class="text-xs text-on-surface-variant leading-relaxed">Requested to add 'Artisanal Cold Brews' category with 4 new SKUs and custom descriptions.</p>
+<div class="flex gap-sm">
+<button class="flex-1 py-xs bg-primary-container text-on-primary-container text-[11px] font-bold rounded hover:brightness-110 transition-all">APPROVE</button>
+<button class="px-3 py-xs border border-outline text-on-surface text-[11px] font-bold rounded hover:bg-error/10 hover:text-error transition-all">REJECT</button>
+</div>
+</div>
+<!-- Request Item 3 -->
+<div class="bg-background rounded-xl p-md border border-outline-variant/20 space-y-md group hover:bg-surface-variant/10 transition-colors">
+<div class="flex items-start justify-between">
+<div class="flex gap-sm items-center">
+<div class="w-8 h-8 rounded-full bg-primary-container/20 flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-sm">block</span>
+</div>
+<div>
+<p class="text-body-sm font-label-bold text-on-surface">Street Bites</p>
+<p class="text-[10px] text-on-surface-variant">Inventory • 8h ago</p>
+</div>
+</div>
+<span class="bg-error-container/40 text-error px-2 py-0.5 rounded text-[10px] font-bold">URGENT</span>
+</div>
+<p class="text-xs text-on-surface-variant leading-relaxed">Emergency delisting of 'Monsoon Special Pakodas' due to ingredient shortage.</p>
+<div class="flex gap-sm">
+<button class="flex-1 py-xs bg-primary-container text-on-primary-container text-[11px] font-bold rounded hover:brightness-110 transition-all">APPROVE</button>
+<button class="px-3 py-xs border border-outline text-on-surface text-[11px] font-bold rounded hover:bg-error/10 hover:text-error transition-all">REJECT</button>
+</div>
+</div>
+</div>
+<div class="p-md bg-surface-container-high border-t border-outline-variant">
+<button class="w-full py-sm border border-primary-container text-primary-container font-label-bold rounded-lg hover:bg-primary-container/10 transition-all">
+                                View Detailed History
+                            </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- FAB for Global Actions -->
+<button class="fixed bottom-lg right-lg w-14 h-14 bg-primary-container text-on-primary-container rounded-full shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-[100] kinetic-card">
+<span class="material-symbols-outlined text-headline-md fill-icon">add</span>
+</button>
+<script>
+        // Simple Interaction logic for Commission toggles and scale effects
+        document.querySelectorAll('.kinetic-card').forEach(card => {
+            card.addEventListener('mousedown', () => {
+                card.classList.add('scale-95');
+            });
+            card.addEventListener('mouseup', () => {
+                card.classList.remove('scale-95');
+            });
+            card.addEventListener('mouseleave', () => {
+                card.classList.remove('scale-95');
+            });
+        });
+
+        // Toggle Platform Fees Logic
+        document.querySelectorAll('.flex.bg-background button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const parent = this.parentElement;
+                parent.querySelectorAll('button').forEach(b => {
+                    b.classList.remove('bg-primary-container', 'text-on-primary-container');
+                    b.classList.add('text-on-surface-variant');
+                });
+                this.classList.add('bg-primary-container', 'text-on-primary-container');
+                this.classList.remove('text-on-surface-variant');
+            });
+        });
+    </script>
+</body></html>

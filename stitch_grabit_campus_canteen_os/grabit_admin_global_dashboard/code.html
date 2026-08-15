@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GrabIt Admin | Performance Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&amp;family=Sora:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed-dim": "#c8c6c5",
+                    "on-error": "#690005",
+                    "on-secondary-container": "#bab8b7",
+                    "primary-fixed-dim": "#ffb692",
+                    "secondary": "#c8c6c5",
+                    "on-primary": "#562000",
+                    "background": "#12131a",
+                    "surface-container-low": "#1a1b22",
+                    "inverse-on-surface": "#2f3037",
+                    "surface-variant": "#33343c",
+                    "surface-container": "#1e1f26",
+                    "tertiary-container": "#9b9999",
+                    "on-tertiary": "#303030",
+                    "surface-tint": "#ffb692",
+                    "on-error-container": "#ffdad6",
+                    "on-secondary": "#313030",
+                    "on-secondary-fixed-variant": "#474646",
+                    "surface-container-lowest": "#0c0e14",
+                    "primary-fixed": "#ffdbcb",
+                    "primary-container": "#ff6d00",
+                    "outline-variant": "#594136",
+                    "inverse-surface": "#e2e1eb",
+                    "on-tertiary-fixed-variant": "#474746",
+                    "on-secondary-fixed": "#1c1b1b",
+                    "error": "#ffb4ab",
+                    "on-tertiary-container": "#323131",
+                    "inverse-primary": "#9f4200",
+                    "on-tertiary-fixed": "#1b1b1c",
+                    "surface-container-highest": "#33343c",
+                    "secondary-fixed-dim": "#c8c6c5",
+                    "on-surface-variant": "#e2bfb0",
+                    "on-primary-container": "#582100",
+                    "secondary-fixed": "#e5e2e1",
+                    "on-primary-fixed": "#341100",
+                    "surface-bright": "#383940",
+                    "on-surface": "#e2e1eb",
+                    "on-background": "#e2e1eb",
+                    "on-primary-fixed-variant": "#7a3000",
+                    "surface-container-high": "#282a31",
+                    "tertiary": "#c8c6c5",
+                    "outline": "#a98a7c",
+                    "surface-dim": "#12131a",
+                    "surface": "#12131a",
+                    "secondary-container": "#4a4949",
+                    "error-container": "#93000a",
+                    "primary": "#ffb692",
+                    "tertiary-fixed": "#e5e2e1"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "margin-mobile": "20px",
+                    "xl": "40px",
+                    "unit": "4px",
+                    "md": "16px",
+                    "gutter": "16px",
+                    "lg": "24px",
+                    "margin-desktop": "64px",
+                    "sm": "8px"
+            },
+            "fontFamily": {
+                    "headline-xl": ["Montserrat"],
+                    "headline-md": ["Montserrat"],
+                    "body-sm": ["Sora"],
+                    "headline-lg": ["Montserrat"],
+                    "body-md": ["Sora"],
+                    "label-bold": ["Sora"],
+                    "body-lg": ["Sora"],
+                    "headline-lg-mobile": ["Montserrat"]
+            },
+            "fontSize": {
+                    "headline-xl": ["40px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+                    "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "700" }],
+                    "body-sm": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                    "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                    "body-md": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                    "label-bold": ["12px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                    "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                    "headline-lg-mobile": ["28px", { "lineHeight": "1.2", "fontWeight": "700" }]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #12131a; /* Pure Dark Background */
+            color: #e2e1eb;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .kinetic-border {
+            position: relative;
+        }
+        .kinetic-border::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0%;
+            height: 2px;
+            background-color: #ff6d00;
+            transition: width 0.3s ease;
+        }
+        .kinetic-border:hover::after {
+            width: 100%;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a1b22;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #33343c;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff6d00;
+        }
+        .chart-glow {
+            filter: drop-shadow(0 0 10px rgba(255, 109, 0, 0.3));
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md overflow-x-hidden">
+<!-- Side Navigation Anchor -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant flex flex-col p-md z-50">
+<div class="mb-xl px-sm">
+<h1 class="font-headline-md text-headline-md text-primary font-extrabold tracking-tight">GrabIt Admin</h1>
+<p class="text-on-surface-variant text-xs opacity-60">System Root</p>
+</div>
+<nav class="flex-grow space-y-sm">
+<!-- Active Tab: Dashboard -->
+<a class="flex items-center gap-md p-md text-primary font-label-bold bg-primary-container/10 rounded-lg transition-all scale-98 active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-md p-md text-on-surface-variant font-body-sm hover:bg-surface-variant/50 transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">school</span>
+<span>Campuses</span>
+</a>
+<a class="flex items-center gap-md p-md text-on-surface-variant font-body-sm hover:bg-surface-variant/50 transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">storefront</span>
+<span>Vendors</span>
+</a>
+<a class="flex items-center gap-md p-md text-on-surface-variant font-body-sm hover:bg-surface-variant/50 transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">local_shipping</span>
+<span>Logistics</span>
+</a>
+<a class="flex items-center gap-md p-md text-on-surface-variant font-body-sm hover:bg-surface-variant/50 transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">monitor_heart</span>
+<span>Health</span>
+</a>
+<a class="flex items-center gap-md p-md text-on-surface-variant font-body-sm hover:bg-surface-variant/50 transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="mt-auto space-y-md">
+<button class="w-full bg-primary-container text-on-primary-container font-label-bold py-md rounded-lg flex items-center justify-center gap-sm hover:brightness-110 transition-all active:scale-95">
+<span class="material-symbols-outlined text-sm">analytics</span>
+                Global Report
+            </button>
+<div class="flex items-center gap-md p-sm bg-surface-variant/20 rounded-xl border border-outline-variant/30">
+<div class="w-10 h-10 rounded-full overflow-hidden border border-primary/40">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a high-tech system administrator in a dark studio. The lighting is dominated by safety orange rim lights reflecting off futuristic glasses, creating a sharp Gen-Z aesthetic. The background is a deep charcoal grey with subtle bokeh from server lights, conveying authority and technical precision." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkOqdSk6jUMqkN1bHTNB07WvYPuP7H5H-uxtrQDeubcvIoVqfi1liwWixbPaTEH7Gi-O6RXSEe3itTgB4P7wed98CqwYQa_vDrdcXGvTLR-1gYD6hbiSKAT5HEbl3VQKLG79VLaaBOSFQq52h8-f1WuvDEe2uGA3zmD0Cvm0fod60gXdXSq9veCgN0cuc5eLcQsCqRlEzt1L3YLXe6halwEsCj5HBigIGDqrGIUlz2Of02J_dXzrJQ"/>
+</div>
+<div>
+<p class="text-on-surface font-label-bold text-[11px]">ADMIN_ROOT</p>
+<p class="text-on-surface-variant text-[10px]">Session: 4h 12m</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Top Bar Anchor -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 px-lg bg-background/80 backdrop-blur-md flex justify-between items-center border-b border-outline-variant z-40">
+<div class="flex items-center gap-lg flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full pl-10 pr-4 py-2 text-sm focus:ring-1 focus:ring-primary-container transition-all" placeholder="Search campus, transaction, or log..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-lg">
+<button class="relative hover:text-primary transition-all">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute -top-1 -right-1 w-2 h-2 bg-primary-container rounded-full"></span>
+</button>
+<button class="hover:text-primary transition-all">
+<span class="material-symbols-outlined">help</span>
+</button>
+<button class="hover:text-primary transition-all">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-64 pt-24 px-lg pb-xl min-h-screen space-y-lg">
+<!-- Animated Background Element -->
+<div class="fixed inset-0 pointer-events-none opacity-20 z-0 overflow-hidden">
+
+</div>
+<div class="relative z-10 space-y-lg">
+<!-- Header Section -->
+<div class="flex justify-between items-end">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">System Overview</h2>
+<p class="text-on-surface-variant">Real-time performance across the global campus network.</p>
+</div>
+<div class="flex gap-sm">
+<button class="px-md py-sm bg-surface-container-high rounded-lg text-xs font-label-bold flex items-center gap-xs hover:bg-surface-variant transition-colors border border-outline-variant">
+<span class="material-symbols-outlined text-sm">calendar_today</span>
+                        LAST 24 HOURS
+                    </button>
+<button class="px-md py-sm bg-primary-container text-on-primary-container rounded-lg text-xs font-label-bold flex items-center gap-xs hover:brightness-110 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-sm">refresh</span>
+                        FORCE REFRESH
+                    </button>
+</div>
+</div>
+<!-- KPI Grid -->
+<section class="grid grid-cols-1 md:grid-cols-4 gap-lg">
+<!-- Total GMV -->
+<div class="bg-surface-container-low p-lg rounded-xl border border-outline-variant group hover:border-primary-container/40 transition-all duration-300">
+<div class="flex justify-between items-start mb-md">
+<div class="p-sm bg-primary-container/10 rounded-lg text-primary-container">
+<span class="material-symbols-outlined">payments</span>
+</div>
+<span class="text-primary text-xs font-label-bold bg-primary/10 px-xs py-[2px] rounded">+12.4%</span>
+</div>
+<p class="text-on-surface-variant text-xs font-label-bold mb-xs uppercase tracking-widest">Total GMV</p>
+<h3 class="font-headline-md text-headline-md text-on-surface">$1,420,892</h3>
+<div class="mt-md h-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary-container w-[70%]" id="gmv-progress"></div>
+</div>
+</div>
+<!-- Active Campuses -->
+<div class="bg-surface-container-low p-lg rounded-xl border border-outline-variant group hover:border-primary-container/40 transition-all duration-300">
+<div class="flex justify-between items-start mb-md">
+<div class="p-sm bg-secondary-container/10 rounded-lg text-secondary">
+<span class="material-symbols-outlined">map</span>
+</div>
+<span class="text-secondary text-xs font-label-bold bg-secondary/10 px-xs py-[2px] rounded">Live</span>
+</div>
+<p class="text-on-surface-variant text-xs font-label-bold mb-xs uppercase tracking-widest">Active Campuses</p>
+<h3 class="font-headline-md text-headline-md text-on-surface">142</h3>
+<div class="mt-md flex -space-x-2">
+<div class="w-6 h-6 rounded-full border border-surface bg-primary-container flex items-center justify-center text-[8px] font-bold">UC</div>
+<div class="w-6 h-6 rounded-full border border-surface bg-secondary-container flex items-center justify-center text-[8px] font-bold">NYU</div>
+<div class="w-6 h-6 rounded-full border border-surface bg-surface-variant flex items-center justify-center text-[8px] font-bold">MIT</div>
+<div class="w-6 h-6 rounded-full border border-surface bg-on-surface-variant/20 flex items-center justify-center text-[8px]">+139</div>
+</div>
+</div>
+<!-- Active Students -->
+<div class="bg-surface-container-low p-lg rounded-xl border border-outline-variant group hover:border-primary-container/40 transition-all duration-300">
+<div class="flex justify-between items-start mb-md">
+<div class="p-sm bg-primary-container/10 rounded-lg text-primary-container">
+<span class="material-symbols-outlined">groups</span>
+</div>
+<span class="text-primary text-xs font-label-bold bg-primary/10 px-xs py-[2px] rounded">+2.1k</span>
+</div>
+<p class="text-on-surface-variant text-xs font-label-bold mb-xs uppercase tracking-widest">Active Students</p>
+<h3 class="font-headline-md text-headline-md text-on-surface">54,302</h3>
+<p class="text-[10px] text-on-surface-variant mt-md">84% of total student body</p>
+</div>
+<!-- Platform Commission -->
+<div class="bg-surface-container-low p-lg rounded-xl border border-outline-variant group hover:border-primary-container/40 transition-all duration-300">
+<div class="flex justify-between items-start mb-md">
+<div class="p-sm bg-primary-container/10 rounded-lg text-primary-container">
+<span class="material-symbols-outlined">receipt_long</span>
+</div>
+<span class="text-primary text-xs font-label-bold bg-primary/10 px-xs py-[2px] rounded">Stable</span>
+</div>
+<p class="text-on-surface-variant text-xs font-label-bold mb-xs uppercase tracking-widest">Platform Comm.</p>
+<h3 class="font-headline-md text-headline-md text-on-surface">15.2%</h3>
+<p class="text-[10px] text-on-surface-variant mt-md">Net Revenue: $215.9k</p>
+</div>
+</section>
+<!-- Middle Section: Bento Layout -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-lg h-auto lg:h-[500px]">
+<!-- Campus Health Map (Visual Placeholder with details) -->
+<div class="lg:col-span-8 bg-surface-container-low rounded-xl border border-outline-variant overflow-hidden relative group">
+<div class="absolute top-4 left-4 z-10 flex items-center gap-sm">
+<h4 class="bg-background/60 backdrop-blur-md px-md py-sm rounded-lg text-xs font-label-bold border border-outline-variant">LIVE CAMPUS HEALTH</h4>
+<div class="flex items-center gap-xs bg-background/60 backdrop-blur-md px-md py-sm rounded-lg border border-outline-variant">
+<span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+<span class="text-[10px] font-label-bold">98 SITES OPTIMAL</span>
+</div>
+</div>
+<div class="w-full h-full opacity-60 group-hover:opacity-100 transition-opacity duration-700 bg-cover bg-center" data-alt="A futuristic dark-mode digital map display on a screen showing a stylized top-down view of multiple urban campus locations. Glowing orange points represent order density, while subtle data lines connect campus clusters. The aesthetic is clean, technological, and high-contrast, reminiscent of a command center dashboard in a cyberpunk setting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA8g_BMfIpEGKbhq0fRZBglXFJclQ4N4Bhe57yvmxoCa2uZNyC3qfOClLS21ooT25LX6ILBXBO05Y_45Uo3fjBIlZPH-TaU7WU9SIhPeoL65VpTApVlODb9HShliPnWaBkItZVILDysMgosFuXbm85rb6zzbP33PR9g-RYY2TR2P9dI498sMunxPUE9_GlUO9IMdeTkab0d7HkLoLNORVcm2pm9_ZqMV2KPD_W4G-ZfQLq7BJtTyI6D')"></div>
+<!-- Overlay Overlay: List View for Mobile/Tablets -->
+<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background to-transparent p-lg flex items-end justify-between">
+<div class="flex gap-lg">
+<div class="text-center">
+<p class="text-[10px] text-on-surface-variant font-label-bold">NORTH</p>
+<p class="text-md font-bold text-primary">8.2k vol</p>
+</div>
+<div class="text-center border-l border-outline-variant pl-lg">
+<p class="text-[10px] text-on-surface-variant font-label-bold">WEST</p>
+<p class="text-md font-bold text-on-surface">5.4k vol</p>
+</div>
+<div class="text-center border-l border-outline-variant pl-lg">
+<p class="text-[10px] text-on-surface-variant font-label-bold">SOUTH</p>
+<p class="text-md font-bold text-on-surface">12.1k vol</p>
+</div>
+</div>
+<button class="bg-primary-container text-on-primary-container px-md py-sm rounded-lg text-xs font-label-bold">EXPAND MAP</button>
+</div>
+</div>
+<!-- Monthly Growth Chart (Asymmetric Card) -->
+<div class="lg:col-span-4 flex flex-col gap-lg">
+<div class="flex-1 bg-surface-container p-lg rounded-xl border border-outline-variant relative overflow-hidden">
+<h4 class="text-xs font-label-bold text-on-surface-variant mb-xl tracking-widest uppercase">Growth Forecast</h4>
+<div class="flex items-end justify-between h-40 px-md gap-sm">
+<div class="w-full bg-surface-variant rounded-t-lg transition-all hover:bg-primary-container/40" style="height: 40%"></div>
+<div class="w-full bg-surface-variant rounded-t-lg transition-all hover:bg-primary-container/40" style="height: 60%"></div>
+<div class="w-full bg-surface-variant rounded-t-lg transition-all hover:bg-primary-container/40" style="height: 55%"></div>
+<div class="w-full bg-surface-variant rounded-t-lg transition-all hover:bg-primary-container/40" style="height: 80%"></div>
+<div class="w-full bg-primary-container rounded-t-lg relative" style="height: 95%">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 text-[10px] font-bold text-primary">CURRENT</div>
+</div>
+</div>
+<div class="mt-md flex justify-between text-[10px] text-on-surface-variant font-label-bold px-md">
+<span>SEP</span><span>OCT</span><span>NOV</span><span>DEC</span><span>JAN</span>
+</div>
+</div>
+<div class="h-32 bg-primary-container/10 border border-primary-container/30 rounded-xl p-md flex items-center gap-lg">
+<div class="p-lg bg-primary-container rounded-xl text-on-primary-container">
+<span class="material-symbols-outlined text-headline-md">rocket_launch</span>
+</div>
+<div>
+<p class="text-on-surface font-label-bold text-sm">Target Reached</p>
+<p class="text-xs text-on-surface-variant opacity-80">January goals achieved 4 days ahead of schedule.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Bottom Section: Logs & Activity -->
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+<!-- System Alerts -->
+<div class="lg:col-span-1 bg-surface-container-low border border-outline-variant rounded-xl p-lg space-y-md">
+<div class="flex justify-between items-center mb-md">
+<h4 class="font-label-bold text-on-surface uppercase tracking-widest text-xs">System Alerts</h4>
+<span class="text-[10px] text-primary-container animate-pulse">4 UNRESOLVED</span>
+</div>
+<div class="space-y-sm">
+<div class="p-sm bg-error-container/10 border-l-2 border-error rounded-r-md flex gap-sm items-start">
+<span class="material-symbols-outlined text-error text-md">error</span>
+<div>
+<p class="text-xs font-bold text-on-surface">Payment Gateway Timeout</p>
+<p class="text-[10px] text-on-surface-variant">Stripe: Latency spike in US-East-1</p>
+<p class="text-[9px] mt-1 opacity-50 uppercase">2 mins ago</p>
+</div>
+</div>
+<div class="p-sm bg-surface-variant/20 border-l-2 border-on-secondary-container rounded-r-md flex gap-sm items-start">
+<span class="material-symbols-outlined text-secondary text-md">warning</span>
+<div>
+<p class="text-xs font-bold text-on-surface">Campus Overload: NYU</p>
+<p class="text-[10px] text-on-surface-variant">Fleet density at 92% capacity.</p>
+<p class="text-[9px] mt-1 opacity-50 uppercase">14 mins ago</p>
+</div>
+</div>
+<div class="p-sm bg-surface-variant/10 border-l-2 border-outline rounded-r-md flex gap-sm items-start">
+<span class="material-symbols-outlined text-on-surface-variant text-md">info</span>
+<div>
+<p class="text-xs font-bold text-on-surface">New Vendor Verification</p>
+<p class="text-[10px] text-on-surface-variant">"Fresh Bites" submitted credentials.</p>
+<p class="text-[9px] mt-1 opacity-50 uppercase">42 mins ago</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Recent Order Logs (Table Style) -->
+<div class="lg:col-span-2 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden">
+<div class="p-lg flex justify-between items-center border-b border-outline-variant">
+<h4 class="font-label-bold text-on-surface uppercase tracking-widest text-xs">Transaction Stream</h4>
+<button class="text-[10px] font-label-bold text-primary hover:underline">VIEW ALL LOGS</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left text-xs">
+<thead class="bg-surface-container text-on-surface-variant">
+<tr>
+<th class="px-lg py-sm font-label-bold">ID</th>
+<th class="px-lg py-sm font-label-bold">CAMPUS</th>
+<th class="px-lg py-sm font-label-bold">AMOUNT</th>
+<th class="px-lg py-sm font-label-bold">STATUS</th>
+<th class="px-lg py-sm font-label-bold">TIME</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<tr class="hover:bg-surface-variant/10 transition-colors cursor-pointer">
+<td class="px-lg py-md font-mono text-primary">#TX-9421</td>
+<td class="px-lg py-md font-label-bold">UC Berkeley</td>
+<td class="px-lg py-md">$24.50</td>
+<td class="px-lg py-md">
+<span class="bg-green-500/10 text-green-500 px-sm py-xs rounded text-[9px] font-bold uppercase">Settled</span>
+</td>
+<td class="px-lg py-md text-on-surface-variant">12:04:01</td>
+</tr>
+<tr class="hover:bg-surface-variant/10 transition-colors cursor-pointer">
+<td class="px-lg py-md font-mono text-primary">#TX-9420</td>
+<td class="px-lg py-md font-label-bold">Stanford</td>
+<td class="px-lg py-md">$112.00</td>
+<td class="px-lg py-md">
+<span class="bg-primary-container/10 text-primary-container px-sm py-xs rounded text-[9px] font-bold uppercase">Pending</span>
+</td>
+<td class="px-lg py-md text-on-surface-variant">12:03:45</td>
+</tr>
+<tr class="hover:bg-surface-variant/10 transition-colors cursor-pointer">
+<td class="px-lg py-md font-mono text-primary">#TX-9419</td>
+<td class="px-lg py-md font-label-bold">NYU</td>
+<td class="px-lg py-md">$18.99</td>
+<td class="px-lg py-md">
+<span class="bg-green-500/10 text-green-500 px-sm py-xs rounded text-[9px] font-bold uppercase">Settled</span>
+</td>
+<td class="px-lg py-md text-on-surface-variant">12:03:12</td>
+</tr>
+<tr class="hover:bg-surface-variant/10 transition-colors cursor-pointer">
+<td class="px-lg py-md font-mono text-primary">#TX-9418</td>
+<td class="px-lg py-md font-label-bold">MIT</td>
+<td class="px-lg py-md">$56.20</td>
+<td class="px-lg py-md">
+<span class="bg-green-500/10 text-green-500 px-sm py-xs rounded text-[9px] font-bold uppercase">Settled</span>
+</td>
+<td class="px-lg py-md text-on-surface-variant">12:02:59</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+</div>
+</main>
+<script>
+        // Simple Interaction: Mock GMV Progress animation
+        document.addEventListener('DOMContentLoaded', () => {
+            const progress = document.getElementById('gmv-progress');
+            progress.style.width = '0%';
+            setTimeout(() => {
+                progress.style.transition = 'width 1.5s cubic-bezier(0.65, 0, 0.35, 1)';
+                progress.style.width = '74%';
+            }, 500);
+
+            // Adding hover behavior for side nav items
+            const navItems = document.querySelectorAll('aside nav a');
+            navItems.forEach(item => {
+                item.addEventListener('mouseenter', () => {
+                    if(!item.classList.contains('text-primary')) {
+                        item.style.transform = 'translateX(4px)';
+                    }
+                });
+                item.addEventListener('mouseleave', () => {
+                    item.style.transform = 'translateX(0)';
+                });
+            });
+        });
+    </script>
+</body></html>

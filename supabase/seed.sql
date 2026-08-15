@@ -158,4 +158,5 @@ INSERT INTO subscriptions (student_id, plan, starts_at, expires_at, is_active) V
 INSERT INTO wallet_bonus_config (min_amount, bonus_amount, is_active) VALUES
   (20000,  1000,  true),   -- ₹200 → +₹10
   (50000,  5000,  true),   -- ₹500 → +₹50
-  (100000, 10000, true);   -- ₹1000 → +₹100
+  (100000, 10000, true)   -- ₹1000 → +₹100
+ON CONFLICT DO NOTHING;

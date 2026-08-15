@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>GrabIt - Profile</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&amp;family=Sora:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary": "#c8c6c5",
+                        "error": "#ffb4ab",
+                        "on-tertiary-fixed-variant": "#474746",
+                        "tertiary-fixed": "#e5e2e1",
+                        "surface-container-highest": "#33343c",
+                        "surface-container-high": "#282a31",
+                        "surface-bright": "#383940",
+                        "on-secondary-container": "#bab8b7",
+                        "surface-variant": "#33343c",
+                        "surface-dim": "#12131a",
+                        "on-tertiary-fixed": "#1b1b1c",
+                        "inverse-primary": "#9f4200",
+                        "background": "#000000",
+                        "inverse-surface": "#e2e1eb",
+                        "surface": "#12131a",
+                        "on-primary": "#562000",
+                        "primary": "#ffb692",
+                        "on-primary-fixed": "#341100",
+                        "tertiary": "#c8c6c5",
+                        "outline": "#a98a7c",
+                        "on-tertiary": "#303030",
+                        "on-secondary-fixed": "#1c1b1b",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "primary-container": "#ff6d00",
+                        "on-background": "#e2e1eb",
+                        "inverse-on-surface": "#2f3037",
+                        "on-secondary": "#313030",
+                        "secondary-fixed": "#e5e2e1",
+                        "secondary-container": "#4a4949",
+                        "outline-variant": "#594136",
+                        "primary-fixed-dim": "#ffb692",
+                        "surface-container": "#1e1f26",
+                        "on-secondary-fixed-variant": "#474646",
+                        "surface-container-lowest": "#0c0e14",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "primary-fixed": "#ffdbcb",
+                        "on-surface-variant": "#e2bfb0",
+                        "surface-container-low": "#1a1b22",
+                        "tertiary-container": "#9b9999",
+                        "on-tertiary-container": "#323131",
+                        "error-container": "#93000a",
+                        "on-primary-fixed-variant": "#7a3000",
+                        "on-error-container": "#ffdad6",
+                        "on-surface": "#e2e1eb",
+                        "on-primary-container": "#582100",
+                        "surface-tint": "#ffb692",
+                        "on-error": "#690005"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "margin-mobile": "20px",
+                        "unit": "4px",
+                        "lg": "24px",
+                        "sm": "8px",
+                        "margin-desktop": "64px",
+                        "xs": "4px",
+                        "xl": "40px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-xl": ["Montserrat"],
+                        "label-bold": ["Sora"],
+                        "body-md": ["Sora"],
+                        "body-lg": ["Sora"],
+                        "headline-lg-mobile": ["Montserrat"],
+                        "headline-md": ["Montserrat"],
+                        "headline-lg": ["Montserrat"],
+                        "body-sm": ["Sora"]
+                    },
+                    "fontSize": {
+                        "headline-xl": ["40px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "label-bold": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #000000;
+            color: #e2e1eb;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .glass-card {
+            background: rgba(30, 31, 38, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .gold-gradient {
+            background: linear-gradient(135deg, #FF6D00 0%, #FFB692 100%);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-body-md overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 z-50 flex justify-between items-center w-full px-margin-mobile h-16 bg-background dark:bg-background">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container" data-icon="location_on">location_on</span>
+<span class="text-label-bold font-label-bold text-on-surface-variant">PSIT Kanpur</span>
+</div>
+<h1 class="text-headline-md font-headline-md font-extrabold text-primary-container dark:text-primary-container tracking-tight">GrabIt</h1>
+<button class="active:scale-95 transition-transform duration-150 hover:opacity-80">
+<span class="material-symbols-outlined text-primary-container" data-icon="qr_code_scanner">qr_code_scanner</span>
+</button>
+</header>
+<main class="pt-20 pb-32 px-margin-mobile max-w-lg mx-auto">
+<!-- Profile Header -->
+<section class="flex flex-col items-center mb-lg">
+<div class="relative w-24 h-24 mb-md">
+<div class="w-full h-full rounded-full border-2 border-primary-container p-1">
+<img class="w-full h-full rounded-full object-cover" data-alt="A professional close-up studio portrait of a confident Gen-Z South Asian male student with a modern haircut. He is wearing a minimalist dark hoodie, looking directly at the camera with a slight smile. The lighting is dramatic and cinematic, featuring vibrant Safety Orange and deep Gunmetal tones that match the GrabIt brand identity. The background is a blurred, high-tech campus setting at night with neon accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDen9ohJhnD8P_jikuQgTYTBo2jkHFI5sB8Ez94WoR9wkZa8IWhCY4W-Ar424CgmEuYuS-aXmGEVGJnENhQNCcVazQ49YJDlRcimBBEWguSgucnFqYOv43jBXmyryt9DnttcemRUPR2dXDCuj3JAJG_UMbmo_8bHGQP8lnSuDmIBFdb9qvZEqgB4UuGDAHl7ZpkVgKPAr5pV50WrvmRI9uCENT0uBCicO5v_-S3fDyJZ15VhNhzUveG"/>
+</div>
+<div class="absolute bottom-0 right-0 bg-primary-container p-1 rounded-full border-2 border-background">
+<span class="material-symbols-outlined text-white text-[16px]" data-icon="edit">edit</span>
+</div>
+</div>
+<h2 class="text-headline-md font-headline-md text-on-surface mb-xs">Aryan Sharma</h2>
+<div class="flex flex-col items-center gap-1 opacity-70">
+<span class="text-label-bold font-label-bold">ID: 2024PSIT0882</span>
+<span class="text-body-sm font-body-sm">PSIT Kanpur • Computer Science</span>
+</div>
+</section>
+<!-- GrabIt Gold Subscription Card -->
+<section class="gold-gradient rounded-xl p-lg mb-xl shadow-lg relative overflow-hidden">
+<div class="absolute top-[-20px] right-[-20px] opacity-20 transform rotate-12">
+<span class="material-symbols-outlined text-[120px] text-white" data-icon="stars">stars</span>
+</div>
+<div class="relative z-10">
+<div class="flex justify-between items-start mb-md">
+<div>
+<span class="inline-block bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-label-bold font-label-bold text-white mb-2">ACTIVE</span>
+<h3 class="text-headline-md font-headline-md text-white">GrabIt Gold</h3>
+</div>
+<span class="material-symbols-outlined text-white text-[32px]" data-icon="workspace_premium">workspace_premium</span>
+</div>
+<p class="text-white/90 text-body-sm font-body-sm mb-lg">Free deliveries on all orders above ₹149 &amp; 10% instant cashback on campus cafes.</p>
+<div class="flex items-center justify-between">
+<div class="text-white/80 text-label-bold font-label-bold">Valid till: 12 Dec 2024</div>
+<button class="bg-black text-white px-4 py-2 rounded-lg text-label-bold font-label-bold hover:scale-105 transition-transform">Manage</button>
+</div>
+</div>
+</section>
+<!-- Menu Options -->
+<nav class="space-y-md">
+<!-- Order History -->
+<div class="glass-card rounded-xl p-md flex items-center justify-between active:scale-[0.98] transition-transform duration-150 cursor-pointer">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+</div>
+<div>
+<span class="text-body-md font-label-bold block">Order History</span>
+<span class="text-body-sm font-body-sm opacity-50">View all your past campus cravings</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- Saved Addresses -->
+<div class="glass-card rounded-xl p-md flex items-center justify-between active:scale-[0.98] transition-transform duration-150 cursor-pointer">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined" data-icon="location_on">location_on</span>
+</div>
+<div>
+<span class="text-body-md font-label-bold block">Saved Addresses</span>
+<span class="text-body-sm font-body-sm opacity-50">Hostel blocks &amp; department spots</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- Help & Support -->
+<div class="glass-card rounded-xl p-md flex items-center justify-between active:scale-[0.98] transition-transform duration-150 cursor-pointer">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined" data-icon="support_agent">support_agent</span>
+</div>
+<div>
+<span class="text-body-md font-label-bold block">Help &amp; Support</span>
+<span class="text-body-sm font-body-sm opacity-50">FAQs, Chat &amp; Contact Support</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- Logout -->
+<div class="glass-card rounded-xl p-md flex items-center justify-between active:scale-[0.98] transition-transform duration-150 cursor-pointer border-error/10">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg bg-error/10 flex items-center justify-center text-error">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+</div>
+<div>
+<span class="text-body-md font-label-bold block text-error">Logout</span>
+<span class="text-body-sm font-body-sm opacity-50">Switch accounts or exit</span>
+</div>
+</div>
+</div>
+</nav>
+<!-- Version Info -->
+<div class="mt-xl text-center">
+<span class="text-body-sm font-body-sm opacity-30">GrabIt v2.4.0-stealth</span>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 py-3 pb-safe bg-surface-container/80 dark:bg-surface-container/80 backdrop-blur-md z-50 rounded-t-xl shadow-lg border-t border-outline-variant/20">
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="text-label-bold font-label-bold">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="text-label-bold font-label-bold">Orders</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="text-label-bold font-label-bold">Wallet</span>
+</div>
+<!-- ACTIVE TAB: Profile -->
+<div class="flex flex-col items-center justify-center text-primary-container bg-primary-container/10 rounded-xl px-3 py-1 scale-90 transition-all duration-200">
+<span class="material-symbols-outlined" data-icon="person" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="text-label-bold font-label-bold">Profile</span>
+</div>
+</nav>
+<script>
+        // Micro-interactions for list items
+        document.querySelectorAll('.glass-card').forEach(card => {
+            card.addEventListener('click', function() {
+                // Haptic feedback simulation
+                if (window.navigator && window.navigator.vibrate) {
+                    window.navigator.vibrate(10);
+                }
+            });
+        });
+
+        // Simple scroll reveal for cards
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('opacity-100', 'translate-y-0');
+                    entry.target.classList.remove('opacity-0', 'translate-y-4');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('nav > div').forEach(item => {
+            item.classList.add('transition-all', 'duration-500', 'opacity-0', 'translate-y-4');
+            observer.observe(item);
+        });
+    </script>
+</body></html>

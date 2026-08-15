@@ -1,0 +1,143 @@
+@import "tailwindcss";
+
+/*
+  GrabIt design tokens — "Kinetic Stealth" (Premium Black variant)
+  Source of truth: stitch_grabit_campus_canteen_os/*_premium_black/code.html
+  (all 17 locked screens are Premium Black), cross-checked against
+  kinetic_stealth/DESIGN.md.
+
+  DAY 2 CORRECTION, flagged per the "don't silently resolve contradictions"
+  rule: the Day 1 prompt specified background #121212 / foreground #E2E1EB
+  as locked values. Inspecting the actual approved Premium Black exports
+  (the specific screens being implemented) shows solid #000000 backgrounds
+  and pure #FFFFFF on-surface text — visibly different from what Day 1
+  hardcoded from a paraphrase. Since Day 2's mandate is pixel-level fidelity
+  to the approved Stitch screens, the token *values* below are corrected to
+  match the real export files; the token *system* (names, structure) is
+  unchanged. Old values kept as a comment for traceability.
+
+  Old (Day 1, uncorrected): background #121212, foreground #E2E1EB
+  Corrected (Day 2, matches actual export): background #000000, foreground #FFFFFF
+*/
+
+:root {
+  /* ---- surfaces ---- */
+  --color-background: #000000;
+  --color-surface: #0f0f0f;
+  --color-surface-elevated: #121212;
+  --color-surface-sunken: #000000;
+  --color-border: #262626;
+  --color-border-subtle: #1a1a1a;
+
+  /* ---- brand ---- */
+  --color-primary: #ff6d00;
+  --color-primary-soft: #ffb692;
+  --color-on-primary: #ffffff;
+
+  /* ---- text ---- */
+  --color-foreground: #ffffff;
+  --color-muted: #c9beb5;
+  --color-faint: #7a7570;
+
+  /* ---- semantic (status), independent of brand accent ---- */
+  --color-success: #4ade80;
+  --color-success-soft: #14251b;
+  --color-warning: #eab308;
+  --color-warning-soft: #2c2314;
+  --color-danger: #ff6d6d;
+  --color-danger-soft: #2c1616;
+
+  /* ---- radius ---- */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-full: 999px;
+
+  /* ---- shadow (used sparingly — Kinetic Stealth is a dark, low-glare system) ---- */
+  --shadow-elevated: 0 8px 24px -8px rgb(0 0 0 / 0.5);
+  --shadow-glow-primary: 0 0 0 1px rgb(255 109 0 / 0.25), 0 4px 16px -4px rgb(255 109 0 / 0.35);
+
+  /* ---- motion ---- */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(0.3, 0, 0.1, 1);
+  --duration-fast: 120ms;
+  --duration-standard: 240ms;
+  --duration-state: 360ms; /* order-status transitions: Placed → Preparing → Ready */
+}
+
+@theme inline {
+  --color-background: var(--color-background);
+  --color-surface: var(--color-surface);
+  --color-surface-elevated: var(--color-surface-elevated);
+  --color-surface-sunken: var(--color-surface-sunken);
+  --color-border: var(--color-border);
+  --color-border-subtle: var(--color-border-subtle);
+
+  --color-primary: var(--color-primary);
+  --color-primary-soft: var(--color-primary-soft);
+  --color-on-primary: var(--color-on-primary);
+
+  --color-foreground: var(--color-foreground);
+  --color-muted: var(--color-muted);
+  --color-faint: var(--color-faint);
+
+  --color-success: var(--color-success);
+  --color-success-soft: var(--color-success-soft);
+  --color-warning: var(--color-warning);
+  --color-warning-soft: var(--color-warning-soft);
+  --color-danger: var(--color-danger);
+  --color-danger-soft: var(--color-danger-soft);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-full: var(--radius-full);
+
+  --font-display: var(--font-montserrat);
+  --font-body: var(--font-sora);
+
+  --ease-standard: var(--ease-standard);
+  --ease-emphasized: var(--ease-emphasized);
+
+  /* type scale — Apple-restraint discipline: a fixed scale, no ad hoc sizes */
+  --text-display: 2.25rem;   /* 36px — screen-level headlines */
+  --text-title: 1.5rem;      /* 24px — section titles */
+  --text-heading: 1.125rem;  /* 18px — card/list headings */
+  --text-body: 0.9375rem;    /* 15px — running text */
+  --text-caption: 0.8125rem; /* 13px — meta, timestamps */
+  --text-label: 0.6875rem;   /* 11px — uppercase eyebrows/labels */
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--text-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* Respect reduced-motion for the order-status transition system (PRD §12, TRD §10) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Visible keyboard focus state (accessibility foundation, TRD §7 Non-Functional Requirements) */
+:focus-visible {
+  outline: 2px solid var(--color-primary-soft);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
