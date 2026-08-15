@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useEffect, useState } from "react";
 import { OrderTrackerHeader } from "@/components/student/order/OrderTrackerHeader";
 import { OrderLiveStatus } from "@/components/student/order/OrderLiveStatus";
 import { PickupPassCard } from "@/components/student/order/PickupPassCard";
@@ -10,12 +10,9 @@ import { OrderContactActions } from "@/components/student/order/OrderContactActi
 import { DevOrderStatusControls } from "@/components/student/order/DevOrderStatusControls";
 import { OrderNotFoundState } from "@/components/student/order/OrderNotFoundState";
 import { useOrders } from "@/lib/orders/OrderContext";
+import { getLiveOrderById } from "@/lib/supabase/orders";
+import type { Order } from "@/lib/orders/types";
 
-// Client Component — converted from
-// stitch_grabit_campus_canteen_os/grabit_track_order_premium_black/code.html.
-// `params` is a Promise even in this client page (Next.js App Router
-// convention) — unwrapped with React's `use()`, matching the pattern the
-// Day 1 stub used with `await` in its Server Component version.
 export default function StudentTrackOrderPage({
   params,
 }: {
@@ -23,7 +20,52 @@ export default function StudentTrackOrderPage({
 }) {
   const { id } = use(params);
   const { getOrder, updateOrderStatus } = useOrders();
-  const order = getOrder(id);
+  const [liveOrder, setLiveOrder] = useState<Order | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const localOrder = getOrder(id);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadOrder() {
+      setIsLoading(true);
+      const dbOrder = await getLiveOrderById(id);
+      if (isMounted) {
+        if (dbOrder) {
+          setLiveOrder(dbOrder);
+        } else if (localOrder) {
+          setLiveOrder(localOrder);
+        } else {
+          setLiveOrder(null);
+        }
+        setIsLoading(false);
+      }
+    }
+
+    loadOrder();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id, localOrder]);
+
+  if (isLoading) {
+    return (
+      <>
+        <OrderTrackerHeader />
+        <main className="mx-auto flex max-w-2xl flex-col items-center justify-center gap-4 px-5 pb-24 pt-32 text-center">
+          <span className="material-symbols-outlined text-[36px] text-primary animate-spin">
+            progress_activity
+          </span>
+          <p className="font-display text-body font-semibold text-foreground">
+            Loading order details from database...
+          </p>
+        </main>
+      </>
+    );
+  }
+
+  const order = liveOrder ?? localOrder;
 
   if (!order) {
     return <OrderNotFoundState />;
@@ -53,7 +95,10 @@ export default function StudentTrackOrderPage({
 
         <DevOrderStatusControls
           status={order.status}
-          onSetStatus={(status) => updateOrderStatus(order.id, status)}
+          onSetStatus={(status) => {
+            setLiveOrder((prev) => (prev ? { ...prev, status } : null));
+            updateOrderStatus(order.id, status);
+          }}
         />
       </main>
     </>

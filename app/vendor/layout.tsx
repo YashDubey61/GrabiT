@@ -3,6 +3,7 @@ import { RoleShellRail, type NavItem } from "@/components/shared/RoleShellNav";
 const VENDOR_NAV: NavItem[] = [
   { label: "Active Orders", href: "/vendor", icon: "soup_kitchen" },
   { label: "Menu", href: "/vendor/menu", icon: "restaurant_menu" },
+  { label: "Notifications", href: "/vendor/notifications", icon: "notifications" },
   { label: "Analytics & Payouts", href: "/vendor/analytics", icon: "monitoring" },
 ];
 

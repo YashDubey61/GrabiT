@@ -30,15 +30,27 @@ export function CampusHeader({ campusName }: { campusName: string }) {
         </div>
       </div>
 
-      <button
-        type="button"
-        aria-label="Scan QR code"
-        className="flex h-10 w-10 items-center justify-center text-primary transition-transform active:scale-95"
-      >
-        <span className="material-symbols-outlined" aria-hidden="true">
-          qr_code_scanner
-        </span>
-      </button>
+      <div className="flex items-center gap-2">
+        <a
+          href="/student/notifications"
+          aria-label="Notifications"
+          className="relative flex h-10 w-10 items-center justify-center text-primary transition-transform active:scale-95"
+        >
+          <span className="material-symbols-outlined" aria-hidden="true">
+            notifications
+          </span>
+        </a>
+
+        <button
+          type="button"
+          aria-label="Scan QR code"
+          className="flex h-10 w-10 items-center justify-center text-primary transition-transform active:scale-95"
+        >
+          <span className="material-symbols-outlined" aria-hidden="true">
+            qr_code_scanner
+          </span>
+        </button>
+      </div>
     </header>
   );
 }

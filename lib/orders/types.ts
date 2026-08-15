@@ -1,4 +1,5 @@
 import type { OrderStatus } from "@/types";
+export type { OrderStatus };
 import type { PickupSlot } from "@/components/student/PickupSlotSelector";
 import type { PaymentMethod } from "@/components/student/PaymentMethodSelector";
 

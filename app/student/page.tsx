@@ -1,19 +1,38 @@
 import { CampusHeader } from "@/components/student/CampusHeader";
 import { CanteenStatusBanner } from "@/components/student/CanteenStatusBanner";
 import { CampusHomeBrowser } from "@/components/student/CampusHomeBrowser";
-import { mockCampus, mockCanteenCategories, mockCanteens } from "@/lib/mock/campus";
+import { StudentRecommendationsSection } from "@/components/student/StudentRecommendationsSection";
+import { TrackEventOnMount } from "@/components/shared/TrackEventOnMount";
+import { mockCanteenCategories, type MockCanteen } from "@/lib/mock/campus";
+import { getLiveCampusDetails, getLiveCampusCanteens } from "@/lib/supabase/data";
 
-// Server Component — no client JS beyond the CampusHomeBrowser island.
-// Converted from stitch_grabit_campus_canteen_os/grabit_campus_home_premium_black/code.html.
-export default function StudentHomePage() {
+// Server Component — fetching live Supabase data for Campus Home.
+export default async function StudentHomePage() {
+  let campus: { name: string; canteensOpen: number; estWaitMinutes: number };
+  let canteens: MockCanteen[];
+  let hasError = false;
+
+  try {
+    [campus, canteens] = await Promise.all([
+      getLiveCampusDetails(),
+      getLiveCampusCanteens(),
+    ]);
+  } catch (err) {
+    console.error("Failed to load Supabase campus data:", err);
+    hasError = true;
+    campus = { name: "PSIT Kanpur", canteensOpen: 0, estWaitMinutes: 0 };
+    canteens = [];
+  }
+
   return (
     <>
-      <CampusHeader campusName={mockCampus.name} />
+      <TrackEventOnMount payload={{ eventName: "student_home_viewed" }} />
+      <CampusHeader campusName={campus.name} />
 
       <main className="mx-auto max-w-2xl px-5 pt-20 pb-10 md:px-16 md:pt-24">
         <CanteenStatusBanner
-          canteensOpen={mockCampus.canteensOpen}
-          estWaitMinutes={mockCampus.estWaitMinutes}
+          canteensOpen={campus.canteensOpen}
+          estWaitMinutes={campus.estWaitMinutes}
         />
 
         <section className="mb-6 space-y-4">
@@ -37,10 +56,19 @@ export default function StudentHomePage() {
           </div>
         </section>
 
-        <CampusHomeBrowser
-          canteens={mockCanteens}
-          categories={mockCanteenCategories}
-        />
+        <StudentRecommendationsSection />
+
+        {hasError ? (
+          <div className="rounded-xl border border-danger/30 bg-danger/10 p-6 text-center text-body-sm text-foreground">
+            <p className="font-bold text-danger">Unable to load canteens.</p>
+            <p className="mt-1 text-muted">Please check your network connection and try again.</p>
+          </div>
+        ) : (
+          <CampusHomeBrowser
+            canteens={canteens}
+            categories={mockCanteenCategories}
+          />
+        )}
       </main>
     </>
   );

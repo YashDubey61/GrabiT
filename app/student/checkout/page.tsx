@@ -9,6 +9,8 @@ import { PaymentMethodSelector, type PaymentMethod } from "@/components/student/
 import { CheckoutBillDetails } from "@/components/student/CheckoutBillDetails";
 import { CheckoutAction } from "@/components/student/CheckoutAction";
 import { EmptyCheckoutState } from "@/components/student/EmptyCheckoutState";
+import { TrackEventOnMount } from "@/components/shared/TrackEventOnMount";
+import { trackProductEvent } from "@/lib/analytics/events";
 import { useCart } from "@/lib/cart/CartContext";
 import { useOrders } from "@/lib/orders/OrderContext";
 
@@ -35,6 +37,8 @@ export default function StudentCheckoutPage() {
       return;
     }
 
+    trackProductEvent({ eventName: "checkout_submitted", canteenId: cart.canteenId });
+
     const result = orders.createOrder({
       canteenId: cart.canteenId,
       canteenName: cart.canteenName,
@@ -55,6 +59,7 @@ export default function StudentCheckoutPage() {
 
   return (
     <>
+      <TrackEventOnMount payload={{ eventName: "checkout_started", canteenId: cart.canteenId ?? undefined }} />
       <CheckoutHeader />
 
       <main className="mx-auto max-w-2xl space-y-6 px-5 pb-56 pt-20 md:px-16 md:pt-24">

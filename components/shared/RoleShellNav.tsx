@@ -72,25 +72,42 @@ export function RoleShellRail({
   items: NavItem[];
   title: string;
 }) {
+  const pathname = usePathname();
+
   return (
     <nav className="flex h-dvh w-16 flex-col gap-1 border-r border-border bg-surface-elevated px-2 py-4 md:w-56 md:px-3">
       <p className="mb-4 hidden px-2 font-display text-heading font-800 text-foreground md:block">
         {title}
       </p>
       <ul className="flex flex-col gap-1">
-        {items.map((item) => (
-          <li key={item.href}>
-            <Link
-              href={item.href}
-              className="flex items-center gap-3 rounded-md px-2.5 py-2 text-body text-muted transition-colors duration-150 hover:bg-surface hover:text-foreground"
-            >
-              <span className="material-symbols-outlined text-[20px]">
-                {item.icon}
-              </span>
-              <span className="hidden md:inline">{item.label}</span>
-            </Link>
-          </li>
-        ))}
+        {items.map((item) => {
+          const isActive =
+            item.href === "/vendor" || item.href === "/superadmin"
+              ? pathname === item.href
+              : pathname.startsWith(item.href);
+
+          return (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                aria-current={isActive ? "page" : undefined}
+                className={`flex items-center gap-3 rounded-md px-2.5 py-2 text-body font-semibold transition-colors duration-150 ${
+                  isActive
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted hover:bg-surface hover:text-foreground"
+                }`}
+              >
+                <span
+                  className="material-symbols-outlined text-[20px]"
+                  style={isActive ? { fontVariationSettings: "'FILL' 1" } : undefined}
+                >
+                  {item.icon}
+                </span>
+                <span className="hidden md:inline">{item.label}</span>
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </nav>
   );

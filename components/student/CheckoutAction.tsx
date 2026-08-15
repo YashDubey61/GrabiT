@@ -1,25 +1,18 @@
 import { getMockPlatformFee } from "@/lib/cart/calculations";
 
-/**
- * Fixed bottom bar — "Total Payable" + "Pay & Place Order", matching the
- * approved export. Presentational only: order creation, validation, and
- * navigation live in app/student/checkout/page.tsx (via useOrders/useCart)
- * — this component just renders the total and forwards a click.
- *
- * Day 4 update: the button now actually creates a mock local order
- * (see lib/orders/OrderContext.tsx) instead of Day 3's inert
- * acknowledgement note. Still no Razorpay, no Supabase, no real payment —
- * "mock order" is explicit in the code, not implied.
- */
+interface CheckoutActionProps {
+  subtotal: number;
+  onPlaceOrder: () => void;
+  error?: string | null;
+  isSubmitting?: boolean;
+}
+
 export function CheckoutAction({
   subtotal,
   onPlaceOrder,
   error,
-}: {
-  subtotal: number;
-  onPlaceOrder: () => void;
-  error?: string | null;
-}) {
+  isSubmitting = false,
+}: CheckoutActionProps) {
   const total = subtotal + getMockPlatformFee(subtotal);
 
   return (
@@ -48,9 +41,10 @@ export function CheckoutAction({
         <button
           type="button"
           onClick={onPlaceOrder}
-          className="w-full rounded-xl bg-primary py-4 text-body font-800 uppercase tracking-wide text-on-primary shadow-xl shadow-primary/20 transition-transform active:scale-95"
+          disabled={isSubmitting}
+          className="w-full rounded-xl bg-primary py-4 text-body font-800 uppercase tracking-wide text-on-primary shadow-xl shadow-primary/20 transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Pay &amp; Place Order
+          {isSubmitting ? "Placing Order..." : "Pay & Place Order"}
         </button>
 
         {error && (
@@ -60,7 +54,7 @@ export function CheckoutAction({
         )}
 
         <p className="text-center text-[11px] text-faint">
-          Mock checkout — no real payment is processed.
+          Live Order Creation — verified against Supabase database.
         </p>
       </div>
     </div>

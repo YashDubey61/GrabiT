@@ -1,6 +1,8 @@
 import { MenuTopBar } from "@/components/student/MenuTopBar";
 import { MenuInfoCard } from "@/components/student/MenuInfoCard";
 import { MenuBrowser } from "@/components/student/MenuBrowser";
+import { StudentRecommendationsSection } from "@/components/student/StudentRecommendationsSection";
+import { TrackEventOnMount } from "@/components/shared/TrackEventOnMount";
 import { mockCanteenInfo, mockMenuCategories, mockMenuItems } from "@/lib/mock/menu";
 
 // Server Component — converted from
@@ -9,6 +11,7 @@ import { mockCanteenInfo, mockMenuCategories, mockMenuItems } from "@/lib/mock/m
 export default function StudentMenuPage() {
   return (
     <>
+      <TrackEventOnMount payload={{ eventName: "menu_viewed", canteenId: mockCanteenInfo.id }} />
       <MenuTopBar title={mockCanteenInfo.name} />
 
       <main className="mx-auto max-w-4xl px-5 pt-20 pb-32 md:px-16 md:pt-24">
@@ -19,6 +22,8 @@ export default function StudentMenuPage() {
           isOpen={mockCanteenInfo.isOpen}
           description={mockCanteenInfo.description}
         />
+
+        <StudentRecommendationsSection />
 
         <MenuBrowser
           canteenId={mockCanteenInfo.id}
