@@ -1,4 +1,4 @@
-export type VendorOrderStatus = "placed" | "preparing" | "ready" | "completed";
+export type VendorOrderStatus = "placed" | "preparing" | "ready" | "picked_up" | "completed" | "cancelled";
 
 export interface VendorOrderItem {
   name: string;
@@ -17,6 +17,11 @@ export interface VendorOrder {
   otpCode?: string;
   prepProgressPercent?: number;
   createdAtIso: string;
+  acceptedAtIso?: string;
+  pickedUpAtIso?: string;
+  completedAtIso?: string;
+  cancelledAtIso?: string;
+  cancellationReason?: string;
 }
 
 export interface VendorStoreConfig {

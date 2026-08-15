@@ -10,6 +10,11 @@ export interface SupabaseVendorOrderRow {
   status: VendorOrderStatus;
   total_amount: number;
   created_at: string;
+  accepted_at?: string | null;
+  picked_up_at?: string | null;
+  completed_at?: string | null;
+  cancelled_at?: string | null;
+  cancellation_reason?: string | null;
   canteens?: { name: string };
   order_items?: {
     id: string;
@@ -56,7 +61,7 @@ export async function getLiveVendorOrders(
   }
 }
 
-function mapSupabaseVendorOrderToUI(row: SupabaseVendorOrderRow): VendorOrder {
+export function mapSupabaseVendorOrderToUI(row: SupabaseVendorOrderRow): VendorOrder {
   const items = (row.order_items ?? []).map((item) => ({
     name: item.menu_items?.name ?? "Canteen Dish",
     quantity: item.quantity,
@@ -70,6 +75,12 @@ function mapSupabaseVendorOrderToUI(row: SupabaseVendorOrderRow): VendorOrder {
     elapsedTimeText = `Started ${elapsedMinutes}m ago`;
   } else if (row.status === "ready") {
     elapsedTimeText = `Ready since ${elapsedMinutes}m`;
+  } else if (row.status === "picked_up") {
+    elapsedTimeText = `Picked Up`;
+  } else if (row.status === "completed") {
+    elapsedTimeText = `Completed`;
+  } else if (row.status === "cancelled") {
+    elapsedTimeText = `Cancelled`;
   }
 
   const otpSuffix = row.order_number.replace(/^#GRB-/, "").replace(/^#/, "");
@@ -85,5 +96,10 @@ function mapSupabaseVendorOrderToUI(row: SupabaseVendorOrderRow): VendorOrder {
     otpCode: row.status === "ready" ? otpSuffix : undefined,
     prepProgressPercent: row.status === "preparing" ? Math.min(85, 30 + elapsedMinutes * 10) : undefined,
     createdAtIso: row.created_at,
+    acceptedAtIso: row.accepted_at ?? undefined,
+    pickedUpAtIso: row.picked_up_at ?? undefined,
+    completedAtIso: row.completed_at ?? undefined,
+    cancelledAtIso: row.cancelled_at ?? undefined,
+    cancellationReason: row.cancellation_reason ?? undefined,
   };
 }

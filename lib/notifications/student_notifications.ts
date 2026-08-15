@@ -5,6 +5,7 @@ export type StudentNotificationType =
   | "ORDER_PLACED"
   | "ORDER_PREPARING"
   | "ORDER_READY"
+  | "ORDER_PICKED_UP"
   | "ORDER_COMPLETED"
   | "ORDER_CANCELLED"
   | "PAYMENT_SUCCESS"

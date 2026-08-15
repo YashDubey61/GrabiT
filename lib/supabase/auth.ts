@@ -93,8 +93,9 @@ export async function signStudentIn(
 export async function signStudentUp(
   email: string,
   pass: string,
-  phone: string,
-  campusId: string,
+  fullName?: string,
+  phone?: string,
+  campusId?: string,
 ): Promise<{ ok: boolean; error?: string }> {
   try {
     const supabase = createClient();
@@ -103,6 +104,11 @@ export async function signStudentUp(
     const { data: authData, error: authErr } = await supabase.auth.signUp({
       email: email.trim(),
       password: pass,
+      options: {
+        data: {
+          full_name: fullName?.trim() || "",
+        },
+      },
     });
 
     if (authErr || !authData.user) {
@@ -112,9 +118,9 @@ export async function signStudentUp(
     const userId = authData.user.id;
 
     // 2. Insert into public.users with role = 'student' (role security enforced)
-    const { error: profileErr } = await supabase.from("users").insert({
+    const { error: profileErr } = await supabase.from("users").upsert({
       id: userId,
-      phone: phone.trim() || "+919999999999",
+      phone: phone?.trim() || `+91${Math.floor(1000000000 + Math.random() * 9000000000)}`,
       role: "student",
       campus_id: campusId || "11111111-1111-1111-1111-111111111111",
     });
@@ -130,7 +136,84 @@ export async function signStudentUp(
 }
 
 /**
- * Sign out current student session via Supabase Auth.
+ * Trigger Supabase OAuth for Google Sign In.
+ */
+export async function signInWithGoogle(): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const supabase = createClient();
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const redirectTo = `${origin}/auth/callback`;
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo,
+        queryParams: {
+          access_type: "offline",
+          prompt: "select_account",
+        },
+      },
+    });
+
+    if (error) {
+      return { ok: false, error: error.message };
+    }
+
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Network error initiating Google Sign-In." };
+  }
+}
+
+/**
+ * Send password reset email via Supabase Auth.
+ */
+export async function sendPasswordResetEmail(
+  email: string,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const supabase = createClient();
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const redirectTo = `${origin}/auth/reset-password`;
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo,
+    });
+
+    if (error) {
+      return { ok: false, error: error.message };
+    }
+
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Network error requesting password reset." };
+  }
+}
+
+/**
+ * Update authenticated user's password.
+ */
+export async function updateUserPassword(
+  newPassword: string,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const supabase = createClient();
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (error) {
+      return { ok: false, error: error.message };
+    }
+
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Network error resetting password." };
+  }
+}
+
+/**
+ * Sign out current user session via Supabase Auth.
  */
 export async function signStudentOut(): Promise<void> {
   try {
@@ -140,3 +223,4 @@ export async function signStudentOut(): Promise<void> {
     // Ignore signout error
   }
 }
+

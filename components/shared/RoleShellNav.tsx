@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 export type NavItem = {
   label: string;
@@ -12,13 +13,6 @@ export type NavItem = {
 /**
  * Bottom tab bar for role surfaces that are primarily mobile (Student).
  * Vendor/Admin use a side rail instead — see RoleShellRail.
- *
- * Active-state styling (filled icon, primary pill background) matches the
- * bottom nav baked into every Stitch export
- * (grabit_campus_home_premium_black/code.html,
- * grabit_menu_premium_black/code.html) rather than the plain hover-only
- * version from Day 1 — now that real routes exist, `usePathname` can
- * drive it for real instead of being a static shell.
  */
 export function RoleShellTabBar({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
@@ -73,42 +67,58 @@ export function RoleShellRail({
   title: string;
 }) {
   const pathname = usePathname();
+  const { signOut } = useAuth();
 
   return (
-    <nav className="flex h-dvh w-16 flex-col gap-1 border-r border-border bg-surface-elevated px-2 py-4 md:w-56 md:px-3">
-      <p className="mb-4 hidden px-2 font-display text-heading font-800 text-foreground md:block">
-        {title}
-      </p>
-      <ul className="flex flex-col gap-1">
-        {items.map((item) => {
-          const isActive =
-            item.href === "/vendor" || item.href === "/superadmin"
-              ? pathname === item.href
-              : pathname.startsWith(item.href);
+    <nav className="flex h-dvh w-16 flex-col justify-between border-r border-border bg-surface-elevated px-2 py-4 md:w-56 md:px-3">
+      <div className="flex flex-col gap-1 overflow-y-auto">
+        <p className="mb-4 hidden px-2 font-display text-heading font-800 text-foreground md:block">
+          {title}
+        </p>
+        <ul className="flex flex-col gap-1">
+          {items.map((item) => {
+            const isActive =
+              item.href === "/vendor" || item.href === "/superadmin"
+                ? pathname === item.href
+                : pathname.startsWith(item.href);
 
-          return (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                aria-current={isActive ? "page" : undefined}
-                className={`flex items-center gap-3 rounded-md px-2.5 py-2 text-body font-semibold transition-colors duration-150 ${
-                  isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted hover:bg-surface hover:text-foreground"
-                }`}
-              >
-                <span
-                  className="material-symbols-outlined text-[20px]"
-                  style={isActive ? { fontVariationSettings: "'FILL' 1" } : undefined}
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`flex items-center gap-3 rounded-md px-2.5 py-2 text-body font-semibold transition-colors duration-150 ${
+                    isActive
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted hover:bg-surface hover:text-foreground"
+                  }`}
                 >
-                  {item.icon}
-                </span>
-                <span className="hidden md:inline">{item.label}</span>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
+                  <span
+                    className="material-symbols-outlined text-[20px]"
+                    style={isActive ? { fontVariationSettings: "'FILL' 1" } : undefined}
+                  >
+                    {item.icon}
+                  </span>
+                  <span className="hidden md:inline">{item.label}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      {/* Sign Out Action at bottom of rail */}
+      <div className="pt-2 border-t border-border">
+        <button
+          type="button"
+          onClick={() => signOut()}
+          className="flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-body font-semibold text-danger/80 hover:bg-danger-soft hover:text-danger transition-colors duration-150"
+          title="Sign Out"
+        >
+          <span className="material-symbols-outlined text-[20px]">logout</span>
+          <span className="hidden md:inline">Sign Out</span>
+        </button>
+      </div>
     </nav>
   );
 }

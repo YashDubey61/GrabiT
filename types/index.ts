@@ -18,6 +18,7 @@ export type OrderStatus =
   | "placed"
   | "preparing"
   | "ready"
+  | "picked_up"
   | "completed"
   | "cancelled";
 

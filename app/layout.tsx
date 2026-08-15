@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Montserrat, Sora } from "next/font/google";
+import { AuthProvider } from "@/lib/auth/AuthContext";
 import "./globals.css";
 
 // Display face — Montserrat, used for headlines/titles only (PRD §12: Apple-level
@@ -55,7 +56,10 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }
+

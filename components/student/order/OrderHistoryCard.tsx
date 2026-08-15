@@ -27,8 +27,13 @@ const STATUS_CONFIG: Record<
     badgeClass: "bg-success-soft text-success border border-success/30",
     isOngoing: true,
   },
-  completed: {
+  picked_up: {
     label: "Picked Up",
+    badgeClass: "bg-primary/10 text-primary border border-primary/30",
+    isOngoing: true,
+  },
+  completed: {
+    label: "Completed",
     badgeClass: "bg-surface-elevated text-success border border-success/20",
     isOngoing: false,
   },

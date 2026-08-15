@@ -2,15 +2,18 @@ import { NextResponse } from "next/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { getAuthenticatedVendorContext } from "@/lib/supabase/vendor_auth";
 import { trackProductEvent } from "@/lib/analytics/events";
+import { recordOrderStatusHistory } from "@/lib/supabase/order_status_history";
 import type { VendorOrderStatus } from "@/lib/mock/vendor";
 
 interface UpdateOrderStatusPayload {
   status: VendorOrderStatus;
+  reason?: string;
 }
 
 function getSupabaseAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
   return createAdminClient(url, key);
 }
 
@@ -69,12 +72,14 @@ export async function PATCH(
     const currentStatus = currentOrder.status as VendorOrderStatus;
     const targetStatus = payload.status;
 
-    // 2. Validate strict status transition rules (placed -> preparing -> ready -> completed)
+    // 2. Validate strict status transition rules (placed -> preparing -> ready -> picked_up -> completed)
     const validTransitions: Record<VendorOrderStatus, VendorOrderStatus[]> = {
-      placed: ["preparing"],
-      preparing: ["ready"],
-      ready: ["completed"],
+      placed: ["preparing", "cancelled"],
+      preparing: ["ready", "cancelled"],
+      ready: ["picked_up"],
+      picked_up: ["completed"],
       completed: [],
+      cancelled: [],
     };
 
     const allowedNextStatuses = validTransitions[currentStatus] ?? [];
@@ -89,23 +94,68 @@ export async function PATCH(
       );
     }
 
-    // 3. Update status in database
+    // 3. Prepare atomic update fields
+    const nowIso = new Date().toISOString();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updateFields: Record<string, any> = {
+      status: targetStatus,
+    };
+
+    if (targetStatus === "preparing" && currentStatus === "placed") {
+      updateFields.accepted_at = nowIso;
+    } else if (targetStatus === "picked_up") {
+      updateFields.picked_up_at = nowIso;
+    } else if (targetStatus === "completed") {
+      updateFields.completed_at = nowIso;
+    } else if (targetStatus === "cancelled") {
+      updateFields.cancelled_at = nowIso;
+      updateFields.cancelled_by = vendorCtx.userId;
+      updateFields.cancellation_reason =
+        payload.reason?.trim() || "Store was unable to fulfill this order.";
+    }
+
+    // 4. Atomic Database Update (WHERE status = currentStatus) for Race Condition Protection
     const { data: updatedOrder, error: updateErr } = await supabase
       .from("orders")
-      .update({ status: targetStatus })
+      .update(updateFields)
       .eq("id", currentOrder.id)
+      .eq("status", currentStatus) // Atomic status check
       .select()
       .single();
 
     if (updateErr || !updatedOrder) {
-      console.error("Order status update database error:", updateErr);
       return NextResponse.json(
-        { ok: false, error: "Failed to update order status." },
-        { status: 500 },
+        {
+          ok: false,
+          error: "This order has already been processed or updated by another session.",
+        },
+        { status: 409 },
       );
     }
 
-    // 4. Authoritative Server Analytics Event Tracking
+    // 5. Audit Log to order_status_history
+    await recordOrderStatusHistory({
+      orderId: currentOrder.id,
+      previousStatus: currentStatus,
+      newStatus: targetStatus,
+      changedBy: vendorCtx.userId,
+      actorRole: "vendor",
+      reason: payload.reason,
+    });
+
+    // 6. Auto-resolve corresponding vendor new order notification
+    if (targetStatus === "preparing" || targetStatus === "cancelled") {
+      try {
+        const { autoResolveOperationalNotification } = await import(
+          "@/lib/notifications/operational_notifications"
+        );
+        await autoResolveOperationalNotification(`vendor-new-order:${currentOrder.id}`);
+      } catch (notifErr) {
+        console.warn("Non-critical notification resolve error:", notifErr);
+      }
+    }
+
+    // 7. Authoritative Server Analytics Event Tracking
     if (targetStatus === "completed") {
       trackProductEvent({
         eventName: "order_completed",
@@ -114,33 +164,48 @@ export async function PATCH(
       });
     }
 
-    // 5. Fail-Safe Student Notification Side-Effect
+    // 8. Student Notification Side-Effect
     try {
-      const { createStudentNotification } = await import("@/lib/notifications/student_notifications");
-      let notifType: "ORDER_PREPARING" | "ORDER_READY" | "ORDER_COMPLETED" | "ORDER_CANCELLED" | null = null;
+      const { createStudentNotification } = await import(
+        "@/lib/notifications/student_notifications"
+      );
+      let notifType:
+        | "ORDER_PREPARING"
+        | "ORDER_READY"
+        | "ORDER_PICKED_UP"
+        | "ORDER_COMPLETED"
+        | "ORDER_CANCELLED"
+        | null = null;
       let title = "";
       let message = "";
       let severity: "INFO" | "SUCCESS" | "WARNING" | "URGENT" = "INFO";
 
+      const orderNum = updatedOrder.order_number ?? updatedOrder.id.slice(0, 6);
+
       if (targetStatus === "preparing") {
         notifType = "ORDER_PREPARING";
-        title = `Order #${updatedOrder.order_number ?? updatedOrder.id.slice(0, 6)} is Preparing`;
-        message = "The kitchen has accepted your order and started cooking.";
+        title = `Order #${orderNum} Accepted!`;
+        message = "The canteen has accepted your order and started cooking.";
         severity = "INFO";
       } else if (targetStatus === "ready") {
         notifType = "ORDER_READY";
-        title = `Order #${updatedOrder.order_number ?? updatedOrder.id.slice(0, 6)} Ready for Pickup!`;
+        title = `Order #${orderNum} Ready for Pickup!`;
         message = "Your food is fresh & hot at the counter. Head to the pickup lane.";
+        severity = "SUCCESS";
+      } else if (targetStatus === "picked_up") {
+        notifType = "ORDER_PICKED_UP";
+        title = `Order #${orderNum} Picked Up`;
+        message = "Your order has been collected at the counter. Enjoy your meal!";
         severity = "SUCCESS";
       } else if (targetStatus === "completed") {
         notifType = "ORDER_COMPLETED";
-        title = `Order #${updatedOrder.order_number ?? updatedOrder.id.slice(0, 6)} Pickup Completed`;
+        title = `Order #${orderNum} Completed`;
         message = "Thank you for ordering with GrabIt! Enjoy your meal.";
         severity = "SUCCESS";
-      } else if ((targetStatus as string) === "cancelled") {
+      } else if (targetStatus === "cancelled") {
         notifType = "ORDER_CANCELLED";
-        title = `Order #${updatedOrder.order_number ?? updatedOrder.id.slice(0, 6)} Cancelled`;
-        message = "Your order was cancelled. Any charged amount will be refunded.";
+        title = `Order #${orderNum} Cancelled by Store`;
+        message = `Reason: ${payload.reason?.trim() || "Store unable to process item"}. Any paid amount will be refunded.`;
         severity = "WARNING";
       }
 
@@ -167,6 +232,11 @@ export async function PATCH(
         id: updatedOrder.id,
         orderNumber: updatedOrder.order_number,
         status: updatedOrder.status,
+        acceptedAt: updatedOrder.accepted_at,
+        pickedUpAt: updatedOrder.picked_up_at,
+        completedAt: updatedOrder.completed_at,
+        cancelledAt: updatedOrder.cancelled_at,
+        cancellationReason: updatedOrder.cancellation_reason,
       },
     });
   } catch (err) {
