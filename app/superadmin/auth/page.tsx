@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -16,10 +16,14 @@ type ViewMode = "signin" | "forgot";
 
 function SuperAdminAuthFormContent() {
   const searchParams = useSearchParams();
-  const { user, role, refreshAuth } = useAuth();
+  const { user, role, isLoading, refreshAuth } = useAuth();
 
   const nextParam = searchParams.get("next");
   const errorParam = searchParams.get("error");
+
+  // Only ever redirect once, at this tab's initial auth resolution — see
+  // app/auth/page.tsx for why (cross-tab Supabase session sync).
+  const hasCheckedInitialAuthRef = useRef(false);
 
   const [mode, setMode] = useState<ViewMode>("signin");
   const [email, setEmail] = useState("");
@@ -30,14 +34,17 @@ function SuperAdminAuthFormContent() {
   const [errorMessage, setErrorMessage] = useState<string | null>(errorParam);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // If already authenticated as an admin, redirect to /superadmin
+  // If already authenticated as an admin, redirect to /superadmin —
+  // evaluated once, at this tab's own initial auth resolution.
   useEffect(() => {
+    if (isLoading || hasCheckedInitialAuthRef.current) return;
+    hasCheckedInitialAuthRef.current = true;
     if (user && role === "admin") {
       const destination = getSafeRedirectUrl(nextParam, "admin");
       authLog("Already authenticated as admin on mount, target:", destination);
       hardNavigate(destination);
     }
-  }, [user, role, nextParam]);
+  }, [user, role, isLoading, nextParam]);
 
   const isEmailValid = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
 

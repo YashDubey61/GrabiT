@@ -3,10 +3,10 @@ import { CartProvider } from "@/lib/cart/CartContext";
 import { OrderProvider } from "@/lib/orders/OrderContext";
 
 const STUDENT_NAV: NavItem[] = [
-  { label: "Home", href: "/student", icon: "storefront" },
-  { label: "Orders", href: "/student/orders", icon: "receipt_long" },
-  { label: "Wallet", href: "/student/wallet", icon: "account_balance_wallet" },
-  { label: "Profile", href: "/student/profile", icon: "person" },
+  { label: "Home", href: "/customer", icon: "storefront" },
+  { label: "Orders", href: "/customer/orders", icon: "receipt_long" },
+  { label: "Wallet", href: "/customer/wallet", icon: "account_balance_wallet" },
+  { label: "Profile", href: "/customer/profile", icon: "person" },
 ];
 
 // Structural shell for the Student role. Route-group layout — does not

@@ -7,7 +7,7 @@ import type { UserRole } from "@/types";
  * and backslash-based ("\\host") open-redirect payloads.
  */
 export function getSafeRedirectUrl(next: string | null | undefined, role: UserRole): string {
-  const fallback = ROLE_HOME[role] || "/student";
+  const fallback = ROLE_HOME[role] || "/customer";
   if (!next) return fallback;
 
   const trimmed = next.trim();

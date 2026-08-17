@@ -333,7 +333,7 @@ export async function POST(request: Request) {
         severity: "INFO",
         category: "ORDERS",
         relatedOrderId: createdOrder.id,
-        actionUrl: `/student/orders/${createdOrder.id}`,
+        actionUrl: `/customer/orders/${createdOrder.id}`,
         dedupeKey: `order-placed:${createdOrder.id}`,
       });
 

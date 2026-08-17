@@ -54,7 +54,7 @@ export async function updateSession(request: NextRequest) {
 
   const isAuthPagePath = isStudentAuth || isVendorAuth || isSuperAdminAuth;
 
-  const isProtectedStudent = pathname.startsWith("/student");
+  const isProtectedStudent = pathname.startsWith("/customer");
   const isProtectedVendor = pathname.startsWith("/vendor") && !isVendorAuth;
   const isProtectedSuperAdmin = pathname.startsWith("/superadmin") && !isSuperAdminAuth;
 
@@ -93,7 +93,7 @@ export async function updateSession(request: NextRequest) {
       userRole = "student";
     }
 
-    const homeUrl = ROLE_HOME[userRole] || "/student";
+    const homeUrl = ROLE_HOME[userRole] || "/customer";
 
     // 2a. Authenticated user visiting any login page -> Redirect to their role home dashboard
     if (isAuthPagePath) {

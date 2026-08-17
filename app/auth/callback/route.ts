@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Determine target redirect route
-    const targetPath = next || ROLE_HOME[userRole] || "/student";
+    const targetPath = next || ROLE_HOME[userRole] || "/customer";
     return NextResponse.redirect(new URL(targetPath, requestUrl.origin));
   }
 

@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "GrabIt — Campus Canteen OS",
     short_name: "GrabIt",
     description: "When Hunger Hits, GrabIt. Pickup-first food ordering for Indian campuses.",
-    start_url: "/student",
+    start_url: "/customer",
     display: "standalone",
     background_color: "#0a0a0b",
     theme_color: "#0a0a0b",

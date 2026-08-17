@@ -54,7 +54,7 @@ export function CampusHeader({
       {/* Quick Action Icons */}
       <div className="flex items-center gap-2">
         <a
-          href="/student/notifications"
+          href="/customer/notifications"
           aria-label="Notifications"
           className="relative flex h-10 w-10 items-center justify-center rounded-xl text-primary hover:bg-surface-elevated transition-colors active:scale-95"
         >

@@ -111,7 +111,7 @@ export async function POST(request: Request) {
           severity: "INFO",
           category: "ORDERS",
           relatedOrderId: updated.id,
-          actionUrl: `/student/orders/${updated.id}`,
+          actionUrl: `/customer/orders/${updated.id}`,
           dedupeKey: `order-completed:${updated.id}`,
         });
       }

@@ -207,7 +207,7 @@ export async function PATCH(
           severity,
           category: "ORDERS",
           relatedOrderId: updatedOrder.id,
-          actionUrl: `/student/orders/${updatedOrder.id}`,
+          actionUrl: `/customer/orders/${updatedOrder.id}`,
           dedupeKey: `order-status:${targetStatus}:${updatedOrder.id}`,
         });
       }

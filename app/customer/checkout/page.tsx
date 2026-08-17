@@ -67,7 +67,7 @@ export default function StudentCheckoutPage() {
       }
 
       cart.clearCart();
-      router.push(`/student/orders/${result.order.id}`);
+      router.push(`/customer/orders/${result.order.id}`);
     } catch {
       setError("Network error. Please try again.");
       setIsSubmitting(false);

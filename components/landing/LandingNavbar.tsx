@@ -18,7 +18,7 @@ export function LandingNavbar() {
 
       <div className="hidden items-center gap-8 md:flex">
         <Link
-          href="/student"
+          href="/customer"
           className="font-display text-caption font-bold tracking-wider uppercase text-foreground hover:text-primary transition-colors"
         >
           Student App

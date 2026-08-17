@@ -57,8 +57,8 @@ function loadFromSession(): CartState {
 }
 
 /**
- * Owns the student's cart for the lifetime of the /student route group
- * (mounted once in app/student/layout.tsx) so Menu and Checkout read the
+ * Owns the student's cart for the lifetime of the /customer route group
+ * (mounted once in app/customer/layout.tsx) so Menu and Checkout read the
  * same state instead of each keeping their own copy.
  *
  * Persistence: sessionStorage only — survives client-side navigation and a

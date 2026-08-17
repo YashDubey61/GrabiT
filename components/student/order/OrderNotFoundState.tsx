@@ -17,7 +17,7 @@ export function OrderNotFoundState() {
         or the link is incorrect.
       </p>
       <Link
-        href="/student/menu"
+        href="/customer/menu"
         className="mt-2 rounded-full bg-primary px-6 py-2.5 text-body font-700 text-on-primary transition-transform active:scale-95"
       >
         Browse Menu

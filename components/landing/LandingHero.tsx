@@ -35,7 +35,7 @@ export function LandingHero() {
 
           <div className="flex flex-col sm:flex-row gap-4 pt-2">
             <Link
-              href="/student"
+              href="/customer"
               className="flex items-center justify-center gap-3 rounded-2xl bg-primary px-8 py-4 font-display text-body font-extrabold uppercase tracking-wider text-on-primary shadow-glow-primary transition-all duration-150 active:scale-95 hover:opacity-90"
             >
               Open Student App

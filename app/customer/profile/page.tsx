@@ -175,7 +175,7 @@ export default function StudentProfilePage() {
                 icon="receipt_long"
                 title="Order History"
                 subtitle="View all your past campus orders"
-                href="/student/orders"
+                href="/customer/orders"
               />
               <ProfileMenuItem
                 icon="location_on"

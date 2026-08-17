@@ -186,7 +186,7 @@ export async function POST(request: Request) {
         message: `Welcome to GrabIt Gold! Enjoy 0% platform fee and priority pickup lanes.`,
         severity: "SUCCESS",
         category: "GOLD",
-        actionUrl: "/student/profile",
+        actionUrl: "/customer/profile",
         dedupeKey: `gold-activated:${user.id}:${razorpay_payment_id}`,
       });
     } catch (notifErr) {

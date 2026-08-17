@@ -103,7 +103,7 @@ export function OrderHistoryCard({ order }: OrderHistoryCardProps) {
       {/* Bottom CTA actions */}
       <div className="flex gap-2 pt-1">
         <Link
-          href={`/student/orders/${order.id}`}
+          href={`/customer/orders/${order.id}`}
           className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-center font-display text-body-sm font-bold uppercase tracking-wider transition-all duration-150 active:scale-[0.98] ${
             statusInfo.isOngoing
               ? "bg-primary text-on-primary shadow-glow-primary hover:opacity-90"
@@ -117,7 +117,7 @@ export function OrderHistoryCard({ order }: OrderHistoryCardProps) {
         </Link>
 
         <Link
-          href={`/student/orders/${order.id}`}
+          href={`/customer/orders/${order.id}`}
           aria-label={`View order ${order.orderNumber} details`}
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border text-muted transition-colors hover:bg-surface-elevated hover:text-foreground active:scale-[0.95]"
         >

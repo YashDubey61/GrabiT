@@ -20,7 +20,7 @@ export function EmptyOrderHistoryState() {
       </p>
 
       <Link
-        href="/student/menu"
+        href="/customer/menu"
         className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 font-display text-body font-bold uppercase tracking-wide text-on-primary shadow-lg transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
       >
         <span className="material-symbols-outlined text-[20px]" aria-hidden="true">

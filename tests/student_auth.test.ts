@@ -19,7 +19,7 @@ const isEmailValid = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
 
 // Safe redirect URL validator matching app/auth/page.tsx
 function getSafeRedirectUrl(next: string | null, userRole: UserRole = "student"): string {
-  const defaultPath = ROLE_HOME[userRole] || "/student";
+  const defaultPath = ROLE_HOME[userRole] || "/customer";
   if (!next) return defaultPath;
 
   const trimmed = next.trim();
@@ -45,8 +45,8 @@ async function runStudentAuthNavigationTests() {
   // Test 1: Successful Student Login Navigation Target
   try {
     const dest = getSafeRedirectUrl(null, "student");
-    if (dest === "/student") {
-      console.log("✅ TEST 1 PASSED: Valid Student login targets /student.");
+    if (dest === "/customer") {
+      console.log("✅ TEST 1 PASSED: Valid Student login targets /customer.");
       passed++;
     } else {
       console.error("❌ TEST 1 FAILED: Unexpected destination.", dest);
@@ -57,12 +57,12 @@ async function runStudentAuthNavigationTests() {
     failed++;
   }
 
-  // Test 2: Next Parameter Navigation Handling (/auth?next=/student)
+  // Test 2: Next Parameter Navigation Handling (/auth?next=/customer)
   try {
-    const nextParam = "/student";
+    const nextParam = "/customer";
     const dest = getSafeRedirectUrl(nextParam, "student");
-    if (dest === "/student") {
-      console.log("✅ TEST 2 PASSED: /auth?next=/student navigates to /student.");
+    if (dest === "/customer") {
+      console.log("✅ TEST 2 PASSED: /auth?next=/customer navigates to /customer.");
       passed++;
     } else {
       console.error("❌ TEST 2 FAILED: Failed to honor next parameter.", dest);
@@ -83,8 +83,8 @@ async function runStudentAuthNavigationTests() {
     const dest2 = getSafeRedirectUrl(maliciousNext2, "student");
     const dest3 = getSafeRedirectUrl(maliciousNext3, "student");
 
-    if (dest1 === "/student" && dest2 === "/student" && dest3 === "/student") {
-      console.log("✅ TEST 3 PASSED: Open redirect attacks rejected (external URLs sanitized to /student).");
+    if (dest1 === "/customer" && dest2 === "/customer" && dest3 === "/customer") {
+      console.log("✅ TEST 3 PASSED: Open redirect attacks rejected (external URLs sanitized to /customer).");
       passed++;
     } else {
       console.error("❌ TEST 3 FAILED: Open redirect vulnerability detected!", { dest1, dest2, dest3 });
@@ -178,12 +178,12 @@ async function runStudentAuthNavigationTests() {
 
   // Test 9: Server-Authoritative Role Isolation
   try {
-    const studentAccessStudent = isAuthorizedForPath("student", "/student");
-    const vendorAccessStudent = isAuthorizedForPath("vendor", "/student");
-    const adminAccessStudent = isAuthorizedForPath("admin", "/student");
+    const studentAccessStudent = isAuthorizedForPath("student", "/customer");
+    const vendorAccessStudent = isAuthorizedForPath("vendor", "/customer");
+    const adminAccessStudent = isAuthorizedForPath("admin", "/customer");
 
     if (studentAccessStudent && !vendorAccessStudent && !adminAccessStudent) {
-      console.log("✅ TEST 9 PASSED: Role isolation enforced (Only student can access /student).");
+      console.log("✅ TEST 9 PASSED: Role isolation enforced (Only student can access /customer).");
       passed++;
     } else {
       console.error("❌ TEST 9 FAILED: Role isolation rule broken.");

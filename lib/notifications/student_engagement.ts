@@ -49,7 +49,7 @@ export async function checkAndTriggerStudentEngagement(userId: string): Promise<
         message: "Skip the canteen line. Order fresh food directly from your phone.",
         severity: "INFO",
         category: "GENERAL",
-        actionUrl: "/student/menu",
+        actionUrl: "/customer/menu",
         dedupeKey,
       });
     } else if (segment === "ACTIVATED" || segment === "RETURNING") {
@@ -60,7 +60,7 @@ export async function checkAndTriggerStudentEngagement(userId: string): Promise<
         message: "Butter Paneer Meal Box is trending at your campus food court.",
         severity: "INFO",
         category: "RECOMMENDATIONS",
-        actionUrl: "/student/menu",
+        actionUrl: "/customer/menu",
         dedupeKey,
       });
     } else if (segment === "LOYAL") {
@@ -71,7 +71,7 @@ export async function checkAndTriggerStudentEngagement(userId: string): Promise<
         message: "Enjoy 0% platform fee and priority pickup lanes across campus.",
         severity: "SUCCESS",
         category: "GOLD",
-        actionUrl: "/student/profile",
+        actionUrl: "/customer/profile",
         dedupeKey,
       });
     }

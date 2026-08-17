@@ -149,7 +149,7 @@ export default function StudentNotificationsPage() {
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between bg-background border-b border-[#262626] px-5 md:px-16">
         <div className="flex items-center gap-3">
           <Link
-            href="/student"
+            href="/customer"
             className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
           >
             <span className="material-symbols-outlined">arrow_back</span>

@@ -24,7 +24,7 @@ export function LandingCtaBanner() {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-2">
           <Link
-            href="/student"
+            href="/customer"
             className="flex items-center justify-center gap-2 rounded-2xl bg-black px-8 py-4 font-display text-body font-extrabold text-white transition-transform hover:scale-105 active:scale-95 shadow-2xl"
           >
             Get the Student App

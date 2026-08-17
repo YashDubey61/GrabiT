@@ -68,7 +68,7 @@ function loadFromSession(): StoredState {
 /**
  * Local order repository — the mock stand-in for TRD §7's `/api/orders`
  * + Supabase `orders`/`order_items` tables. Mounted once in
- * app/student/layout.tsx, next to CartProvider, so Checkout and Track
+ * app/customer/layout.tsx, next to CartProvider, so Checkout and Track
  * Order (and Day 5's Order History) all read the same store.
  *
  * Persistence: sessionStorage, same pattern as CartContext — survives a

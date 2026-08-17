@@ -35,7 +35,7 @@ export function LandingFeaturesBento() {
 
               <div>
                 <Link
-                  href="/student"
+                  href="/customer"
                   className="inline-flex items-center gap-2 font-display text-caption font-bold uppercase tracking-wider text-primary group-hover:gap-3 transition-all"
                 >
                   Explore Stealth Mode

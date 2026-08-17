@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -39,11 +39,17 @@ type AuthMode = "signin" | "signup" | "forgot";
 
 function AuthFormContent() {
   const searchParams = useSearchParams();
-  const { user, role, refreshAuth } = useAuth();
+  const { user, role, isLoading, refreshAuth } = useAuth();
 
   const tabParam = searchParams.get("tab");
   const errorParam = searchParams.get("error");
   const nextParam = searchParams.get("next");
+
+  // Only ever redirect once, at this tab's initial auth resolution — the
+  // Supabase client syncs session changes made in OTHER tabs into this
+  // context too, and without this guard that would silently bounce a tab
+  // sitting on /auth to another tab's freshly-signed-in dashboard.
+  const hasCheckedInitialAuthRef = useRef(false);
 
   const initialMode: AuthMode =
     tabParam === "signup" ? "signup" : tabParam === "forgot" ? "forgot" : "signin";
@@ -62,14 +68,17 @@ function AuthFormContent() {
   const [errorMessage, setErrorMessage] = useState<string | null>(errorParam);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Redirect if already logged in
+  // Redirect if already logged in — evaluated once, at this tab's own
+  // initial auth resolution, not on every later change (see ref above).
   useEffect(() => {
+    if (isLoading || hasCheckedInitialAuthRef.current) return;
+    hasCheckedInitialAuthRef.current = true;
     if (user && role) {
       const destination = getSafeRedirectUrl(nextParam, role);
       authLog("Already authenticated on mount, role:", role, "target:", destination);
       hardNavigate(destination);
     }
-  }, [user, role, nextParam]);
+  }, [user, role, isLoading, nextParam]);
 
   // Validation helpers
   const isEmailValid = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());

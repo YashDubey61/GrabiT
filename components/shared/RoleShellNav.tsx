@@ -22,8 +22,8 @@ export function RoleShellTabBar({ items }: { items: NavItem[] }) {
       <ul className="mx-auto flex max-w-md items-center justify-around px-4 py-3">
         {items.map((item) => {
           const isActive =
-            item.href === "/student"
-              ? pathname === "/student"
+            item.href === "/customer"
+              ? pathname === "/customer"
               : pathname.startsWith(item.href);
 
           return (

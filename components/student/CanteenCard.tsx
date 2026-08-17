@@ -15,7 +15,7 @@ import type { MockCanteen } from "@/lib/mock/campus";
 export function CanteenCard({ canteen }: { canteen: MockCanteen }) {
   return (
     <Link
-      href={`/student/menu/${canteen.id}`}
+      href={`/customer/menu/${canteen.id}`}
       className="group relative block overflow-hidden rounded-2xl border border-border-subtle bg-surface-elevated transition-colors duration-300 hover:border-primary/50"
     >
       <div className="relative h-48 overflow-hidden">

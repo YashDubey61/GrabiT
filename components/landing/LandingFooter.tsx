@@ -24,22 +24,22 @@ export function LandingFooter() {
             </h5>
             <ul className="space-y-2 text-body-sm">
               <li>
-                <Link href="/student" className="hover:text-primary transition-colors">
+                <Link href="/customer" className="hover:text-primary transition-colors">
                   Student App
                 </Link>
               </li>
               <li>
-                <Link href="/student/menu" className="hover:text-primary transition-colors">
+                <Link href="/customer/menu" className="hover:text-primary transition-colors">
                   Campus Menu
                 </Link>
               </li>
               <li>
-                <Link href="/student/wallet" className="hover:text-primary transition-colors">
+                <Link href="/customer/wallet" className="hover:text-primary transition-colors">
                   Digital Wallet
                 </Link>
               </li>
               <li>
-                <Link href="/student/orders" className="hover:text-primary transition-colors">
+                <Link href="/customer/orders" className="hover:text-primary transition-colors">
                   Order Tracking
                 </Link>
               </li>
@@ -53,7 +53,7 @@ export function LandingFooter() {
             </h5>
             <ul className="space-y-2 text-body-sm">
               <li>
-                <Link href="/student" className="hover:text-primary transition-colors">
+                <Link href="/customer" className="hover:text-primary transition-colors">
                   Student Portal
                 </Link>
               </li>

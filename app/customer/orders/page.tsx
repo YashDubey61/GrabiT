@@ -79,7 +79,7 @@ export default function StudentOrderHistoryPage() {
       <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-border/50 bg-background/90 px-4 backdrop-blur-md sm:px-6">
         <div className="flex items-center gap-3">
           <Link
-            href="/student"
+            href="/customer"
             aria-label="Back to home"
             className="flex h-10 w-10 items-center justify-center rounded-xl text-muted transition-colors hover:bg-surface-elevated hover:text-foreground active:scale-95"
           >
