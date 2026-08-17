@@ -16,7 +16,11 @@ import { VendorNotificationsDrawer } from "@/components/vendor/notifications/Ven
 import { IncomingOrderAlert } from "@/components/vendor/orders/IncomingOrderAlert";
 import { VendorQrScanner } from "@/components/vendor/orders/VendorQrScanner";
 import { getLiveVendorOrders } from "@/lib/supabase/vendor_orders";
-import { getLiveVendorCanteenId, getLiveVendorShopName } from "@/lib/supabase/vendor_context";
+import {
+  getLiveVendorCanteenId,
+  getLiveVendorShopName,
+  getLiveVendorPauseStatus,
+} from "@/lib/supabase/vendor_context";
 import { createClient } from "@/lib/supabase/client";
 import { useOrderAlertSound } from "@/lib/vendor/useOrderAlertSound";
 import { hardNavigate } from "@/lib/auth/redirect";
@@ -26,6 +30,7 @@ const TAB_TITLE_ALERT = "🔔 NEW ORDER — GRABIT Vendor";
 
 export default function VendorActiveOrdersPage() {
   const [store, setStore] = useState(MOCK_VENDOR_STORE);
+  const [pauseStatus, setPauseStatus] = useState<{ isPaused: boolean; reason: string | null } | null>(null);
   const [orders, setOrders] = useState<VendorOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [notification, setNotification] = useState<string | null>(null);
@@ -105,6 +110,10 @@ export default function VendorActiveOrdersPage() {
       if (isMounted && name) {
         setStore((prev) => ({ ...prev, name }));
       }
+    });
+
+    getLiveVendorPauseStatus().then((pause) => {
+      if (isMounted) setPauseStatus(pause);
     });
 
     getLiveVendorCanteenId().then((id) => {
@@ -341,6 +350,20 @@ export default function VendorActiveOrdersPage() {
       />
 
       <main className="flex-1 p-4 sm:p-6 flex flex-col gap-6 max-w-7xl mx-auto w-full">
+        {pauseStatus?.isPaused && (
+          <div className="flex flex-col gap-1 rounded-xl border border-warning/40 bg-warning/10 p-4">
+            <span className="font-display text-body-sm font-extrabold uppercase tracking-wider text-warning">
+              Store Paused by Super Admin
+            </span>
+            {pauseStatus.reason && (
+              <span className="text-caption text-warning/80">Reason: {pauseStatus.reason}</span>
+            )}
+            <span className="text-caption text-muted">
+              Customers cannot place new orders until this is lifted.
+            </span>
+          </div>
+        )}
+
         {notification && (
           <div className="rounded-xl border border-primary/30 bg-primary/10 p-3 text-center text-body-sm font-semibold text-primary animate-fade-in">
             {notification}

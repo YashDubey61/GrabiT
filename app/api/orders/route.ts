@@ -87,7 +87,7 @@ export async function POST(request: Request) {
     // 4. Authoritative Canteen & Campus Validation
     const { data: canteenRow, error: canteenErr } = await supabase
       .from("canteens")
-      .select("id, campus_id, status, name")
+      .select("id, campus_id, status, name, is_paused, pause_reason")
       .eq("id", effectiveCanteenId)
       .maybeSingle();
 
@@ -101,6 +101,18 @@ export async function POST(request: Request) {
     if (canteenRow.status !== "active") {
       return NextResponse.json(
         { ok: false, error: "This vendor is currently not accepting orders." },
+        { status: 400 },
+      );
+    }
+
+    if (canteenRow.is_paused) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: canteenRow.pause_reason
+            ? `This vendor is currently unavailable: ${canteenRow.pause_reason}`
+            : "This vendor is currently unavailable.",
+        },
         { status: 400 },
       );
     }

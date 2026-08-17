@@ -31,6 +31,31 @@ export async function getLiveVendorCanteenId(): Promise<string | null> {
   }
 }
 
+/** Resolves whether Super Admin has paused this vendor's store, and
+ * why, so the dashboard can show a clear "Paused by Super Admin"
+ * banner instead of silently blocking new orders. */
+export async function getLiveVendorPauseStatus(): Promise<{
+  isPaused: boolean;
+  reason: string | null;
+} | null> {
+  try {
+    const canteenId = await getLiveVendorCanteenId();
+    if (!canteenId) return null;
+
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("canteens")
+      .select("is_paused, pause_reason")
+      .eq("id", canteenId)
+      .maybeSingle();
+
+    if (!data) return null;
+    return { isPaused: data.is_paused ?? false, reason: data.pause_reason ?? null };
+  } catch {
+    return null;
+  }
+}
+
 /** Resolves the authenticated vendor's own store/shop name, for header
  * display. Falls back to null (never "undefined"/"null") so callers can
  * show a safe default like "GrabIt". */

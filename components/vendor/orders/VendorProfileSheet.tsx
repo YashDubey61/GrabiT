@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { VendorStoreConfig } from "@/lib/mock/vendor";
+import { createClient } from "@/lib/supabase/client";
 
 interface VendorProfile {
   vendorId: string;
@@ -40,6 +41,13 @@ export function VendorProfileSheet({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
+
   useEffect(() => {
     if (!isOpen) return;
     fetch("/api/vendor/profile")
@@ -73,6 +81,34 @@ export function VendorProfileSheet({
       setIsEditing(false);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordError(null);
+    setPasswordSuccess(false);
+    if (newPassword.length < 8) {
+      setPasswordError("Password must be at least 8 characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Passwords do not match.");
+      return;
+    }
+    setIsSavingPassword(true);
+    try {
+      const supabase = createClient();
+      const { error: updateErr } = await supabase.auth.updateUser({ password: newPassword });
+      if (updateErr) {
+        setPasswordError("Unable to change password. Please try again.");
+        return;
+      }
+      setPasswordSuccess(true);
+      setNewPassword("");
+      setConfirmPassword("");
+      setIsChangingPassword(false);
+    } finally {
+      setIsSavingPassword(false);
     }
   };
 
@@ -179,6 +215,67 @@ export function VendorProfileSheet({
               <div className="divide-y divide-border/40 rounded-xl border border-border bg-surface-elevated px-4">
                 <Field label="Vendor ID" value={profile.vendorId} />
                 <Field label="Registered On" value={registeredLabel} />
+              </div>
+            </section>
+
+            <section>
+              <h4 className="mb-1 font-display text-[11px] font-extrabold uppercase tracking-widest text-faint">
+                Account Settings
+              </h4>
+              <div className="rounded-xl border border-border bg-surface-elevated p-4">
+                {isChangingPassword ? (
+                  <div className="flex flex-col gap-3">
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="New password"
+                      className="rounded-lg border border-border bg-surface px-3 py-2 text-body-sm text-foreground focus:border-primary focus:outline-none"
+                    />
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Confirm new password"
+                      className="rounded-lg border border-border bg-surface px-3 py-2 text-body-sm text-foreground focus:border-primary focus:outline-none"
+                    />
+                    {passwordError && <p className="text-caption font-semibold text-danger">{passwordError}</p>}
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsChangingPassword(false);
+                          setPasswordError(null);
+                        }}
+                        className="flex-1 rounded-lg border border-border py-2 font-display text-caption font-bold text-muted"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isSavingPassword}
+                        onClick={handleChangePassword}
+                        className="flex-1 rounded-lg bg-primary py-2 font-display text-caption font-bold text-on-primary disabled:opacity-50"
+                      >
+                        {isSavingPassword ? "Saving..." : "Save"}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsChangingPassword(true);
+                      setPasswordSuccess(false);
+                    }}
+                    className="font-display text-caption font-bold text-primary hover:text-primary-soft"
+                  >
+                    Change Password
+                  </button>
+                )}
+                {passwordSuccess && (
+                  <p className="mt-2 text-caption font-semibold text-success">Password updated successfully.</p>
+                )}
               </div>
             </section>
           </div>

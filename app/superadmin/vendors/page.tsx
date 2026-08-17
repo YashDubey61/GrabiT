@@ -11,6 +11,7 @@ import {
 import { VendorOversightHeader } from "@/components/superadmin/vendors/VendorOversightHeader";
 import { VendorHubGroup } from "@/components/superadmin/vendors/VendorHubGroup";
 import { VendorApprovalQueue } from "@/components/superadmin/vendors/VendorApprovalQueue";
+import { VendorManagementSection } from "@/components/superadmin/vendors/VendorManagementSection";
 
 export default function SuperAdminVendorsPage() {
   const [hubs, setHubs] = useState<CampusVendorHub[]>(
@@ -188,6 +189,9 @@ export default function SuperAdminVendorsPage() {
 
         {/* Header & Metric Summary */}
         <VendorOversightHeader pendingCount={approvalQueue.length} />
+
+        {/* Vendor creation, credentials, pause/resume, and deactivation */}
+        <VendorManagementSection />
 
         {/* Search Bar Input */}
         <div className="relative w-full">
