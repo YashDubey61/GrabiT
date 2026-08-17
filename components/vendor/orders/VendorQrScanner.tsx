@@ -1,8 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ClipboardEvent,
+  type KeyboardEvent,
+} from "react";
 import jsQR from "jsqr";
 import { buildPickupQrPayload, parsePickupQrPayload } from "@/lib/orders/pickup_qr";
+import { PICKUP_OTP_LENGTH } from "@/lib/orders/pickup_otp";
 
 interface ScannedOrder {
   id: string;
@@ -14,13 +22,20 @@ interface ScannedOrder {
 }
 
 type CameraState = "idle" | "starting" | "running" | "denied" | "unavailable";
+type EntryMode = "qr" | "otp";
+// Remembers exactly which credential verified, so completion consumes
+// the same one — regardless of whether it came from the camera, the
+// raw-token paste box, or the OTP digits.
+type PendingCredential = { type: "qr" | "otp"; value: string };
 
 export function VendorQrScanner({
   isOpen,
+  initialMode = "qr",
   onClose,
   onCompleted,
 }: {
   isOpen: boolean;
+  initialMode?: EntryMode;
   onClose: () => void;
   onCompleted: (orderNumber: string) => void;
 }) {
@@ -28,16 +43,19 @@ export function VendorQrScanner({
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number | null>(null);
   const scanningRef = useRef(false);
-  // Remembers the exact payload that verified, so completion consumes
-  // the same token the vendor just confirmed on screen.
-  const pendingQrValueRef = useRef<string | null>(null);
+  const pendingCredentialRef = useRef<PendingCredential | null>(null);
+  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+  const [mode, setMode] = useState<EntryMode>(initialMode);
   const [cameraState, setCameraState] = useState<CameraState>("idle");
   const [detected, setDetected] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [verifiedOrder, setVerifiedOrder] = useState<ScannedOrder | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   const [manualCode, setManualCode] = useState("");
+  const [otpDigits, setOtpDigits] = useState<string[]>(
+    Array(PICKUP_OTP_LENGTH).fill(""),
+  );
 
   const stopCamera = useCallback(() => {
     scanningRef.current = false;
@@ -52,40 +70,52 @@ export function VendorQrScanner({
     if (videoRef.current) videoRef.current.srcObject = null;
   }, []);
 
-  /** Sends a scanned/typed payload to the server for verification. */
-  const verifyQrValue = useCallback(
-    async (qrValue: string) => {
+  /** Sends a scanned/typed credential to the server for verification.
+   * QR and OTP both call this same function against the same endpoint —
+   * only the request field differs — so they can never diverge. */
+  const verifyCredential = useCallback(
+    async (credential: PendingCredential, fallbackError: string) => {
       setIsBusy(true);
       setErrorMessage(null);
       try {
         const res = await fetch("/api/vendor/orders/verify-qr", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ qrValue }),
+          body: JSON.stringify(
+            credential.type === "qr"
+              ? { qrValue: credential.value }
+              : { otpValue: credential.value },
+          ),
         });
         const data = await res.json();
 
         if (!res.ok || !data.ok) {
-          setErrorMessage(data.error ?? "Unable to verify this QR code.");
+          setErrorMessage(data.error ?? fallbackError);
           setVerifiedOrder(null);
-          pendingQrValueRef.current = null;
+          pendingCredentialRef.current = null;
           return false;
         }
 
-        // Hold the verified payload so "Complete Order" consumes exactly
-        // this token (works for both camera scans and manual entry).
-        pendingQrValueRef.current = qrValue;
+        // Hold the verified credential so "Complete Order" consumes
+        // exactly this one (works for camera scans, pasted tokens, and
+        // manual OTP entry alike).
+        pendingCredentialRef.current = credential;
         setVerifiedOrder(data.order as ScannedOrder);
         stopCamera();
         return true;
       } catch {
-        setErrorMessage("Network error verifying QR. Try again.");
+        setErrorMessage("Network error verifying. Try again.");
         return false;
       } finally {
         setIsBusy(false);
       }
     },
     [stopCamera],
+  );
+
+  const verifyQrValue = useCallback(
+    (qrValue: string) => verifyCredential({ type: "qr", value: qrValue }, "Unable to verify this QR code."),
+    [verifyCredential],
   );
 
   const startCamera = useCallback(async () => {
@@ -156,29 +186,99 @@ export function VendorQrScanner({
     }
   }, [verifyQrValue]);
 
-  // Tear down camera + timers whenever the scanner closes or unmounts.
+  // Reset all state whenever the scanner opens or closes. Runs on the
+  // `isOpen` transition only (not on every `initialMode` prop identity
+  // change) — the modal doesn't remount between opens, so this is what
+  // makes each fresh open honor whichever entry point (QR button vs OTP
+  // link) the vendor just clicked, instead of getting stuck on whatever
+  // mode the very first open used.
   useEffect(() => {
+    pendingCredentialRef.current = null;
+    /* eslint-disable react-hooks/set-state-in-effect */
+    setVerifiedOrder(null);
+    setErrorMessage(null);
+    setManualCode("");
+    setOtpDigits(Array(PICKUP_OTP_LENGTH).fill(""));
+    setMode(isOpen ? initialMode : "qr");
+    /* eslint-enable react-hooks/set-state-in-effect */
     if (!isOpen) {
-      // Closing tears down the camera (external system) and clears the
-      // previous scan so reopening never shows a stale verified order.
       stopCamera();
-      pendingQrValueRef.current = null;
-      /* eslint-disable react-hooks/set-state-in-effect */
-      setVerifiedOrder(null);
-      setErrorMessage(null);
-      setManualCode("");
       setCameraState("idle");
-      /* eslint-enable react-hooks/set-state-in-effect */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  // Camera only ever runs while the modal is open AND in QR mode —
+  // starting it (an external system, getUserMedia) is exactly what
+  // effects are for.
+  useEffect(() => {
+    if (isOpen && mode === "qr") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      startCamera();
+      return () => stopCamera();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, mode]);
+
+  const switchToOtp = () => {
+    stopCamera();
+    setErrorMessage(null);
+    setMode("otp");
+  };
+
+  const switchToQr = () => {
+    setErrorMessage(null);
+    setOtpDigits(Array(PICKUP_OTP_LENGTH).fill(""));
+    setMode("qr");
+  };
+
+  const handleOtpDigitChange = (index: number, rawValue: string) => {
+    const digits = rawValue.replace(/\D/g, "");
+    if (!digits) {
+      setOtpDigits((prev) => prev.map((d, i) => (i === index ? "" : d)));
       return;
     }
-    startCamera();
-    return () => stopCamera();
-  }, [isOpen, startCamera, stopCamera]);
+    // Supports paste: a multi-digit value fills this box and onward.
+    setOtpDigits((prev) => {
+      const next = [...prev];
+      let cursor = index;
+      for (const digit of digits) {
+        if (cursor >= PICKUP_OTP_LENGTH) break;
+        next[cursor] = digit;
+        cursor++;
+      }
+      const focusIndex = Math.min(cursor, PICKUP_OTP_LENGTH - 1);
+      otpInputRefs.current[focusIndex]?.focus();
+      return next;
+    });
+  };
+
+  const handleOtpKeyDown = (index: number, e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !otpDigits[index] && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  // Each box only ever holds one typed digit (maxLength=1 below), so a
+  // real multi-digit paste needs its own handler — the browser would
+  // otherwise truncate it to a single character before onChange fires.
+  const handleOtpPaste = (index: number, e: ClipboardEvent<HTMLInputElement>) => {
+    const pasted = e.clipboardData.getData("text");
+    if (!/\d/.test(pasted)) return;
+    e.preventDefault();
+    handleOtpDigitChange(index, pasted);
+  };
+
+  const handleVerifyOtp = async () => {
+    const code = otpDigits.join("");
+    if (code.length !== PICKUP_OTP_LENGTH) return;
+    await verifyCredential({ type: "otp", value: code }, "Unable to verify this OTP.");
+  };
 
   const handleCompleteOrder = async () => {
     if (!verifiedOrder) return;
-    const qrValue = pendingQrValueRef.current;
-    if (!qrValue) return;
+    const credential = pendingCredentialRef.current;
+    if (!credential) return;
 
     setIsBusy(true);
     setErrorMessage(null);
@@ -186,7 +286,11 @@ export function VendorQrScanner({
       const res = await fetch("/api/vendor/orders/complete-qr", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ qrValue }),
+        body: JSON.stringify(
+          credential.type === "qr"
+            ? { qrValue: credential.value }
+            : { otpValue: credential.value },
+        ),
       });
       const data = await res.json();
 
@@ -221,11 +325,13 @@ export function VendorQrScanner({
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <div>
             <h3 className="font-display text-body font-extrabold text-foreground">
-              {verifiedOrder ? "Order Verified" : "Scan Order QR"}
+              {verifiedOrder ? "Order Verified" : mode === "otp" ? "Verify Order" : "Scan Order QR"}
             </h3>
             {!verifiedOrder && (
               <p className="text-caption text-faint">
-                Position the customer&apos;s QR inside the frame.
+                {mode === "otp"
+                  ? "Enter the customer's order verification code."
+                  : "Position the customer's QR inside the frame."}
               </p>
             )}
           </div>
@@ -293,6 +399,60 @@ export function VendorQrScanner({
                 className="w-full rounded-xl bg-primary py-3.5 font-display text-body-sm font-extrabold uppercase tracking-widest text-on-primary shadow-glow-primary transition-all active:scale-95 hover:opacity-90 disabled:opacity-50"
               >
                 {isBusy ? "Completing..." : "Complete Order"}
+              </button>
+            </div>
+          ) : mode === "otp" ? (
+            /* ---------- Manual OTP entry ---------- */
+            <div className="flex flex-col gap-4">
+              <p className="text-center font-display text-caption font-bold text-muted">
+                Enter the customer&apos;s {PICKUP_OTP_LENGTH}-digit OTP
+              </p>
+
+              <div className="flex items-center justify-center gap-3">
+                {otpDigits.map((digit, idx) => (
+                  <input
+                    key={idx}
+                    ref={(el) => {
+                      otpInputRefs.current[idx] = el;
+                    }}
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleOtpDigitChange(idx, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                    onPaste={(e) => handleOtpPaste(idx, e)}
+                    className="h-14 w-12 rounded-xl border border-border bg-surface-elevated text-center font-mono text-title font-extrabold text-foreground focus:border-primary focus:outline-none"
+                  />
+                ))}
+              </div>
+
+              {errorMessage && (
+                <div className="flex items-start gap-2 rounded-xl border border-danger/40 bg-danger-soft/40 p-3 text-caption font-semibold text-danger">
+                  <span className="material-symbols-outlined text-[18px] shrink-0">error</span>
+                  <div>
+                    <p className="font-bold">Incorrect OTP</p>
+                    <p>{errorMessage}</p>
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={handleVerifyOtp}
+                disabled={isBusy || otpDigits.some((d) => !d)}
+                className="w-full rounded-xl bg-primary py-3.5 font-display text-body-sm font-extrabold uppercase tracking-widest text-on-primary shadow-glow-primary transition-all active:scale-95 hover:opacity-90 disabled:opacity-50"
+              >
+                {isBusy ? "Verifying..." : "Verify OTP"}
+              </button>
+
+              <button
+                type="button"
+                onClick={switchToQr}
+                className="w-full rounded-xl border border-border py-2.5 font-display text-caption font-bold uppercase tracking-wider text-muted hover:text-foreground"
+              >
+                ← Back to QR Scanner
               </button>
             </div>
           ) : (
@@ -399,6 +559,20 @@ export function VendorQrScanner({
                   </button>
                 </div>
               </div>
+
+              <div className="flex items-center gap-3 text-caption font-bold uppercase tracking-wider text-faint">
+                <div className="h-px flex-1 bg-border" />
+                OR
+                <div className="h-px flex-1 bg-border" />
+              </div>
+
+              <button
+                type="button"
+                onClick={switchToOtp}
+                className="w-full rounded-xl border border-primary/40 py-3 font-display text-body-sm font-extrabold uppercase tracking-widest text-primary transition-all active:scale-[0.98] hover:bg-primary/10"
+              >
+                Enter OTP Manually
+              </button>
 
               <button
                 type="button"

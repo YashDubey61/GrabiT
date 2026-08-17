@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   resolvePickupQr,
+  resolvePickupOtp,
   pickupQrHttpStatus,
   getSupabaseAdminClient,
 } from "@/lib/supabase/pickup_qr_verify";
@@ -8,25 +9,31 @@ import { getAuthenticatedVendorContext } from "@/lib/supabase/vendor_auth";
 import { recordOrderStatusHistory } from "@/lib/supabase/order_status_history";
 
 /**
- * Consumes a pickup QR and completes the order.
+ * Consumes a pickup credential — QR token OR manual OTP — and completes
+ * the order. Both methods call this exact same handler, so they can
+ * never leave the order in different states.
  *
- * All authority comes from the token + the vendor's own session — the
- * client never supplies an order id, canteen id, or target status.
+ * All authority comes from the credential + the vendor's own session —
+ * the client never supplies an order id, canteen id, or target status.
  *
  * The mutation is a single conditional UPDATE guarded on
- * (token, canteen, status, unused-token). If two devices scan the same
- * QR simultaneously, exactly one UPDATE matches a row; the loser gets
- * zero rows back and is reported as already completed. That guard —
- * not the read above it — is what actually prevents double completion.
+ * (credential, canteen, status, unused-token). If two devices verify
+ * the same order simultaneously (via QR, OTP, or one of each), exactly
+ * one UPDATE matches a row; the loser gets zero rows back and is
+ * reported as already completed. That guard — not the read above it —
+ * is what actually prevents double completion.
  */
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as { qrValue?: unknown };
+    const body = (await request.json()) as { qrValue?: unknown; otpValue?: unknown };
 
     // Pre-flight: resolves ownership/state and produces the friendly
     // error messages. Not relied on for correctness — the atomic UPDATE
     // below re-asserts every condition.
-    const result = await resolvePickupQr(body?.qrValue);
+    const result =
+      body?.otpValue !== undefined
+        ? await resolvePickupOtp(body.otpValue)
+        : await resolvePickupQr(body?.qrValue);
     if (!result.ok) {
       return NextResponse.json(
         { ok: false, code: result.code, error: result.error },
@@ -45,19 +52,28 @@ export async function POST(request: Request) {
     const supabase = getSupabaseAdminClient();
     const nowIso = new Date().toISOString();
     const previousStatus = result.order.status;
+    const { column: credentialColumn, value: credentialValue } = result.credential;
 
-    const { data: updated, error: updateErr } = await supabase
+    let updateQuery = supabase
       .from("orders")
       .update({
         status: "completed",
         picked_up_at: previousStatus === "picked_up" ? undefined : nowIso,
         completed_at: nowIso,
+        // Shared "used" marker for BOTH methods — once either QR or OTP
+        // completes the order, this blocks the other from also working.
         pickup_qr_used_at: nowIso,
       })
-      .eq("pickup_qr_token", result.token)
       .eq("canteen_id", vendorCtx.canteenId)
       .in("status", ["ready", "picked_up"])
-      .is("pickup_qr_used_at", null)
+      .is("pickup_qr_used_at", null);
+
+    updateQuery =
+      credentialColumn === "pickup_qr_token"
+        ? updateQuery.eq("pickup_qr_token", credentialValue)
+        : updateQuery.eq("pickup_otp_code", credentialValue);
+
+    const { data: updated, error: updateErr } = await updateQuery
       .select("id, order_number, completed_at")
       .maybeSingle();
 
@@ -67,7 +83,7 @@ export async function POST(request: Request) {
         {
           ok: false,
           code: "ALREADY_COMPLETED",
-          error: "Order already completed. This QR code is no longer valid.",
+          error: "Order already completed. This code is no longer valid.",
         },
         { status: 409 },
       );
@@ -82,7 +98,10 @@ export async function POST(request: Request) {
         newStatus: "picked_up",
         changedBy: vendorCtx.userId,
         actorRole: "vendor",
-        reason: "Pickup QR verified at counter",
+        reason:
+          credentialColumn === "pickup_qr_token"
+            ? "Pickup QR verified at counter"
+            : "Pickup OTP verified at counter",
       });
     }
     await recordOrderStatusHistory({

@@ -5,11 +5,13 @@ import type { VendorPayoutRecord } from "@/lib/mock/vendor";
 interface VendorPayoutLedgerProps {
   records: VendorPayoutRecord[];
   onDownloadHistory?: () => void;
+  isDownloading?: boolean;
 }
 
 export function VendorPayoutLedger({
   records,
   onDownloadHistory,
+  isDownloading = false,
 }: VendorPayoutLedgerProps) {
   const pendingTotal = records
     .filter((r) => r.status === "Pending")
@@ -53,8 +55,39 @@ export function VendorPayoutLedger({
         </div>
       </div>
 
-      {/* Ledger Table */}
-      <div className="overflow-x-auto hide-scrollbar">
+      {/* Ledger — stacked cards on mobile, table from sm+ */}
+      <div className="flex flex-col gap-3 p-4 sm:hidden">
+        {records.map((rec) => (
+          <div key={rec.id} className="rounded-xl border border-border/40 bg-surface-sunken p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="font-mono text-body-sm font-bold text-foreground">{rec.reference}</span>
+              <span
+                className={`rounded-full px-2.5 py-0.5 font-display text-[10px] font-bold uppercase tracking-wider ${
+                  rec.status === "Pending"
+                    ? "bg-primary/20 text-primary border border-primary/30"
+                    : "bg-success/20 text-success border border-success/30"
+                }`}
+              >
+                {rec.status}
+              </span>
+            </div>
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="font-display text-[10px] font-bold uppercase tracking-widest text-faint">Date</p>
+                <p className="text-body-sm text-foreground">{rec.date}</p>
+              </div>
+              <div className="text-right">
+                <p className="font-display text-[10px] font-bold uppercase tracking-widest text-faint">Amount</p>
+                <p className="font-display text-body font-extrabold text-foreground">
+                  ₹{rec.amount.toLocaleString("en-IN")}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden overflow-x-auto hide-scrollbar sm:block">
         <table className="w-full border-collapse text-left">
           <thead>
             <tr className="border-b border-border/40 bg-surface-sunken font-display text-[10px] font-bold uppercase tracking-widest text-faint">
@@ -96,11 +129,15 @@ export function VendorPayoutLedger({
         <button
           type="button"
           onClick={onDownloadHistory}
-          className="flex items-center gap-2 font-display text-caption font-extrabold uppercase tracking-wider text-primary hover:text-primary-soft transition-colors"
+          disabled={isDownloading}
+          className="flex items-center gap-2 font-display text-caption font-extrabold uppercase tracking-wider text-primary hover:text-primary-soft transition-colors disabled:opacity-50"
         >
-          <span>Download Full History</span>
-          <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
-            download
+          <span>{isDownloading ? "Generating report..." : "Download Full History"}</span>
+          <span
+            className={`material-symbols-outlined text-[16px] ${isDownloading ? "animate-spin" : ""}`}
+            aria-hidden="true"
+          >
+            {isDownloading ? "progress_activity" : "download"}
           </span>
         </button>
       </div>

@@ -15,6 +15,7 @@ export interface SupabaseVendorOrderRow {
   completed_at?: string | null;
   cancelled_at?: string | null;
   cancellation_reason?: string | null;
+  pickup_otp_code?: string | null;
   canteens?: { name: string };
   order_items?: {
     id: string;
@@ -88,8 +89,6 @@ export function mapSupabaseVendorOrderToUI(row: SupabaseVendorOrderRow): VendorO
     elapsedTimeText = `Cancelled`;
   }
 
-  const otpSuffix = row.order_number.replace(/^#GRB-/, "").replace(/^#/, "");
-
   return {
     id: row.id,
     orderNumber: row.order_number.startsWith("#") ? row.order_number : `#${row.order_number}`,
@@ -99,7 +98,10 @@ export function mapSupabaseVendorOrderToUI(row: SupabaseVendorOrderRow): VendorO
     status: row.status,
     totalAmount: Number(row.total_amount) || 0,
     items,
-    otpCode: row.status === "ready" ? otpSuffix : undefined,
+    // Real per-order secret the *customer* reads aloud for manual OTP
+    // verification — this used to be derived from the (guessable, public)
+    // order number, which defeated the purpose of a fallback credential.
+    otpCode: row.status === "ready" ? row.pickup_otp_code ?? undefined : undefined,
     prepProgressPercent: row.status === "preparing" ? Math.min(85, 30 + elapsedMinutes * 10) : undefined,
     createdAtIso: row.created_at,
     acceptedAtIso: row.accepted_at ?? undefined,

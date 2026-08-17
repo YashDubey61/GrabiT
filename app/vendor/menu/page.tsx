@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import {
-  type VendorMenuItem,
-  type VendorMenuCategory,
-} from "@/lib/mock/vendor";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { type VendorMenuItem } from "@/lib/mock/vendor";
 import { VendorMenuHeader } from "@/components/vendor/menu/VendorMenuHeader";
 import {
   VendorMenuCategoryChips,
@@ -19,15 +17,18 @@ import {
   updateLiveVendorMenuItem,
 } from "@/lib/supabase/vendor_menu";
 import { getLiveVendorCanteenId } from "@/lib/supabase/vendor_context";
-
-const CATEGORIES: VendorMenuCategory[] = [
-  "Breakfast",
-  "Lunch",
-  "Snacks",
-  "Beverages",
-];
+import { getLiveVendorCategories, type VendorCategory } from "@/lib/supabase/vendor_categories";
+import { VendorCategoryManagerModal } from "@/components/vendor/menu/VendorCategoryManagerModal";
 
 export default function VendorMenuManagementPage() {
+  return (
+    <Suspense fallback={null}>
+      <VendorMenuManagementPageInner />
+    </Suspense>
+  );
+}
+
+function VendorMenuManagementPageInner() {
   const [menuItems, setMenuItems] = useState<VendorMenuItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -37,6 +38,9 @@ export default function VendorMenuManagementPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<VendorMenuItem | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
+  const [categoryRows, setCategoryRows] = useState<VendorCategory[]>([]);
+  const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
+  const categories = useMemo(() => categoryRows.map((c) => c.name), [categoryRows]);
 
   const showNotification = (msg: string) => {
     setNotification(msg);
@@ -51,9 +55,25 @@ export default function VendorMenuManagementPage() {
     setIsLoading(false);
   };
 
+  const loadCategories = async () => {
+    const live = await getLiveVendorCategories();
+    setCategoryRows(live);
+  };
+
+  const searchParams = useSearchParams();
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadMenuItems();
+    loadCategories();
+    if (searchParams.get("manage") === "categories") {
+      setIsCategoryManagerOpen(true);
+    }
+    if (searchParams.get("add") === "dish") {
+      setEditingItem(null);
+      setIsModalOpen(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleToggleStock = async (itemId: string, inStock: boolean) => {
@@ -120,11 +140,13 @@ export default function VendorMenuManagementPage() {
 
   // Grouped items by category for rendering sections
   const groupedCategories = useMemo(() => {
-    return CATEGORIES.map((cat) => ({
-      category: cat,
-      items: filteredItems.filter((i) => i.category === cat),
-    })).filter((group) => group.items.length > 0);
-  }, [filteredItems]);
+    return categories
+      .map((cat) => ({
+        category: cat,
+        items: filteredItems.filter((i) => i.category === cat),
+      }))
+      .filter((group) => group.items.length > 0);
+  }, [filteredItems, categories]);
 
   return (
     <div className="min-h-dvh bg-background text-foreground flex flex-col">
@@ -143,10 +165,21 @@ export default function VendorMenuManagementPage() {
         />
 
         {/* Category Filter Chips */}
-        <VendorMenuCategoryChips
-          selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
-        />
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
+          <VendorMenuCategoryChips
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+          />
+          <button
+            type="button"
+            onClick={() => setIsCategoryManagerOpen(true)}
+            className="flex w-full shrink-0 items-center justify-center gap-1.5 rounded-full border border-border px-3 py-2 font-display text-caption font-bold text-muted hover:border-primary/40 hover:text-primary sm:w-auto"
+          >
+            <span className="material-symbols-outlined text-[16px]">tune</span>
+            Manage Categories
+          </button>
+        </div>
 
         {isLoading ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
@@ -206,6 +239,17 @@ export default function VendorMenuManagementPage() {
           onClose={() => setIsModalOpen(false)}
           onSave={handleSaveItem}
           editingItem={editingItem}
+          categories={categories}
+        />
+
+        <VendorCategoryManagerModal
+          isOpen={isCategoryManagerOpen}
+          onClose={() => setIsCategoryManagerOpen(false)}
+          categories={categoryRows}
+          onChanged={() => {
+            loadCategories();
+            loadMenuItems();
+          }}
         />
       </main>
     </div>

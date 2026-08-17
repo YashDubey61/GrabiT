@@ -122,11 +122,7 @@ const DEFAULT_ITEM_IMAGE =
   "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80";
 
 function toVendorCategory(category: string | null | undefined): VendorMenuCategory {
-  const normalized = (category || "").toLowerCase();
-  if (normalized.includes("breakfast")) return "Breakfast";
-  if (normalized.includes("beverage") || normalized.includes("drink")) return "Beverages";
-  if (normalized.includes("snack")) return "Snacks";
-  return "Lunch";
+  return category?.trim() || "Lunch";
 }
 
 function mapSupabaseMenuItemToUI(row: SupabaseMenuItemRow): VendorMenuItem {

@@ -1,8 +1,9 @@
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomInt } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { trackProductEvent } from "@/lib/analytics/events";
+import { PICKUP_OTP_LENGTH } from "@/lib/orders/pickup_otp";
 
 interface IncomingOrderItem {
   menuItemId: string;
@@ -183,7 +184,20 @@ export async function POST(request: Request) {
     }
 
     const platformFee = Math.round(subtotal * 0.05); // 5% platform fee
-    const totalAmount = subtotal + platformFee;
+
+    // Authoritative delivery charge — always re-read server-side from
+    // platform_settings (Super Admin-controlled), never trusted from
+    // the client, so it can never be manipulated at checkout.
+    const { data: deliveryChargeSetting } = await supabase
+      .from("platform_settings")
+      .select("value")
+      .eq("key", "delivery_charge")
+      .maybeSingle();
+    const deliveryCharge = Number(
+      (deliveryChargeSetting?.value as { amount?: number } | null)?.amount ?? 2.5,
+    );
+
+    const totalAmount = subtotal + platformFee + deliveryCharge;
 
     // 7. Auto-Initialize Wallet & Handle Wallet Debit
     if (payload.paymentMethod === "wallet") {
@@ -249,6 +263,15 @@ export async function POST(request: Request) {
     // id / order number, which are guessable.
     const pickupQrToken = randomBytes(32).toString("hex");
 
+    // Manual-entry fallback for the same verification: a short numeric
+    // code the student reads out loud when the QR can't be scanned.
+    // Independent random value from the QR token — not derived from the
+    // order number, which is guessable/sequential.
+    const pickupOtpCode = String(randomInt(0, 10 ** PICKUP_OTP_LENGTH)).padStart(
+      PICKUP_OTP_LENGTH,
+      "0",
+    );
+
     // 9. Atomic Order Insertion
     const { data: createdOrder, error: orderErr } = await supabase
       .from("orders")
@@ -258,9 +281,11 @@ export async function POST(request: Request) {
         order_number: orderNumber,
         status: "placed",
         total_amount: totalAmount,
+        delivery_charge: deliveryCharge,
         slot: dbSlot,
         pickup_qr_token: pickupQrToken,
         pickup_qr_created_at: new Date().toISOString(),
+        pickup_otp_code: pickupOtpCode,
       })
       .select("id, order_number, created_at, canteen_id, student_id")
       .single();
@@ -376,6 +401,7 @@ export async function POST(request: Request) {
         })),
         subtotal,
         platformFee,
+        deliveryCharge,
         totalAmount,
         createdAt: createdOrder.created_at,
         estimatedReadyAt: new Date(

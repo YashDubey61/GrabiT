@@ -1,4 +1,4 @@
-import { RoleShellRail, type NavItem } from "@/components/shared/RoleShellNav";
+import { RoleShellRail, RoleShellTabBar, type NavItem } from "@/components/shared/RoleShellNav";
 
 const VENDOR_NAV: NavItem[] = [
   { label: "Active Orders", href: "/vendor", icon: "soup_kitchen" },
@@ -17,8 +17,15 @@ export default function VendorLayout({
 }) {
   return (
     <div className="flex min-h-dvh bg-background">
-      <RoleShellRail items={VENDOR_NAV} title="GrabIt Vendor" />
-      <div className="flex-1 overflow-x-auto">{children}</div>
+      <div className="hidden sm:flex">
+        <RoleShellRail items={VENDOR_NAV} title="GrabIt Vendor" />
+      </div>
+      <div className="w-full flex-1 overflow-x-hidden pb-20 sm:pb-0 sm:overflow-x-auto">
+        {children}
+      </div>
+      <div className="sm:hidden">
+        <RoleShellTabBar items={VENDOR_NAV} />
+      </div>
     </div>
   );
 }

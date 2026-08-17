@@ -54,7 +54,9 @@ export interface Order {
   estimatedReadyAt: string;
   /** Opaque per-order pickup-verification token encoded into the QR. */
   pickupQrToken?: string | null;
-  /** Non-null once a vendor has scanned and consumed the pickup QR. */
+  /** Non-null once a vendor has scanned/verified and consumed the pickup credential (QR or OTP — both share this marker). */
   pickupQrUsedAt?: string | null;
+  /** Manual-entry fallback for the same verification — the code the student reads out when the QR can't be scanned. */
+  pickupOtpCode?: string | null;
   completedAt?: string | null;
 }

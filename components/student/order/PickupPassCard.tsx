@@ -17,12 +17,14 @@ export function PickupPassCard({
   orderNumber,
   validUntilLabel,
   pickupQrToken,
+  pickupOtpCode,
   status,
   completedAtLabel,
 }: {
   orderNumber: string;
   validUntilLabel: string;
   pickupQrToken?: string | null;
+  pickupOtpCode?: string | null;
   status: OrderStatus;
   completedAtLabel?: string | null;
 }) {
@@ -147,6 +149,26 @@ export function PickupPassCard({
             : `Valid until ${validUntilLabel}`}
         </p>
       </div>
+
+      {/* Manual fallback — same credential as the QR, for when the
+          counter can't scan it. Read this out to the vendor instead. */}
+      {!isCompleted && pickupOtpCode && (
+        <div className="flex w-full flex-col items-center gap-1.5 border-t border-white/10 pt-4">
+          <p className="text-[10px] font-700 uppercase tracking-wider text-faint">
+            Can&apos;t scan? Give the counter this code
+          </p>
+          <div className="flex gap-2">
+            {pickupOtpCode.split("").map((digit, idx) => (
+              <span
+                key={idx}
+                className="flex h-9 w-8 items-center justify-center rounded-lg border border-border bg-surface font-mono text-body font-extrabold text-foreground"
+              >
+                {digit}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   );
 }

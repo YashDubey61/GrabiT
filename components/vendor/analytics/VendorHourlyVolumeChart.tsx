@@ -35,13 +35,13 @@ export function VendorHourlyVolumeChart({
         </div>
 
         {/* Timeframe Chips */}
-        <div className="flex rounded-xl border border-border bg-surface-sunken p-1">
+        <div className="grid grid-cols-3 gap-1 rounded-xl border border-border bg-surface-sunken p-1">
           {(["Today", "7 Days", "30 Days"] as const).map((tf) => (
             <button
               key={tf}
               type="button"
               onClick={() => handleSelectTimeframe(tf)}
-              className={`rounded-lg px-3 py-1 font-display text-caption font-bold transition-all ${
+              className={`rounded-lg px-3 py-1.5 text-center font-display text-caption font-bold transition-all ${
                 timeframe === tf
                   ? "bg-primary text-on-primary shadow-sm"
                   : "text-muted hover:text-foreground"

@@ -6,7 +6,6 @@ import { CheckoutHeader } from "@/components/student/CheckoutHeader";
 import { CheckoutOrderSummary } from "@/components/student/CheckoutOrderSummary";
 import { PickupSlotSelector, type PickupSlot } from "@/components/student/PickupSlotSelector";
 import { PaymentMethodSelector, type PaymentMethod } from "@/components/student/PaymentMethodSelector";
-import { CheckoutBillDetails } from "@/components/student/CheckoutBillDetails";
 import { CheckoutAction } from "@/components/student/CheckoutAction";
 import { EmptyCheckoutState } from "@/components/student/EmptyCheckoutState";
 import { TrackEventOnMount } from "@/components/shared/TrackEventOnMount";
@@ -79,11 +78,10 @@ export default function StudentCheckoutPage() {
       <TrackEventOnMount payload={{ eventName: "checkout_started", canteenId: cart.canteenId ?? undefined }} />
       <CheckoutHeader />
 
-      <main className="mx-auto max-w-2xl space-y-6 px-5 pb-56 pt-20 md:px-16 md:pt-24">
+      <main className="mx-auto max-w-2xl space-y-6 px-5 pb-40 pt-20 md:px-16 md:pt-24">
         <CheckoutOrderSummary items={cart.items} pickupSlot={slot} />
         <PickupSlotSelector selected={slot} onSelect={setSlot} />
         <PaymentMethodSelector selected={paymentMethod} onSelect={setPaymentMethod} />
-        <CheckoutBillDetails subtotal={cart.subtotal} />
       </main>
 
       <CheckoutAction

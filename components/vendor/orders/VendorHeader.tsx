@@ -8,6 +8,8 @@ interface VendorHeaderProps {
   onToggleStatus: () => void;
   onChangePrepTime: () => void;
   onOpenNotifications: () => void;
+  onOpenMoreFeatures: () => void;
+  onOpenProfile: () => void;
   pendingOrderCount?: number;
 }
 
@@ -16,17 +18,26 @@ export function VendorHeader({
   onToggleStatus,
   onChangePrepTime,
   onOpenNotifications,
+  onOpenMoreFeatures,
+  onOpenProfile,
   pendingOrderCount = 0,
 }: VendorHeaderProps) {
   return (
-    <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur-md sm:px-6">
+    <header className="sticky top-0 z-40 flex min-h-16 w-full flex-wrap items-center justify-between gap-y-2 border-b border-border bg-background/90 px-3 py-2 backdrop-blur-md sm:h-16 sm:flex-nowrap sm:px-6 sm:py-0">
       {/* Brand & Hub Title */}
-      <div className="flex items-center gap-3">
-        <span className="material-symbols-outlined text-[24px] text-primary" aria-hidden="true">
-          location_on
-        </span>
-        <h1 className="font-display text-title font-extrabold tracking-tight text-primary">
-          GrabIt
+      <div className="flex min-w-0 flex-1 items-center gap-2 sm:flex-none sm:gap-3">
+        <button
+          type="button"
+          onClick={onOpenMoreFeatures}
+          aria-label="More features"
+          className="flex shrink-0 items-center justify-center rounded-lg p-1 text-primary hover:bg-surface-elevated"
+        >
+          <span className="material-symbols-outlined text-[20px] sm:text-[24px]" aria-hidden="true">
+            grid_view
+          </span>
+        </button>
+        <h1 className="min-w-0 truncate font-display text-body font-extrabold tracking-tight text-primary sm:text-title">
+          {store.name || "GrabIt"}
         </h1>
         <div className="hidden sm:block h-5 w-[1px] bg-border" />
         <span className="hidden sm:inline-block font-display text-caption font-bold tracking-wider text-muted uppercase">
@@ -35,21 +46,24 @@ export function VendorHeader({
       </div>
 
       {/* Control Actions & Status */}
-      <div className="flex items-center gap-3 sm:gap-4">
+      <div className="flex shrink-0 items-center gap-2 sm:gap-4">
         {/* Prep Time Setting */}
         <button
           type="button"
           onClick={onChangePrepTime}
-          className="flex items-center gap-1.5 rounded-xl border border-border bg-surface-elevated px-3 py-1.5 font-display text-caption font-bold text-foreground transition-colors hover:border-primary/40 active:scale-95"
+          className="flex shrink-0 items-center gap-1 rounded-xl border border-border bg-surface-elevated px-2 py-1.5 font-display text-[10px] font-bold text-foreground transition-colors hover:border-primary/40 active:scale-95 sm:gap-1.5 sm:px-3 sm:text-caption"
         >
-          <span className="material-symbols-outlined text-[16px] text-muted" aria-hidden="true">
+          <span className="material-symbols-outlined text-[14px] text-muted sm:text-[16px]" aria-hidden="true">
             schedule
           </span>
-          <span>PREP: {store.prepTimeMinutes} MINS</span>
+          <span className="whitespace-nowrap">
+            PREP: {store.prepTimeMinutes} <span className="hidden sm:inline">MINS</span>
+            <span className="sm:hidden">M</span>
+          </span>
         </button>
 
         {/* Store Status Toggle */}
-        <div className="flex items-center gap-2 rounded-full border border-border bg-surface-elevated px-3 py-1">
+        <div className="flex shrink-0 items-center gap-2 rounded-full border border-border bg-surface-elevated px-3 py-1">
           <span
             className={`font-display text-[11px] font-bold uppercase tracking-wider ${
               store.isOpen ? "text-success" : "text-muted"
@@ -96,7 +110,12 @@ export function VendorHeader({
         </button>
 
         {/* Vendor Avatar */}
-        <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full border border-border">
+        <button
+          type="button"
+          onClick={onOpenProfile}
+          aria-label="Vendor profile"
+          className="h-9 w-9 shrink-0 overflow-hidden rounded-full border border-border"
+        >
           <Image
             src={store.avatarUrl}
             alt={store.name}
@@ -104,7 +123,7 @@ export function VendorHeader({
             height={36}
             className="h-full w-full object-cover"
           />
-        </div>
+        </button>
       </div>
     </header>
   );

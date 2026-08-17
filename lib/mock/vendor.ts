@@ -41,7 +41,9 @@ export interface VendorStats {
   avgCompletionMinutes: number;
 }
 
-export type VendorMenuCategory = "Breakfast" | "Lunch" | "Snacks" | "Beverages";
+// Vendor-defined — not a fixed set. Defaults ("Breakfast", "Lunch", …)
+// are just the seeded starting rows in `vendor_categories`.
+export type VendorMenuCategory = string;
 
 export interface VendorMenuItem {
   id: string;

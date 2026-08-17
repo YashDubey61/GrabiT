@@ -159,6 +159,7 @@ export default function StudentTrackOrderPage({
             orderNumber={order.orderNumber}
             validUntilLabel={validUntilLabel}
             pickupQrToken={order.pickupQrToken}
+            pickupOtpCode={order.pickupOtpCode}
             status={order.status}
             completedAtLabel={
               order.completedAt

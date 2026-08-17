@@ -4,26 +4,21 @@ import type { VendorMenuCategory } from "@/lib/mock/vendor";
 
 export type CategoryFilterOption = "All Items" | VendorMenuCategory;
 
-const CATEGORY_OPTIONS: CategoryFilterOption[] = [
-  "All Items",
-  "Breakfast",
-  "Lunch",
-  "Snacks",
-  "Beverages",
-];
-
 interface VendorMenuCategoryChipsProps {
+  categories: VendorMenuCategory[];
   selectedCategory: CategoryFilterOption;
   onSelectCategory: (category: CategoryFilterOption) => void;
 }
 
 export function VendorMenuCategoryChips({
+  categories,
   selectedCategory,
   onSelectCategory,
 }: VendorMenuCategoryChipsProps) {
+  const options: CategoryFilterOption[] = ["All Items", ...categories];
   return (
-    <section className="mb-6 flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-      {CATEGORY_OPTIONS.map((cat) => {
+    <section className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+      {options.map((cat) => {
         const isActive = selectedCategory === cat;
         return (
           <button

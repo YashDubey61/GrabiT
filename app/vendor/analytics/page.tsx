@@ -25,6 +25,7 @@ export default function VendorAnalyticsPage() {
   const [payouts, setPayouts] = useState<VendorPayoutRecord[]>(MOCK_PAYOUT_RECORDS);
   const [isLoading, setIsLoading] = useState(true);
   const [notification, setNotification] = useState<string | null>(null);
+  const [isDownloadingReport, setIsDownloadingReport] = useState(false);
 
   const showNotification = (msg: string) => {
     setNotification(msg);
@@ -48,9 +49,23 @@ export default function VendorAnalyticsPage() {
     loadAnalytics(timeframe);
   }, [timeframe]);
 
-  const handleDownloadCsv = () => {
-    showNotification("Downloading full payout settlement CSV...");
-    window.open("/api/vendor/analytics/payouts/export", "_blank");
+  const handleDownloadReport = async () => {
+    setIsDownloadingReport(true);
+    try {
+      const res = await fetch(`/api/vendor/analytics/payouts/export?tf=${timeframe}`);
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        showNotification(data.error ?? "Unable to generate report. Please try again.");
+        return;
+      }
+      const { generateVendorReportPdf } = await import("@/lib/vendor/generateVendorReportPdf");
+      generateVendorReportPdf(data.report);
+      showNotification("Report downloaded successfully");
+    } catch {
+      showNotification("Unable to generate report. Please try again.");
+    } finally {
+      setIsDownloadingReport(false);
+    }
   };
 
   return (
@@ -74,11 +89,11 @@ export default function VendorAnalyticsPage() {
           </div>
 
           {/* Timeframe Selector Chips */}
-          <div className="mt-2 sm:mt-0 flex items-center gap-1 rounded-xl border border-border bg-[#1e1f26] p-1 w-fit">
+          <div className="mt-2 grid grid-cols-3 gap-1 rounded-xl border border-border bg-[#1e1f26] p-1 sm:mt-0 sm:w-fit">
             <button
               type="button"
               onClick={() => setTimeframe("today")}
-              className={`rounded-lg px-3 py-1.5 font-display text-caption font-bold transition-all ${timeframe === "today"
+              className={`rounded-lg px-3 py-1.5 text-center font-display text-caption font-bold transition-all ${timeframe === "today"
                   ? "bg-primary text-on-primary shadow-sm"
                   : "text-faint hover:text-foreground"
                 }`}
@@ -88,7 +103,7 @@ export default function VendorAnalyticsPage() {
             <button
               type="button"
               onClick={() => setTimeframe("7d")}
-              className={`rounded-lg px-3 py-1.5 font-display text-caption font-bold transition-all ${timeframe === "7d"
+              className={`rounded-lg px-3 py-1.5 text-center font-display text-caption font-bold transition-all ${timeframe === "7d"
                   ? "bg-primary text-on-primary shadow-sm"
                   : "text-faint hover:text-foreground"
                 }`}
@@ -98,7 +113,7 @@ export default function VendorAnalyticsPage() {
             <button
               type="button"
               onClick={() => setTimeframe("30d")}
-              className={`rounded-lg px-3 py-1.5 font-display text-caption font-bold transition-all ${timeframe === "30d"
+              className={`rounded-lg px-3 py-1.5 text-center font-display text-caption font-bold transition-all ${timeframe === "30d"
                   ? "bg-primary text-on-primary shadow-sm"
                   : "text-faint hover:text-foreground"
                 }`}
@@ -146,7 +161,8 @@ export default function VendorAnalyticsPage() {
             {/* Payout Ledger */}
             <VendorPayoutLedger
               records={payouts}
-              onDownloadHistory={handleDownloadCsv}
+              onDownloadHistory={handleDownloadReport}
+              isDownloading={isDownloadingReport}
             />
           </>
         )}

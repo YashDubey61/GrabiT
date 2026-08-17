@@ -8,13 +8,15 @@ import {
   type VendorOrderStatus,
 } from "@/lib/mock/vendor";
 import { VendorHeader } from "@/components/vendor/orders/VendorHeader";
+import { VendorMoreFeaturesSheet } from "@/components/vendor/orders/VendorMoreFeaturesSheet";
+import { VendorProfileSheet } from "@/components/vendor/orders/VendorProfileSheet";
 import { VendorStatsBar } from "@/components/vendor/orders/VendorStatsBar";
 import { VendorOrdersBoard } from "@/components/vendor/orders/VendorOrdersBoard";
 import { VendorNotificationsDrawer } from "@/components/vendor/notifications/VendorNotificationsDrawer";
 import { IncomingOrderAlert } from "@/components/vendor/orders/IncomingOrderAlert";
 import { VendorQrScanner } from "@/components/vendor/orders/VendorQrScanner";
 import { getLiveVendorOrders } from "@/lib/supabase/vendor_orders";
-import { getLiveVendorCanteenId } from "@/lib/supabase/vendor_context";
+import { getLiveVendorCanteenId, getLiveVendorShopName } from "@/lib/supabase/vendor_context";
 import { createClient } from "@/lib/supabase/client";
 import { useOrderAlertSound } from "@/lib/vendor/useOrderAlertSound";
 import { hardNavigate } from "@/lib/auth/redirect";
@@ -30,6 +32,9 @@ export default function VendorActiveOrdersPage() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isMoreFeaturesOpen, setIsMoreFeaturesOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [scannerInitialMode, setScannerInitialMode] = useState<"qr" | "otp">("qr");
   const canteenIdRef = useRef<string | null>(null);
 
   // Order-alert ringing: alertedOrderIds tracks every "placed" order id
@@ -95,6 +100,12 @@ export default function VendorActiveOrdersPage() {
     let isMounted = true;
     let channel: ReturnType<ReturnType<typeof createClient>["channel"]> | null = null;
     const supabase = createClient();
+
+    getLiveVendorShopName().then((name) => {
+      if (isMounted && name) {
+        setStore((prev) => ({ ...prev, name }));
+      }
+    });
 
     getLiveVendorCanteenId().then((id) => {
       if (!isMounted) return;
@@ -308,7 +319,25 @@ export default function VendorActiveOrdersPage() {
         onToggleStatus={handleToggleStoreStatus}
         onChangePrepTime={handleChangePrepTime}
         onOpenNotifications={() => setIsNotificationsOpen(true)}
+        onOpenMoreFeatures={() => setIsMoreFeaturesOpen(true)}
+        onOpenProfile={() => setIsProfileOpen(true)}
         pendingOrderCount={pendingPlacedOrders.length}
+      />
+
+      <VendorMoreFeaturesSheet
+        isOpen={isMoreFeaturesOpen}
+        onClose={() => setIsMoreFeaturesOpen(false)}
+        store={store}
+        onToggleStatus={handleToggleStoreStatus}
+        onChangePrepTime={handleChangePrepTime}
+        isSoundUnlocked={sound.isUnlocked}
+        onUnlockSound={sound.unlock}
+      />
+
+      <VendorProfileSheet
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        store={store}
       />
 
       <main className="flex-1 p-4 sm:p-6 flex flex-col gap-6 max-w-7xl mx-auto w-full">
@@ -350,14 +379,29 @@ export default function VendorActiveOrdersPage() {
           </div>
         )}
 
-        <button
-          type="button"
-          onClick={() => setIsScannerOpen(true)}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/10 py-3.5 font-display text-body-sm font-extrabold uppercase tracking-widest text-primary transition-all active:scale-[0.98] hover:bg-primary/20"
-        >
-          <span className="material-symbols-outlined text-[20px]">qr_code_scanner</span>
-          Scan Order QR
-        </button>
+        <div className="flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setScannerInitialMode("qr");
+              setIsScannerOpen(true);
+            }}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/10 py-3.5 font-display text-body-sm font-extrabold uppercase tracking-widest text-primary transition-all active:scale-[0.98] hover:bg-primary/20"
+          >
+            <span className="material-symbols-outlined text-[20px]">qr_code_scanner</span>
+            Scan Order QR
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setScannerInitialMode("otp");
+              setIsScannerOpen(true);
+            }}
+            className="text-center font-display text-caption font-bold uppercase tracking-wider text-muted hover:text-primary"
+          >
+            Enter OTP Manually
+          </button>
+        </div>
 
         <VendorStatsBar stats={computedStats} />
 
@@ -386,6 +430,7 @@ export default function VendorActiveOrdersPage() {
 
       <VendorQrScanner
         isOpen={isScannerOpen}
+        initialMode={scannerInitialMode}
         onClose={() => setIsScannerOpen(false)}
         onCompleted={(orderNumber) => {
           showNotification(`Order ${orderNumber} completed`);

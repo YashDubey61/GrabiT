@@ -54,8 +54,8 @@ export function IncomingOrderAlert({
   };
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-0 z-[60] flex justify-center px-4 pt-4 sm:pt-6">
-      <div className="pointer-events-auto w-full max-w-md rounded-3xl border-2 border-primary bg-surface shadow-2xl shadow-primary/30 animate-in slide-in-from-top-4 fade-in duration-300">
+    <div className="pointer-events-none fixed inset-0 z-[60] flex items-center justify-center px-4 pb-24 pt-20 sm:pb-6 sm:pt-24">
+      <div className="pointer-events-auto flex w-full max-w-md max-h-full flex-col overflow-y-auto rounded-3xl border-2 border-primary bg-surface shadow-2xl shadow-primary/30 animate-in zoom-in-95 fade-in duration-300">
         {/* Header */}
         <div className="flex items-center justify-between rounded-t-3xl bg-primary/10 px-5 py-3 border-b border-primary/30">
           <div className="flex items-center gap-2">

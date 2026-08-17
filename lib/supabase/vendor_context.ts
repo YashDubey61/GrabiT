@@ -30,3 +30,24 @@ export async function getLiveVendorCanteenId(): Promise<string | null> {
     return null;
   }
 }
+
+/** Resolves the authenticated vendor's own store/shop name, for header
+ * display. Falls back to null (never "undefined"/"null") so callers can
+ * show a safe default like "GrabIt". */
+export async function getLiveVendorShopName(): Promise<string | null> {
+  try {
+    const canteenId = await getLiveVendorCanteenId();
+    if (!canteenId) return null;
+
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("canteens")
+      .select("name")
+      .eq("id", canteenId)
+      .maybeSingle();
+
+    return data?.name || null;
+  } catch {
+    return null;
+  }
+}

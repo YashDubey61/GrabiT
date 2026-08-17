@@ -6,6 +6,7 @@ import type {
   OperationsTimeframe,
   OperationalAlert,
 } from "@/lib/supabase/superadmin_operations";
+import { DeliveryChargeSettings } from "@/components/superadmin/DeliveryChargeSettings";
 
 export default function SuperAdminOperationsPage() {
   const [timeframe, setTimeframe] = useState<OperationsTimeframe>("today");
@@ -130,6 +131,8 @@ export default function SuperAdminOperationsPage() {
             </button>
           </div>
         </header>
+
+        <DeliveryChargeSettings />
 
         {error && (
           <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-label font-bold text-destructive">
