@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   signStudentIn,
   signStudentUp,
@@ -10,7 +10,7 @@ import {
   sendPasswordResetEmail,
 } from "@/lib/supabase/auth";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { ROLE_HOME } from "@/lib/auth/roles";
+import { getSafeRedirectUrl, hardNavigate, authLog, authError } from "@/lib/auth/redirect";
 
 function GoogleIcon() {
   return (
@@ -38,9 +38,8 @@ function GoogleIcon() {
 type AuthMode = "signin" | "signup" | "forgot";
 
 function AuthFormContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, role } = useAuth();
+  const { user, role, refreshAuth } = useAuth();
 
   const tabParam = searchParams.get("tab");
   const errorParam = searchParams.get("error");
@@ -66,10 +65,11 @@ function AuthFormContent() {
   // Redirect if already logged in
   useEffect(() => {
     if (user && role) {
-      const targetPath = nextParam || ROLE_HOME[role] || "/student";
-      router.replace(targetPath);
+      const destination = getSafeRedirectUrl(nextParam, role);
+      authLog("Already authenticated on mount, role:", role, "target:", destination);
+      hardNavigate(destination);
     }
-  }, [user, role, router, nextParam]);
+  }, [user, role, nextParam]);
 
   // Validation helpers
   const isEmailValid = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
@@ -90,31 +90,82 @@ function AuthFormContent() {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setSuccessMessage(null);
 
-    if (!isEmailValid(email)) {
+    const trimmedEmail = email.trim();
+    if (!email || !trimmedEmail) {
+      setErrorMessage("Please enter your email.");
+      return;
+    }
+    if (!isEmailValid(trimmedEmail)) {
       setErrorMessage("Please enter a valid email address.");
       return;
     }
     if (!password) {
-      setErrorMessage("Password is required.");
+      setErrorMessage("Please enter your password.");
       return;
     }
 
     setIsSubmitting(true);
-    const res = await signStudentIn(email, password);
-    setIsSubmitting(false);
-
-    if (!res.ok) {
-      if (res.error?.toLowerCase().includes("invalid login credentials")) {
-        setErrorMessage("Invalid email or password. Please try again.");
-      } else {
-        setErrorMessage(res.error || "Failed to sign in. Please try again.");
+    authLog("Login submitted (student portal)");
+    try {
+      const res = await signStudentIn(trimmedEmail, password);
+      if (!res.ok) {
+        authError("Authentication failed:", res.error);
+        setErrorMessage(res.error || "Sign in failed. Please check your email and password.");
+        setIsSubmitting(false);
+        return;
       }
-      return;
-    }
 
-    const targetPath = nextParam || "/student";
-    router.push(targetPath);
+      if (!res.session) {
+        authError("Authentication reported ok but no session was returned");
+        setErrorMessage("We couldn’t complete your sign in. Please try again.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      authLog("Authentication successful, session confirmed");
+
+      const userRole = res.role || "student";
+      authLog("Role detected:", userRole);
+
+      // Refresh AuthContext so the rest of the app (nav, guards) sees the
+      // new session before we hand off to the destination route.
+      try {
+        await refreshAuth();
+        authLog("User/profile loaded via refreshAuth");
+      } catch (refreshErr) {
+        authError("refreshAuth failed (non-fatal, session already confirmed):", refreshErr);
+      }
+
+      if (userRole === "vendor") {
+        const destination = getSafeRedirectUrl(nextParam, "vendor");
+        authLog("Target route:", destination);
+        setSuccessMessage("Signed in successfully as Vendor. Redirecting to Vendor Dashboard...");
+        authLog("Redirecting...");
+        hardNavigate(destination);
+        return;
+      }
+
+      if (userRole === "admin") {
+        const destination = getSafeRedirectUrl(nextParam, "admin");
+        authLog("Target route:", destination);
+        setSuccessMessage("Signed in successfully as Super Admin. Redirecting to Super Admin Portal...");
+        authLog("Redirecting...");
+        hardNavigate(destination);
+        return;
+      }
+
+      const destination = getSafeRedirectUrl(nextParam, "student");
+      authLog("Target route:", destination);
+      setSuccessMessage("Signed in successfully.");
+      authLog("Redirecting...");
+      hardNavigate(destination);
+    } catch (err) {
+      authError("Unexpected error during sign-in:", err);
+      setErrorMessage("Unable to sign in right now. Please check your connection and try again.");
+      setIsSubmitting(false);
+    }
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -275,7 +326,7 @@ function AuthFormContent() {
 
         {/* ----------------- SIGN IN FORM ----------------- */}
         {mode === "signin" && (
-          <form onSubmit={handleSignIn} className="flex flex-col gap-4">
+          <form onSubmit={handleSignIn} noValidate className="flex flex-col gap-4">
             {/* Email */}
             <div>
               <label
@@ -287,11 +338,11 @@ function AuthFormContent() {
               <input
                 id="signin-email"
                 type="email"
-                required
+                disabled={isSubmitting || isGoogleLoading}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@campus.ac.in"
-                className="w-full rounded-xl border border-border bg-surface-elevated px-4 py-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none transition-colors"
+                className="w-full rounded-xl border border-border bg-surface-elevated px-4 py-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none transition-colors disabled:opacity-50"
               />
             </div>
 
@@ -320,11 +371,11 @@ function AuthFormContent() {
                 <input
                   id="signin-password"
                   type={showPassword ? "text" : "password"}
-                  required
+                  disabled={isSubmitting || isGoogleLoading}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full rounded-xl border border-border bg-surface-elevated px-4 py-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none transition-colors pr-10"
+                  className="w-full rounded-xl border border-border bg-surface-elevated px-4 py-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none transition-colors pr-10 disabled:opacity-50"
                 />
                 <button
                   type="button"

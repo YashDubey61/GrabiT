@@ -50,20 +50,6 @@ export function SuperAdminKpiGrid({ kpis }: SuperAdminKpiGridProps) {
         <h3 className="font-display text-title font-extrabold text-foreground sm:text-[24px]">
           {kpis.activeCampuses}
         </h3>
-        <div className="flex -space-x-1.5 pt-1">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary font-display text-[9px] font-bold text-black border border-background">
-            PSIT
-          </div>
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-surface-sunken font-display text-[9px] font-bold text-muted border border-background">
-            IITK
-          </div>
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-surface-sunken font-display text-[9px] font-bold text-muted border border-background">
-            BITS
-          </div>
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-border font-display text-[8px] font-bold text-faint border border-background">
-            +139
-          </div>
-        </div>
       </div>
 
       {/* Card 3: Active Students */}

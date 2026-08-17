@@ -11,15 +11,11 @@ import type { MockCanteen } from "@/lib/mock/campus";
  * not a client-side `router.push` from a `<div onClick>` — keyboard and
  * screen-reader users get a real link, not a div pretending to be one.
  *
- * Day 2 scope note: every canteen currently links to the single
- * `/student/menu` route (that's the only Menu route Day 1 built). A
- * canteen-scoped `/student/menu/[canteenId]` is Day 3+ work — see the
- * Day 2 report's recommendation.
  */
 export function CanteenCard({ canteen }: { canteen: MockCanteen }) {
   return (
     <Link
-      href="/student/menu"
+      href={`/student/menu/${canteen.id}`}
       className="group relative block overflow-hidden rounded-2xl border border-border-subtle bg-surface-elevated transition-colors duration-300 hover:border-primary/50"
     >
       <div className="relative h-48 overflow-hidden">
@@ -81,10 +77,13 @@ export function CanteenCard({ canteen }: { canteen: MockCanteen }) {
             e.preventDefault();
             e.stopPropagation();
           }}
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-on-primary shadow-lg transition-transform active:scale-90"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-on-primary shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-90"
         >
-          <span className="material-symbols-outlined" aria-hidden="true">
-            add
+          <span
+            className="material-symbols-outlined text-[18px] text-white"
+            aria-hidden="true"
+          >
+            shopping_bag
           </span>
         </button>
       </div>

@@ -13,6 +13,7 @@ export interface VendorOrder {
   elapsedTimeText: string;
   paymentType: "PREPAID" | "CASH";
   status: VendorOrderStatus;
+  totalAmount: number;
   items: VendorOrderItem[];
   otpCode?: string;
   prepProgressPercent?: number;
@@ -83,10 +84,14 @@ export interface VendorPayoutRecord {
   amount: number;
 }
 
+// Store open/closed + prep-time are still UI-only state (not yet
+// persisted to canteens); name/campus are placeholder display text until
+// the vendor header is wired to the authenticated vendor's own
+// canteen/campus record (see getLiveVendorCanteenId).
 export const MOCK_VENDOR_STORE: VendorStoreConfig = {
-  name: "CyberCafe Central",
+  name: "My Store",
   hubTitle: "CAMPUS VENDOR HUB",
-  campus: "PSIT Kanpur",
+  campus: "",
   isOpen: true,
   prepTimeMinutes: 12,
   avatarUrl:
@@ -99,82 +104,6 @@ export const MOCK_VENDOR_STATS: VendorStats = {
   dailyRevenue: 4250,
   avgCompletionMinutes: 11.4,
 };
-
-export const INITIAL_VENDOR_ORDERS: VendorOrder[] = [
-  {
-    id: "v_ord_2841",
-    orderNumber: "#2841",
-    studentName: "Rohan Sharma",
-    elapsedTimeText: "2 mins ago",
-    paymentType: "PREPAID",
-    status: "placed",
-    items: [
-      { name: "Veg Cheese Burger", quantity: 2, notes: "Extra Spicy" },
-      { name: "Hazelnut Cold Coffee", quantity: 1, notes: "Less Sugar" },
-    ],
-    createdAtIso: new Date(Date.now() - 2 * 60000).toISOString(),
-  },
-  {
-    id: "v_ord_2842",
-    orderNumber: "#2842",
-    studentName: "Priya Patel",
-    elapsedTimeText: "5 mins ago",
-    paymentType: "CASH",
-    status: "placed",
-    items: [{ name: "Paneer Tikka Wrap", quantity: 3 }],
-    createdAtIso: new Date(Date.now() - 5 * 60000).toISOString(),
-  },
-  {
-    id: "v_ord_2838",
-    orderNumber: "#2838",
-    studentName: "Ananya K.",
-    elapsedTimeText: "Started 8m ago",
-    paymentType: "PREPAID",
-    status: "preparing",
-    prepProgressPercent: 65,
-    items: [
-      { name: "Chicken Maggi Bowl", quantity: 1 },
-      { name: "Fresh Lime Soda", quantity: 1 },
-    ],
-    createdAtIso: new Date(Date.now() - 8 * 60000).toISOString(),
-  },
-  {
-    id: "v_ord_2835",
-    orderNumber: "#2835",
-    studentName: "Sid M.",
-    elapsedTimeText: "Started 15m ago",
-    paymentType: "PREPAID",
-    status: "preparing",
-    prepProgressPercent: 85,
-    items: [{ name: "Vada Pav", quantity: 4 }],
-    createdAtIso: new Date(Date.now() - 15 * 60000).toISOString(),
-  },
-  {
-    id: "v_ord_2830",
-    orderNumber: "#2830",
-    studentName: "Kevin Joy",
-    elapsedTimeText: "Ready since 4m",
-    paymentType: "PREPAID",
-    status: "ready",
-    otpCode: "4821",
-    items: [
-      { name: "Large Fries", quantity: 1 },
-      { name: "Coke", quantity: 2 },
-    ],
-    createdAtIso: new Date(Date.now() - 20 * 60000).toISOString(),
-  },
-  {
-    id: "v_ord_2828",
-    orderNumber: "#2828",
-    studentName: "Sara L.",
-    elapsedTimeText: "Ready since 12m",
-    paymentType: "PREPAID",
-    status: "ready",
-    otpCode: "9102",
-    items: [{ name: "Masala Dosa", quantity: 2 }],
-    createdAtIso: new Date(Date.now() - 28 * 60000).toISOString(),
-  },
-];
 
 export const INITIAL_VENDOR_MENU_ITEMS: VendorMenuItem[] = [
   {

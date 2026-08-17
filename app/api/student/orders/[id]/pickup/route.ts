@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { recordOrderStatusHistory } from "@/lib/supabase/order_status_history";
+import { validateOrderStatusTransition } from "@/lib/orders/status_transitions";
+import type { VendorOrderStatus } from "@/lib/mock/vendor";
 
 function getSupabaseAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -58,13 +60,16 @@ export async function POST(
       );
     }
 
-    // Status check: Must be in 'ready' state
-    if (currentOrder.status !== "ready") {
+    // Status check: only ready -> picked_up is a valid student-initiated transition
+    const transitionCheck = validateOrderStatusTransition(
+      currentOrder.status as VendorOrderStatus,
+      "picked_up",
+      "student",
+    );
+
+    if (!transitionCheck.ok) {
       return NextResponse.json(
-        {
-          ok: false,
-          error: `Cannot confirm pickup for order with status "${currentOrder.status}". Order must be "ready".`,
-        },
+        { ok: false, error: transitionCheck.error },
         { status: 400 },
       );
     }

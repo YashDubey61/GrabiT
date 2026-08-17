@@ -1,4 +1,6 @@
 import { createClient } from "./client";
+import type { UserRole } from "@/types";
+import type { User, Session } from "@supabase/supabase-js";
 
 export interface StudentProfile {
   id: string;
@@ -39,19 +41,18 @@ export async function getCurrentStudentProfile(): Promise<StudentProfile | null>
 
     const p = profiles[0];
 
-    // Explicit role guard: Reject non-student accounts (vendor / superadmin)
     if (p.role !== "student") {
       return null;
     }
 
-    const campusName = (p.campuses as { name: string } | null)?.name ?? "PSIT Kanpur";
+    const campusName = (p.campuses as { name: string } | null)?.name ?? "Campus";
 
     return {
       id: p.id,
       email: user.email ?? "student@grabit.in",
       phone: p.phone ?? "+919999999999",
       role: "student",
-      campusId: p.campus_id ?? "11111111-1111-1111-1111-111111111111",
+      campusId: p.campus_id ?? "a1000000-0000-0000-0000-000000000001",
       campusName,
       studentIdTag: `GRB-${p.id.slice(0, 6).toUpperCase()}`,
       avatarUrl:
@@ -68,21 +69,117 @@ export async function getCurrentStudentProfile(): Promise<StudentProfile | null>
 export async function signStudentIn(
   email: string,
   pass: string,
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; role?: UserRole; user?: User; session?: Session; error?: string }> {
   try {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      return { ok: false, error: "Please enter your email." };
+    }
+    if (!pass) {
+      return { ok: false, error: "Please enter your password." };
+    }
+
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: trimmedEmail,
       password: pass,
     });
 
     if (error) {
-      return { ok: false, error: error.message };
+      const errLower = error.message?.toLowerCase() || "";
+      if (errLower.includes("invalid login credentials") || errLower.includes("invalid credentials")) {
+        return { ok: false, error: "Sign in failed. Please check your email and password." };
+      }
+      if (errLower.includes("fetch") || errLower.includes("network") || errLower.includes("connection")) {
+        return { ok: false, error: "Unable to sign in right now. Please check your connection and try again." };
+      }
+      return { ok: false, error: "Sign in failed. Please check your email and password." };
     }
 
-    return { ok: true };
+    if (!data.user || !data.session) {
+      return { ok: false, error: "We couldn’t complete your sign in. Please try again." };
+    }
+
+    let role: UserRole = "student";
+    try {
+      const { data: profile } = await supabase
+        .from("users")
+        .select("role")
+        .eq("id", data.user.id)
+        .maybeSingle();
+
+      if (profile?.role) {
+        role = profile.role as UserRole;
+      }
+    } catch {
+      role = "student";
+    }
+
+    return { ok: true, role, user: data.user, session: data.session };
   } catch {
-    return { ok: false, error: "Network error signing in." };
+    return { ok: false, error: "Unable to sign in right now. Please check your connection and try again." };
+  }
+}
+
+/**
+ * Sign in vendor with Email + Password via Supabase Auth.
+ * Handles store partner authentication and vendor role resolution.
+ */
+export async function signVendorIn(
+  email: string,
+  pass: string,
+): Promise<{ ok: boolean; role?: UserRole; user?: User; session?: Session; error?: string }> {
+  try {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      return { ok: false, error: "Please enter your store email address." };
+    }
+    if (!pass) {
+      return { ok: false, error: "Please enter your password." };
+    }
+
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: trimmedEmail,
+      password: pass,
+    });
+
+    if (error) {
+      const errLower = error.message?.toLowerCase() || "";
+      if (errLower.includes("invalid login credentials") || errLower.includes("invalid credentials")) {
+        return { ok: false, error: "Invalid email or password. Please check your credentials." };
+      }
+      if (errLower.includes("fetch") || errLower.includes("network") || errLower.includes("connection")) {
+        return { ok: false, error: "Unable to sign in right now. Please check your connection and try again." };
+      }
+      return { ok: false, error: "Authentication failed. Please verify store credentials." };
+    }
+
+    if (!data.user || !data.session) {
+      return { ok: false, error: "We couldn’t complete vendor authentication. Please try again." };
+    }
+
+    // Resolve the account's actual role from public.users — never
+    // auto-provision a vendor row here. Vendor access must be explicitly
+    // granted (by seed/migration or Super Admin), not self-assigned by
+    // whoever successfully authenticates. If no profile row exists yet,
+    // role is left undefined so the caller can fail closed.
+    let role: UserRole | undefined;
+    try {
+      const { data: profile } = await supabase
+        .from("users")
+        .select("role")
+        .eq("id", data.user.id)
+        .maybeSingle();
+
+      role = profile?.role as UserRole | undefined;
+    } catch {
+      role = undefined;
+    }
+
+    return { ok: true, role, user: data.user, session: data.session };
+  } catch {
+    return { ok: false, error: "Unable to sign in right now. Please check your connection and try again." };
   }
 }
 
@@ -100,7 +197,6 @@ export async function signStudentUp(
   try {
     const supabase = createClient();
 
-    // 1. Supabase Auth Signup
     const { data: authData, error: authErr } = await supabase.auth.signUp({
       email: email.trim(),
       password: pass,
@@ -117,12 +213,11 @@ export async function signStudentUp(
 
     const userId = authData.user.id;
 
-    // 2. Insert into public.users with role = 'student' (role security enforced)
     const { error: profileErr } = await supabase.from("users").upsert({
       id: userId,
       phone: phone?.trim() || `+91${Math.floor(1000000000 + Math.random() * 9000000000)}`,
       role: "student",
-      campus_id: campusId || "11111111-1111-1111-1111-111111111111",
+      campus_id: campusId || "a1000000-0000-0000-0000-000000000001",
     });
 
     if (profileErr) {
@@ -223,4 +318,3 @@ export async function signStudentOut(): Promise<void> {
     // Ignore signout error
   }
 }
-

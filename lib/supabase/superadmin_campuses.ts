@@ -43,7 +43,7 @@ export async function getSuperAdminCampuses(
   // 1. Fetch live campuses
   const { data: dbCampuses } = await supabase
     .from("campuses")
-    .select("id, name, city, status, logistics_lead, image_url");
+    .select("id, name, city, status, logistics_lead, image_url, latitude, longitude, radius_meters, short_name, address, state");
 
   // 2. Fetch canteens to compute per-campus vendor/canteen counts
   const { data: dbCanteens } = await supabase
@@ -102,21 +102,8 @@ export async function getSuperAdminCampuses(
       };
     });
   } else {
-    // Fallback if database is fresh without seeded campuses
-    mappedCampuses = [
-      {
-        id: "cmp_1",
-        name: "PSIT Kanpur",
-        location: "Kanpur, UP",
-        vendorCount: 4,
-        dailyOrders: 1840,
-        ordersCapacityPercent: 80,
-        logisticsLeadName: "Aryan Kapoor",
-        logisticsLeadInitials: "AK",
-        status: "ACTIVE",
-        imageUrl: DEFAULT_CAMPUS_IMAGE,
-      },
-    ];
+    // No campuses exist yet — genuine empty state, not fake data.
+    mappedCampuses = [];
   }
 
   // Filter Search Query and Status
@@ -173,6 +160,10 @@ export async function createLiveCampus(payload: {
   location: string;
   status?: string;
   logisticsLeadName?: string;
+  latitude?: number;
+  longitude?: number;
+  radiusMeters?: number;
+  shortName?: string;
 }) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const serviceKey =
@@ -187,6 +178,10 @@ export async function createLiveCampus(payload: {
       status: payload.status || "ACTIVE",
       logistics_lead: payload.logisticsLeadName?.trim() || "Operations Lead",
       image_url: DEFAULT_CAMPUS_IMAGE,
+      latitude: payload.latitude ?? null,
+      longitude: payload.longitude ?? null,
+      radius_meters: payload.radiusMeters ?? 2000,
+      short_name: payload.shortName?.trim() || null,
     })
     .select()
     .single();
@@ -208,6 +203,10 @@ export async function updateLiveCampus(
     location?: string;
     status?: string;
     logisticsLeadName?: string;
+    latitude?: number;
+    longitude?: number;
+    radiusMeters?: number;
+    shortName?: string;
   },
 ) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -220,6 +219,10 @@ export async function updateLiveCampus(
   if (payload.location) updates.city = payload.location.trim();
   if (payload.status) updates.status = payload.status;
   if (payload.logisticsLeadName) updates.logistics_lead = payload.logisticsLeadName.trim();
+  if (payload.latitude !== undefined) updates.latitude = payload.latitude;
+  if (payload.longitude !== undefined) updates.longitude = payload.longitude;
+  if (payload.radiusMeters !== undefined) updates.radius_meters = payload.radiusMeters;
+  if (payload.shortName !== undefined) updates.short_name = payload.shortName.trim();
 
   const { data, error } = await supabase
     .from("campuses")

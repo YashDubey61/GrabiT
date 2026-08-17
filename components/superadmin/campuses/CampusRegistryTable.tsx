@@ -8,12 +8,14 @@ interface CampusRegistryTableProps {
   campuses: SuperAdminCampus[];
   onManageCampus: (campus: SuperAdminCampus) => void;
   onDownloadRegistry?: () => void;
+  isLoading?: boolean;
 }
 
 export function CampusRegistryTable({
   campuses,
   onManageCampus,
   onDownloadRegistry,
+  isLoading = false,
 }: CampusRegistryTableProps) {
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
 
@@ -50,7 +52,13 @@ export function CampusRegistryTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-border/30">
-            {campuses.length === 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={6} className="px-6 py-8 text-center text-body-sm text-faint">
+                  Loading campuses…
+                </td>
+              </tr>
+            ) : campuses.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-6 py-8 text-center text-body-sm text-faint">
                   No campuses match your search or status filter.
@@ -171,7 +179,7 @@ export function CampusRegistryTable({
       {/* Pagination Footer */}
       <div className="flex items-center justify-between border-t border-border p-4 bg-surface-sunken/40">
         <span className="text-caption text-faint">
-          Showing <span className="font-semibold text-foreground">1-{campuses.length}</span> of 24 campuses
+          Showing <span className="font-semibold text-foreground">1-{campuses.length}</span> of {campuses.length} campuses
         </span>
         <div className="flex gap-2">
           <button

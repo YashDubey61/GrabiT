@@ -12,49 +12,66 @@ import { EmptyCheckoutState } from "@/components/student/EmptyCheckoutState";
 import { TrackEventOnMount } from "@/components/shared/TrackEventOnMount";
 import { trackProductEvent } from "@/lib/analytics/events";
 import { useCart } from "@/lib/cart/CartContext";
-import { useOrders } from "@/lib/orders/OrderContext";
 
 // Client Component — converted from
 // stitch_grabit_campus_canteen_os/grabit_checkout_premium_black/code.html.
 export default function StudentCheckoutPage() {
   const router = useRouter();
   const cart = useCart();
-  const orders = useOrders();
   const [slot, setSlot] = useState<PickupSlot>("ASAP");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("wallet");
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (cart.items.length === 0) {
     return <EmptyCheckoutState />;
   }
 
-  // Day 4: "Pay & Place Order" creates a real (mock, local-only) order.
-  // Sequence matters — cart is cleared only *after* order creation
-  // succeeds, so a validation failure never loses the student's cart.
-  function handlePlaceOrder() {
+  // "Pay & Place Order" creates a real, server-persisted order via
+  // POST /api/orders — the server re-validates items/prices from the DB
+  // and is the sole source of truth for totals. Cart is cleared only
+  // *after* order creation succeeds, so a failed submission never loses
+  // the student's cart.
+  async function handlePlaceOrder() {
     if (!cart.canteenId || !cart.canteenName) {
       setError("Something went wrong with your cart. Please try again.");
       return;
     }
 
     trackProductEvent({ eventName: "checkout_submitted", canteenId: cart.canteenId });
-
-    const result = orders.createOrder({
-      canteenId: cart.canteenId,
-      canteenName: cart.canteenName,
-      items: cart.items,
-      slot,
-      paymentMethod,
-    });
-
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
-
+    setIsSubmitting(true);
     setError(null);
-    cart.clearCart();
-    router.push(`/student/orders/${result.order.id}`);
+
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          canteenId: cart.canteenId,
+          canteenName: cart.canteenName,
+          slot,
+          paymentMethod,
+          items: cart.items.map((item) => ({
+            menuItemId: item.menuItemId,
+            quantity: item.quantity,
+          })),
+        }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok || !result.ok) {
+        setError(result.error || "Failed to place order. Please try again.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      cart.clearCart();
+      router.push(`/student/orders/${result.order.id}`);
+    } catch {
+      setError("Network error. Please try again.");
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -69,7 +86,12 @@ export default function StudentCheckoutPage() {
         <CheckoutBillDetails subtotal={cart.subtotal} />
       </main>
 
-      <CheckoutAction subtotal={cart.subtotal} onPlaceOrder={handlePlaceOrder} error={error} />
+      <CheckoutAction
+        subtotal={cart.subtotal}
+        onPlaceOrder={handlePlaceOrder}
+        error={error}
+        isSubmitting={isSubmitting}
+      />
     </>
   );
 }

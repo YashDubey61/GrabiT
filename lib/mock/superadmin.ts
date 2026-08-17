@@ -37,6 +37,9 @@ export interface SuperAdminCampus {
   logisticsLeadInitials: string;
   status: "ACTIVE" | "MAINTENANCE" | "PRE_ONBOARDING";
   imageUrl: string;
+  latitude?: number;
+  longitude?: number;
+  radiusMeters?: number;
 }
 
 export interface CampusActivityFeedItem {
@@ -79,175 +82,12 @@ export interface VendorApprovalRequest {
   priceChanges?: PriceChangeDetail[];
 }
 
-export const MOCK_SUPERADMIN_KPIS: SuperAdminKpis = {
-  totalGmv: 1420892,
-  gmvGrowthPercent: 12.4,
-  activeCampuses: 142,
-  activeStudents: 54302,
-  studentsGrowthText: "+2.1k",
-  platformCommissionPercent: 15.2,
-  netRevenue: 215900,
-};
+// Live KPIs/alerts/transactions are fetched from Supabase via
+// GET /api/superadmin/dashboard — no hardcoded sample data here.
 
-export const MOCK_SYSTEM_ALERTS: SystemAlertItem[] = [
-  {
-    id: "alt_1",
-    title: "Payment Gateway Latency Spike",
-    subtitle: "Razorpay / UPI latency spike in North region",
-    timestampText: "2 mins ago",
-    severity: "error",
-  },
-  {
-    id: "alt_2",
-    title: "Campus Overload: PSIT Kanpur",
-    subtitle: "Kitchen order density at 92% capacity during lunch rush",
-    timestampText: "14 mins ago",
-    severity: "warning",
-  },
-  {
-    id: "alt_3",
-    title: "New Vendor Verification",
-    subtitle: '"Fresh Bites Canteen" submitted FSSAI credentials',
-    timestampText: "42 mins ago",
-    severity: "info",
-  },
-];
-
-export const MOCK_TRANSACTION_LOGS: TransactionStreamLog[] = [
-  {
-    id: "tx_1",
-    txCode: "#TX-9421",
-    campusName: "PSIT Kanpur",
-    amount: 245.0,
-    status: "Settled",
-    timeText: "12:04:01",
-  },
-  {
-    id: "tx_2",
-    txCode: "#TX-9420",
-    campusName: "IIT Kanpur",
-    amount: 1120.0,
-    status: "Pending",
-    timeText: "12:03:45",
-  },
-  {
-    id: "tx_3",
-    txCode: "#TX-9419",
-    campusName: "BITS Pilani",
-    amount: 189.9,
-    status: "Settled",
-    timeText: "12:03:12",
-  },
-  {
-    id: "tx_4",
-    txCode: "#TX-9418",
-    campusName: "DU North Campus",
-    amount: 562.0,
-    status: "Settled",
-    timeText: "12:02:59",
-  },
-  {
-    id: "tx_5",
-    txCode: "#TX-9417",
-    campusName: "BHU Varanasi",
-    amount: 340.5,
-    status: "Settled",
-    timeText: "12:01:30",
-  },
-];
-
-export const INITIAL_SUPERADMIN_CAMPUSES: SuperAdminCampus[] = [
-  {
-    id: "cmp_1",
-    name: "PSIT Kanpur",
-    location: "Uttar Pradesh, India",
-    vendorCount: 42,
-    vendorNewDelta: 3,
-    dailyOrders: 1840,
-    ordersCapacityPercent: 80,
-    logisticsLeadName: "Aryan Kapoor",
-    logisticsLeadInitials: "AK",
-    status: "ACTIVE",
-    imageUrl:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuAnL6yucAYd9Pmi4RFLLpjUqnREaSik4Hr8cWfjb_4cRgTLKjsvS1FXpojDeCHE8K5sL6y2DCUvdoJ0pNqrVEjEw-dMlChm-A_NrJ2OaCiJIldBlaBdRTnVf2-RblrCkWjmGmv6KifqsrKdjlP4lECNuKWiq7ZWjQ4CTVDmEvDunlXkXpwIxncN-rjEu_Ty0TB2hrpsN07nWk_H2n7QqWcUVVC7lsZtqdx49maJ5ZUruKWncwZ8yTEk",
-  },
-  {
-    id: "cmp_2",
-    name: "Galgotias University",
-    location: "Greater Noida, Delhi NCR",
-    vendorCount: 58,
-    dailyOrders: 2610,
-    ordersCapacityPercent: 95,
-    logisticsLeadName: "Sania Mirza",
-    logisticsLeadInitials: "SM",
-    status: "ACTIVE",
-    imageUrl:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDXh1ho0ZzcaPiPBN4XmOTiDB-UC-u1D7hvaHopybSX5Tcy3mqbfr4r-3MHerbjQxbkE-q_tzYtBi7TKNkEpbiC8qVkxoiEyXnlw4SkwIjNjTZULB7bJrWGjV8JgYNgayi60peLaIF9GplOTIOLh5OjGZPtZbea7b26dyv93QLDKFUfnVAJmZxt9Xlit0afjB-n5sJ-4hCsyzwwlG37eAzHnZe2UVAtNSB8Fpg-X3T-jLieKFqyWFPd",
-  },
-  {
-    id: "cmp_3",
-    name: "SRM KTR",
-    location: "Chennai, Tamil Nadu",
-    vendorCount: 31,
-    dailyOrders: 920,
-    ordersCapacityPercent: 45,
-    logisticsLeadName: "Rohan Verma",
-    logisticsLeadInitials: "RV",
-    status: "MAINTENANCE",
-    imageUrl:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuABszicRTmp2V2katFBUUwEt-EzRDFZmOA0tAQs5p-e5bY3cnbc32DwAIUQTORc1fxlnKo01m_AGZBDqC3ehL2oJqXePT0QsJ87RRpDYsRKjYFP_Ba6mz6aI7G-nViAtxQX-bnHdJax6M69dlyGVnlAqtA76bsh7KnFWHcUyh2JWI8mEBY51F1yLOQuoEZrMRT7zuMLunZb_CuzGf6aGYvejpDPkD-muURuZOYtMJIxsC5gss1IVDJf",
-  },
-  {
-    id: "cmp_4",
-    name: "LPU Punjab",
-    location: "Phagwara, Punjab",
-    vendorCount: 104,
-    dailyOrders: 5420,
-    ordersCapacityPercent: 100,
-    logisticsLeadName: "Deepak Singh",
-    logisticsLeadInitials: "DS",
-    status: "ACTIVE",
-    imageUrl:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCplM-hOF-_VV1ektq9WsvFS6E39mYrLxjv4ZzKV2JEv3Pz22B4fpWBKx0MFA_AiM_0Oi5y3m6Xms7yyTjnFdlgS16XXfIAgH0iV4K_3hvivrSsz3J2QZcr8OkIL--e3bdESQ8XFgn_89y1Aqoe57T-aymSCyPy4ZPx-hYvr37DtRXLxnrBLLGhKU4-RfPCLlKedCG6QpNaABAm__P_H_YtNzRTWtd50ZMb49ktoOEkR1PPpvwMOEVP",
-  },
-  {
-    id: "cmp_5",
-    name: "Amity University",
-    location: "Noida, Uttar Pradesh",
-    vendorCount: 18,
-    dailyOrders: 410,
-    ordersCapacityPercent: 30,
-    logisticsLeadName: "Pooja Sharma",
-    logisticsLeadInitials: "PS",
-    status: "PRE_ONBOARDING",
-    imageUrl:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuAnL6yucAYd9Pmi4RFLLpjUqnREaSik4Hr8cWfjb_4cRgTLKjsvS1FXpojDeCHE8K5sL6y2DCUvdoJ0pNqrVEjEw-dMlChm-A_NrJ2OaCiJIldBlaBdRTnVf2-RblrCkWjmGmv6KifqsrKdjlP4lECNuKWiq7ZWjQ4CTVDmEvDunlXkXpwIxncN-rjEu_Ty0TB2hrpsN07nWk_H2n7QqWcUVVC7lsZtqdx49maJ5ZUruKWncwZ8yTEk",
-  },
-];
-
-export const MOCK_CAMPUS_ACTIVITIES: CampusActivityFeedItem[] = [
-  {
-    id: "act_1",
-    title: "New Campus Onboarding",
-    description: "Amity University, Noida enters pre-onboarding integration phase.",
-    timestampText: "2 HOURS AGO",
-    type: "new",
-  },
-  {
-    id: "act_2",
-    title: "Vendor Milestone Achieved",
-    description: "LPU Punjab reached 100+ active campus vendor storefronts.",
-    timestampText: "5 HOURS AGO",
-    type: "milestone",
-  },
-  {
-    id: "act_3",
-    title: "Network System Alert",
-    description: "SRM KTR logistics nodes experiencing peak lunch latency.",
-    timestampText: "8 HOURS AGO",
-    type: "alert",
-  },
-];
+// Live campus/vendor data is fetched from Supabase via
+// getSuperAdminCampuses() (lib/supabase/superadmin_campuses.ts) — no
+// hardcoded sample campuses/activities here.
 
 export const INITIAL_VENDOR_OVERSIGHT_HUBS: CampusVendorHub[] = [
   {

@@ -111,7 +111,7 @@ export function GrabItGoldCard({
             {subscription.active ? (
               `Valid till: ${subscription.validUntil}`
             ) : (
-              `Status: ${subscription.validUntil}`
+              "Status: Inactive"
             )}
           </div>
 

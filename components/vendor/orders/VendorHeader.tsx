@@ -8,6 +8,7 @@ interface VendorHeaderProps {
   onToggleStatus: () => void;
   onChangePrepTime: () => void;
   onOpenNotifications: () => void;
+  pendingOrderCount?: number;
 }
 
 export function VendorHeader({
@@ -15,6 +16,7 @@ export function VendorHeader({
   onToggleStatus,
   onChangePrepTime,
   onOpenNotifications,
+  pendingOrderCount = 0,
 }: VendorHeaderProps) {
   return (
     <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur-md sm:px-6">
@@ -78,10 +80,19 @@ export function VendorHeader({
           aria-label="Notifications"
           className="relative flex h-9 w-9 items-center justify-center rounded-xl text-muted transition-colors hover:bg-surface-elevated hover:text-foreground active:scale-95"
         >
-          <span className="material-symbols-outlined text-[22px]" aria-hidden="true">
+          <span
+            className={`material-symbols-outlined text-[22px] ${pendingOrderCount > 0 ? "animate-pulse text-primary" : ""}`}
+            aria-hidden="true"
+          >
             notifications
           </span>
-          <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary ring-2 ring-background" />
+          {pendingOrderCount > 0 ? (
+            <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 font-display text-[10px] font-extrabold text-on-primary ring-2 ring-background">
+              {pendingOrderCount}
+            </span>
+          ) : (
+            <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary ring-2 ring-background" />
+          )}
         </button>
 
         {/* Vendor Avatar */}

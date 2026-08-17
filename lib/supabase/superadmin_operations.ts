@@ -167,7 +167,7 @@ export async function getSuperAdminOperationsMetrics(
     // Campus aggregation
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const canteen = o.canteens as any;
-    const campusName = (canteen?.campuses?.name as string) ?? "PSIT Kanpur";
+    const campusName = (canteen?.campuses?.name as string) ?? "Campus";
     const existingCampus = campusGmvMap.get(campusName) ?? { campusName, count: 0, gmv: 0 };
     existingCampus.count++;
     existingCampus.gmv += amount;
@@ -380,15 +380,7 @@ export async function getSuperAdminOperationsMetrics(
     }),
   );
 
-  if (campusVolumeMap.length === 0) {
-    campusVolumeMap.push(
-      { campusId: "camp_1", campusName: "PSIT Kanpur", orderCount: 24, totalGmv: 4420 },
-      { campusId: "camp_2", campusName: "IIT Kanpur", orderCount: 12, totalGmv: 2180 },
-      { campusId: "camp_3", campusName: "BITS Pilani", orderCount: 6, totalGmv: 1100 },
-    );
-  }
-
-  const highestVolumeCampus = campusVolumeMap[0]?.campusName ?? "PSIT Kanpur";
+  const highestVolumeCampus = campusVolumeMap[0]?.campusName ?? "No data available";
 
   const campusOps: CampusOperationsMetrics = {
     activeCampusesCount,

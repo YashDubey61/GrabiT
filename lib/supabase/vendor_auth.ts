@@ -8,8 +8,6 @@ export interface VendorContext {
   canteenName: string;
 }
 
-const SEED_CANTEEN_ID = "ca000001-1111-1111-1111-111111111111";
-
 /**
  * Server-side Vendor Identity & Canteen Resolver.
  * Resolves authenticated vendor identity strictly from auth.users session -> public.users -> canteens.
@@ -49,8 +47,15 @@ export async function getAuthenticatedVendorContext(): Promise<VendorContext | n
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const canteen = (p.canteens as any) ?? null;
-    const canteenId = canteen?.id ?? p.canteen_id ?? SEED_CANTEEN_ID;
-    const canteenName = canteen?.name ?? "Central Food Court";
+    const canteenId = canteen?.id ?? p.canteen_id ?? null;
+
+    // Fail closed: a vendor account with no assigned canteen has nothing
+    // to manage, and must not silently fall back to another vendor's shop.
+    if (!canteenId) {
+      return null;
+    }
+
+    const canteenName = canteen?.name ?? "";
 
     return {
       userId: user.id,

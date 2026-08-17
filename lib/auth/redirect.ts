@@ -1,0 +1,46 @@
+import { ROLE_HOME } from "@/lib/auth/roles";
+import type { UserRole } from "@/types";
+
+/**
+ * Sanitizes a `?next=` redirect target so it can only point back into
+ * this app. Rejects protocol-relative ("//host"), absolute ("https://"),
+ * and backslash-based ("\\host") open-redirect payloads.
+ */
+export function getSafeRedirectUrl(next: string | null | undefined, role: UserRole): string {
+  const fallback = ROLE_HOME[role] || "/student";
+  if (!next) return fallback;
+
+  const trimmed = next.trim();
+  if (
+    trimmed.startsWith("/") &&
+    !trimmed.startsWith("//") &&
+    !trimmed.includes(":") &&
+    !trimmed.includes("\\")
+  ) {
+    return trimmed;
+  }
+  return fallback;
+}
+
+/**
+ * Forces a full document navigation instead of a Next.js client-side
+ * transition. Required for the post-login redirect specifically: the
+ * App Router's client Router Cache can replay a *pre-login* prefetch of
+ * the destination route (captured while the user was unauthenticated,
+ * i.e. the middleware's own redirect-to-login response) instead of
+ * re-running middleware against the just-established session cookies.
+ * A hard navigation always issues a fresh request, so middleware always
+ * re-evaluates with current cookies — this is what makes the redirect
+ * land reliably instead of bouncing back to the auth page.
+ */
+export function hardNavigate(url: string): void {
+  window.location.assign(url);
+}
+
+export function authLog(...args: unknown[]): void {
+  console.log("[AUTH]", ...args);
+}
+
+export function authError(...args: unknown[]): void {
+  console.error("[AUTH ERROR]", ...args);
+}

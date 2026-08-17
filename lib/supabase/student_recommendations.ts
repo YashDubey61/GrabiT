@@ -67,7 +67,7 @@ export async function getStudentRecommendations(): Promise<StudentRecommendation
   // 2. Fetch all current menu items to get current prices and availability
   const { data: dbMenuItems } = await adminSupabase
     .from("menu_items")
-    .select("id, canteen_id, name, category, price, is_available, canteens(id, name, campus_id, campuses(id, name))");
+    .select("id, canteen_id, name, category, price, availability, canteens(id, name, campus_id, campuses(id, name))");
 
   const menuItemsList = dbMenuItems ?? [];
 
@@ -78,7 +78,7 @@ export async function getStudentRecommendations(): Promise<StudentRecommendation
   >();
 
   menuItemsList.forEach((m) => {
-    if (m.is_available) {
+    if (m.availability === "available") {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const canteen = m.canteens as any;
       availableItemsMap.set(m.id, {
@@ -88,14 +88,14 @@ export async function getStudentRecommendations(): Promise<StudentRecommendation
         category: m.category || "General",
         price: Number(m.price) || 0,
         canteenName: canteen?.name || "Campus Canteen",
-        campusName: canteen?.campuses?.name || "PSIT Kanpur",
+        campusName: canteen?.campuses?.name || "Campus",
       });
     }
   });
 
   const recommendationList: RecommendationItem[] = [];
   let isPersonalized = false;
-  let campusName = "PSIT Kanpur";
+  let campusName = "Campus";
 
   // 3. ORDER AGAIN ENGINE (If authenticated student has order history)
   if (studentUserId) {

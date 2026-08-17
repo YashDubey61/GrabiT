@@ -2,21 +2,21 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
-  signStudentIn,
+  signVendorIn,
   signStudentOut,
   sendPasswordResetEmail,
 } from "@/lib/supabase/auth";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { getSafeRedirectUrl, hardNavigate, authLog, authError } from "@/lib/auth/redirect";
 
 type ViewMode = "signin" | "forgot";
 
 function VendorAuthFormContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, role } = useAuth();
+  const { user, role, refreshAuth } = useAuth();
 
   const nextParam = searchParams.get("next");
   const errorParam = searchParams.get("error");
@@ -30,20 +30,24 @@ function VendorAuthFormContent() {
   const [errorMessage, setErrorMessage] = useState<string | null>(errorParam);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // If already authenticated as a vendor, redirect to /vendor
+  // If already authenticated as a vendor, redirect directly to /vendor
   useEffect(() => {
     if (user && role === "vendor") {
-      router.replace(nextParam || "/vendor");
+      const destination = getSafeRedirectUrl(nextParam, "vendor");
+      authLog("Already authenticated as vendor on mount, target:", destination);
+      hardNavigate(destination);
     }
-  }, [user, role, router, nextParam]);
+  }, [user, role, nextParam]);
 
   const isEmailValid = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setSuccessMessage(null);
 
-    if (!isEmailValid(email)) {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !isEmailValid(trimmedEmail)) {
       setErrorMessage("Please enter a valid store email address.");
       return;
     }
@@ -53,21 +57,43 @@ function VendorAuthFormContent() {
     }
 
     setIsSubmitting(true);
+    authLog("Login submitted (vendor portal)");
 
-    // 1. Authenticate credentials via Supabase Auth
-    const res = await signStudentIn(email, password);
+    // 1. Authenticate vendor credentials via Supabase Auth
+    const res = await signVendorIn(trimmedEmail, password);
 
     if (!res.ok) {
+      authError("Authentication failed:", res.error);
       setIsSubmitting(false);
-      if (res.error?.toLowerCase().includes("invalid login credentials")) {
-        setErrorMessage("Invalid email or password. Please try again.");
-      } else {
-        setErrorMessage(res.error || "Authentication failed. Please verify credentials.");
-      }
+      setErrorMessage(res.error || "Authentication failed. Please verify store credentials.");
       return;
     }
 
-    // 2. Authoritative role check against public.users
+    if (!res.session) {
+      authError("Authentication reported ok but no session was returned");
+      setIsSubmitting(false);
+      setErrorMessage("We couldn't complete vendor authentication. Please try again.");
+      return;
+    }
+
+    authLog("Authentication successful, session confirmed");
+
+    // 2. Authoritative role check against public.users — fail closed.
+    // Vendor access must be explicitly provisioned (role='vendor' with a
+    // valid canteen_id, set by seed/migration or Super Admin). A normal
+    // authenticated user must NEVER be auto-promoted to vendor just by
+    // reaching this page or successfully signing in — that would let any
+    // student/user account self-grant vendor access.
+    authLog("Role detected:", res.role ?? "(none)");
+
+    if (res.role !== "vendor") {
+      authError("Account is not a vendor (role:", res.role, ") — rejecting vendor portal access");
+      await signStudentOut();
+      setIsSubmitting(false);
+      setErrorMessage("This account does not have vendor access. Please contact your administrator.");
+      return;
+    }
+
     try {
       const supabase = createClient();
       const {
@@ -75,6 +101,8 @@ function VendorAuthFormContent() {
       } = await supabase.auth.getUser();
 
       if (!authUser) {
+        authError("Failed to resolve authenticated user after sign-in");
+        await signStudentOut();
         setIsSubmitting(false);
         setErrorMessage("Failed to resolve authentication session.");
         return;
@@ -82,27 +110,39 @@ function VendorAuthFormContent() {
 
       const { data: profile } = await supabase
         .from("users")
-        .select("role")
+        .select("canteen_id")
         .eq("id", authUser.id)
         .maybeSingle();
 
-      const userRole = profile?.role;
-
-      if (userRole !== "vendor") {
-        // Explicit Fail-Closed: Log out non-vendor account attempting vendor portal access
+      if (!profile?.canteen_id) {
+        authError("Vendor account has no assigned canteen_id — rejecting access");
         await signStudentOut();
         setIsSubmitting(false);
-        setErrorMessage("This account does not have access to the Vendor Portal.");
+        setErrorMessage("This vendor account is not linked to a store yet. Please contact your administrator.");
         return;
       }
-
-      setIsSubmitting(false);
-      router.push(nextParam || "/vendor");
-    } catch {
+    } catch (roleCheckErr) {
+      authError("Unexpected error verifying vendor canteen assignment:", roleCheckErr);
       await signStudentOut();
       setIsSubmitting(false);
       setErrorMessage("An unexpected error occurred verifying vendor identity.");
+      return;
     }
+
+    // 3. Refresh AuthContext, then hand off with a full navigation so
+    // middleware re-evaluates against the just-established session.
+    try {
+      await refreshAuth();
+      authLog("User/profile loaded via refreshAuth");
+    } catch (refreshErr) {
+      authError("refreshAuth failed (non-fatal, session already confirmed):", refreshErr);
+    }
+
+    const destination = getSafeRedirectUrl(nextParam, "vendor");
+    authLog("Target route:", destination);
+    setSuccessMessage("Vendor authenticated successfully! Opening Vendor Dashboard...");
+    authLog("Redirecting...");
+    hardNavigate(destination);
   };
 
   const handleForgot = async (e: React.FormEvent) => {

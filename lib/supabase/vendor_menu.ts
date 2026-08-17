@@ -8,24 +8,26 @@ export interface SupabaseMenuItemRow {
   price: number;
   availability: "available" | "unavailable";
   is_sponsored: boolean;
-  created_at: string;
+  category?: string | null;
+  description?: string | null;
+  image_url?: string | null;
 }
 
-const DEFAULT_CANTEEN_ID = "ca000001-1111-1111-1111-111111111111";
-
 /**
- * Fetch live vendor menu items from Supabase database.
+ * Fetch live vendor menu items from Supabase database, strictly scoped
+ * to the given canteen. Fails closed (returns []) with no canteenId.
  */
 export async function getLiveVendorMenuItems(
-  canteenId: string = DEFAULT_CANTEEN_ID,
+  canteenId: string | null,
 ): Promise<VendorMenuItem[]> {
+  if (!canteenId) return [];
   try {
     const supabase = createClient();
     const { data: items, error } = await supabase
       .from("menu_items")
       .select("*")
       .eq("canteen_id", canteenId)
-      .order("created_at", { ascending: false });
+      .order("name", { ascending: true });
 
     if (error || !items) {
       return [];
@@ -116,27 +118,25 @@ export async function toggleLiveVendorMenuItemStock(
   return updateLiveVendorMenuItem(id, { inStock });
 }
 
+const DEFAULT_ITEM_IMAGE =
+  "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80";
+
+function toVendorCategory(category: string | null | undefined): VendorMenuCategory {
+  const normalized = (category || "").toLowerCase();
+  if (normalized.includes("breakfast")) return "Breakfast";
+  if (normalized.includes("beverage") || normalized.includes("drink")) return "Beverages";
+  if (normalized.includes("snack")) return "Snacks";
+  return "Lunch";
+}
+
 function mapSupabaseMenuItemToUI(row: SupabaseMenuItemRow): VendorMenuItem {
-  const price = Number(row.price);
-  let category: VendorMenuCategory = "Lunch";
-
-  const lowerName = row.name.toLowerCase();
-  if (lowerName.includes("dosa") || lowerName.includes("chai") || lowerName.includes("tea") || lowerName.includes("coffee")) {
-    category = "Breakfast";
-  } else if (lowerName.includes("float") || lowerName.includes("soda") || lowerName.includes("juice")) {
-    category = "Beverages";
-  } else if (lowerName.includes("sandwich") || lowerName.includes("vada") || lowerName.includes("burger")) {
-    category = "Snacks";
-  }
-
   return {
     id: row.id,
     name: row.name,
-    description: `Freshly prepared ${row.name} at Central Canteen.`,
-    price,
-    category,
+    description: row.description || "",
+    price: Number(row.price),
+    category: toVendorCategory(row.category),
     inStock: row.availability === "available",
-    imageUrl:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDZJOsZC2WTR9Mf_IxY3m4yqQ8Y8wMwd2TS6HxDopTGA_DGGQamchaCR_uoLZ-zRhN1JFjCmYfXP4zclth26t59-EeFbwZpUCTDyW8EZk-8TsYcVNjZXJEJi87-S8-GPjoZamBExSnAbseaZzmiPjSMV52hUibuKRjDHXc2JH9QhumI7atkXb-HwcnHPc5OOAnRIK2-_cnvFElwxcluIyVRnee766ArY2JO-wO9Hclr0O1UOJDy6c0g",
+    imageUrl: row.image_url || DEFAULT_ITEM_IMAGE,
   };
 }

@@ -147,7 +147,7 @@ export async function getSuperAdminGlobalMetrics(): Promise<SuperAdminDashboardD
     transactions = liveOrders.map((o) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const canteen = o.canteens as any;
-      const campusName = (canteen?.campuses?.name as string) ?? "PSIT Kanpur";
+      const campusName = (canteen?.campuses?.name as string) ?? "Campus";
       const txCode = `#TX-${o.order_number ? o.order_number.slice(-4) : o.id.slice(0, 4).toUpperCase()}`;
       const statusLabel =
         o.status === "completed" || o.status === "ready" ? "Settled" : "Pending";
@@ -170,32 +170,8 @@ export async function getSuperAdminGlobalMetrics(): Promise<SuperAdminDashboardD
       };
     });
   } else {
-    transactions = [
-      {
-        id: "tx_1",
-        txCode: "#TX-9421",
-        campusName: "PSIT Kanpur",
-        amount: 245.0,
-        status: "Settled",
-        timeText: "12:04:01",
-      },
-      {
-        id: "tx_2",
-        txCode: "#TX-9420",
-        campusName: "IIT Kanpur",
-        amount: 1120.0,
-        status: "Pending",
-        timeText: "12:03:45",
-      },
-      {
-        id: "tx_3",
-        txCode: "#TX-9419",
-        campusName: "BITS Pilani",
-        amount: 189.9,
-        status: "Settled",
-        timeText: "12:03:12",
-      },
-    ];
+    // No orders yet — genuine empty state, not fabricated transactions.
+    transactions = [];
   }
 
   // 6. System Alerts from failed payments or canteen statuses
@@ -231,7 +207,7 @@ export async function getSuperAdminGlobalMetrics(): Promise<SuperAdminDashboardD
       {
         id: "alt_2",
         title: "Campus Densities Optimal",
-        subtitle: "PSIT Kanpur & Galgotias canteen densities operating within capacity.",
+        subtitle: "All campus canteen densities operating within capacity.",
         timestampText: "12 mins ago",
         severity: "info",
       },

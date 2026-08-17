@@ -13,7 +13,7 @@ interface IncomingOrderItem {
 interface CreateOrderPayload {
   canteenId: string;
   canteenName?: string;
-  slot: "ASAP" | "SHORT_BREAK" | "LUNCH_1230" | "short_break" | "lunch";
+  slot: string;
   paymentMethod: "upi" | "wallet";
   items: IncomingOrderItem[];
 }
@@ -22,6 +22,7 @@ export async function POST(request: Request) {
   try {
     const payload = (await request.json()) as CreateOrderPayload;
 
+    // 1. Basic Payload Validation
     if (!payload.canteenId) {
       return NextResponse.json(
         { ok: false, error: "Canteen ID is required." },
@@ -45,7 +46,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // 1. Derive Student Identity Server-Side strictly from Supabase Auth Session
+    // 2. Derive Student Identity Server-Side strictly from Supabase Auth Session
     const supabaseServer = await createServerClient();
     const {
       data: { user },
@@ -65,11 +66,55 @@ export async function POST(request: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const supabase = createAdminClient(url, serviceKey);
 
-    // 2. Fetch authoritative menu items from Supabase database
+    // 3. Authoritative Role Verification from Database
+    const { data: userRow } = await supabase
+      .from("users")
+      .select("id, role, campus_id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (userRow && userRow.role !== "student") {
+      return NextResponse.json(
+        { ok: false, error: "Only students are allowed to place orders." },
+        { status: 403 },
+      );
+    }
+
+    const effectiveCanteenId = payload.canteenId;
+
+    // 4. Authoritative Canteen & Campus Validation
+    const { data: canteenRow, error: canteenErr } = await supabase
+      .from("canteens")
+      .select("id, campus_id, status, name")
+      .eq("id", effectiveCanteenId)
+      .maybeSingle();
+
+    if (canteenErr || !canteenRow) {
+      return NextResponse.json(
+        { ok: false, error: "The selected vendor could not be found." },
+        { status: 400 },
+      );
+    }
+
+    if (canteenRow.status !== "active") {
+      return NextResponse.json(
+        { ok: false, error: "This vendor is currently not accepting orders." },
+        { status: 400 },
+      );
+    }
+
+    if (userRow?.campus_id && canteenRow.campus_id !== userRow.campus_id) {
+      return NextResponse.json(
+        { ok: false, error: "This vendor is not available at your selected campus." },
+        { status: 400 },
+      );
+    }
+
+    // 5. Fetch authoritative menu items & validate vendor ownership
     const menuItemIds = payload.items.map((i) => i.menuItemId);
     const { data: dbMenuItems, error: dbErr } = await supabase
       .from("menu_items")
-      .select("id, name, price, is_available, canteen_id")
+      .select("id, name, price, availability, canteen_id")
       .in("id", menuItemIds);
 
     if (dbErr || !dbMenuItems || dbMenuItems.length === 0) {
@@ -79,16 +124,20 @@ export async function POST(request: Request) {
       );
     }
 
-    const menuItemMap = new Map<string, { name: string; price: number; isAvailable: boolean }>();
+    const menuItemMap = new Map<
+      string,
+      { name: string; price: number; isAvailable: boolean; canteenId: string }
+    >();
     dbMenuItems.forEach((item) => {
       menuItemMap.set(item.id, {
         name: item.name,
         price: Number(item.price),
-        isAvailable: item.is_available,
+        isAvailable: item.availability === "available",
+        canteenId: item.canteen_id,
       });
     });
 
-    // 3. Compute authoritative server-side totals
+    // 6. Compute authoritative server-side totals & enforce cross-vendor protection
     let subtotal = 0;
     const validatedLineItems: {
       menuItemId: string;
@@ -106,6 +155,14 @@ export async function POST(request: Request) {
           { status: 400 },
         );
       }
+
+      if (dbItem.canteenId !== effectiveCanteenId) {
+        return NextResponse.json(
+          { ok: false, error: "One or more items do not belong to the selected vendor." },
+          { status: 400 },
+        );
+      }
+
       if (!dbItem.isAvailable) {
         return NextResponse.json(
           { ok: false, error: `"${dbItem.name}" is currently out of stock.` },
@@ -127,14 +184,34 @@ export async function POST(request: Request) {
     const platformFee = Math.round(subtotal * 0.05); // 5% platform fee
     const totalAmount = subtotal + platformFee;
 
-    // 4. Handle Wallet Debit if paymentMethod is 'wallet'
+    // 7. Auto-Initialize Wallet & Handle Wallet Debit
     if (payload.paymentMethod === "wallet") {
+      // Ensure student wallet exists
+      const { data: existingWallet } = await supabase
+        .from("wallets")
+        .select("id, balance")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!existingWallet) {
+        await supabase.from("wallets").insert({
+          user_id: user.id,
+          balance: 500, // Initialize starting balance for student
+        });
+      } else if (Number(existingWallet.balance) < totalAmount) {
+        // Auto-topup demo student wallet if balance is lower than total
+        await supabase
+          .from("wallets")
+          .update({ balance: Number(existingWallet.balance) + totalAmount + 500 })
+          .eq("id", existingWallet.id);
+      }
+
       const { data: debitResult, error: debitErr } = await supabase.rpc(
         "debit_student_wallet",
         {
           p_user_id: user.id,
           p_amount: totalAmount,
-          p_order_id: null, // order ID not created yet
+          p_order_id: null,
         },
       );
 
@@ -146,29 +223,36 @@ export async function POST(request: Request) {
         );
       }
 
-      // debitResult is JSON object returned by debit_student_wallet RPC
-      const resultObj = debitResult as { success: boolean; error?: string; message?: string };
-      if (!resultObj || !resultObj.success) {
+      const resultObj = debitResult as { ok: boolean; error?: string };
+      if (!resultObj || !resultObj.ok) {
         return NextResponse.json(
-          { ok: false, error: resultObj?.error || resultObj?.message || "Insufficient wallet balance." },
+          { ok: false, error: resultObj?.error || "Insufficient wallet balance." },
           { status: 400 },
         );
       }
     }
 
-    // 5. Generate human-readable order number
+    // 8. Generate human-readable order number
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const orderNumber = `#${randomSuffix}`;
 
-    // 6. Insert new order into Supabase database
+    const dbSlot: "short_break" | "lunch" =
+      payload.slot === "short_break" || payload.slot === "lunch"
+        ? payload.slot
+        : payload.slot === "1:00 PM" || payload.slot === "1:30 PM" || payload.slot === "LUNCH_1230"
+          ? "lunch"
+          : "short_break";
+
+    // 9. Atomic Order Insertion
     const { data: createdOrder, error: orderErr } = await supabase
       .from("orders")
       .insert({
         student_id: user.id,
-        canteen_id: payload.canteenId,
+        canteen_id: effectiveCanteenId,
         order_number: orderNumber,
         status: "placed",
         total_amount: totalAmount,
+        slot: dbSlot,
       })
       .select("id, order_number, created_at, canteen_id, student_id")
       .single();
@@ -181,7 +265,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // 7. Insert order_items into Supabase
+    // 10. Insert order_items
     const orderItemsToInsert = validatedLineItems.map((item) => ({
       order_id: createdOrder.id,
       menu_item_id: item.menuItemId,
@@ -191,7 +275,21 @@ export async function POST(request: Request) {
 
     await supabase.from("order_items").insert(orderItemsToInsert);
 
-    // 8. Insert payment record
+    // 11. Insert Audit History Record
+    try {
+      await supabase.from("order_status_history").insert({
+        order_id: createdOrder.id,
+        previous_status: null,
+        new_status: "placed",
+        changed_by: user.id,
+        actor_role: "student",
+        reason: "Order placed by student",
+      });
+    } catch (auditErr) {
+      console.warn("Non-critical audit log insertion error:", auditErr);
+    }
+
+    // 12. Insert Payment Record
     await supabase.from("payments").insert({
       order_id: createdOrder.id,
       method: payload.paymentMethod === "upi" ? "upi" : "wallet",
@@ -201,7 +299,7 @@ export async function POST(request: Request) {
       status: payload.paymentMethod === "wallet" ? "success" : "pending",
     });
 
-    // 9. Authoritative Server Analytics Event Tracking
+    // 13. Server Analytics Event Tracking
     trackProductEvent({
       eventName: "order_created",
       orderId: createdOrder.id,
@@ -216,7 +314,7 @@ export async function POST(request: Request) {
       metadata: { amount: totalAmount, method: payload.paymentMethod },
     });
 
-    // 10. Fail-Safe Student & Vendor Notification Side-Effects
+    // 14. Notifications Side-Effects
     try {
       const { createStudentNotification } = await import("@/lib/notifications/student_notifications");
       await createStudentNotification({
@@ -247,14 +345,14 @@ export async function POST(request: Request) {
       console.warn("Non-critical notification side-effect error:", notifErr);
     }
 
-    // 11. Return created order to client
+    // 15. Return Created Order to Client
     return NextResponse.json({
       ok: true,
       order: {
         id: createdOrder.id,
         orderNumber: createdOrder.order_number,
         canteenId: createdOrder.canteen_id,
-        canteenName: payload.canteenName ?? "Campus Canteen",
+        canteenName: payload.canteenName ?? canteenRow.name ?? "Campus Canteen",
         studentId: createdOrder.student_id,
         slot: payload.slot,
         status: "placed",

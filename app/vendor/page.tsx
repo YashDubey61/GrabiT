@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import {
   MOCK_VENDOR_STORE,
   MOCK_VENDOR_STATS,
@@ -11,30 +11,14 @@ import { VendorHeader } from "@/components/vendor/orders/VendorHeader";
 import { VendorStatsBar } from "@/components/vendor/orders/VendorStatsBar";
 import { VendorOrdersBoard } from "@/components/vendor/orders/VendorOrdersBoard";
 import { VendorNotificationsDrawer } from "@/components/vendor/notifications/VendorNotificationsDrawer";
+import { IncomingOrderAlert } from "@/components/vendor/orders/IncomingOrderAlert";
 import { getLiveVendorOrders } from "@/lib/supabase/vendor_orders";
+import { getLiveVendorCanteenId } from "@/lib/supabase/vendor_context";
 import { createClient } from "@/lib/supabase/client";
+import { useOrderAlertSound } from "@/lib/vendor/useOrderAlertSound";
 
-function playNotificationChime() {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(587.33, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
-    gain.gain.setValueAtTime(0.15, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.35);
-  } catch {
-    // Ignore if audio permissions block sound
-  }
-}
+const TAB_TITLE_DEFAULT = "GrabIt Vendor";
+const TAB_TITLE_ALERT = "🔔 NEW ORDER — GRABIT Vendor";
 
 export default function VendorActiveOrdersPage() {
   const [store, setStore] = useState(MOCK_VENDOR_STORE);
@@ -42,48 +26,129 @@ export default function VendorActiveOrdersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [notification, setNotification] = useState<string | null>(null);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const canteenIdRef = useRef<string | null>(null);
+
+  // Order-alert ringing: alertedOrderIds tracks every "placed" order id
+  // we've already reacted to (rung for or seen on initial load), so
+  // duplicate realtime events / re-renders never start a second ring for
+  // the same order. hasLoadedOnceRef distinguishes "orders that were
+  // already pending when the dashboard opened" (shown, never rung) from
+  // "orders that arrived after" (shown AND rung) — see req #10.
+  const sound = useOrderAlertSound();
+  // The realtime subscription below is set up once (mount-only effect) so
+  // it never has to tear down and reconnect; that means any callback it
+  // captures is frozen at mount time. `soundRef` always points at the
+  // latest sound-hook object so calls made from inside that stale closure
+  // (fetchOrders -> applyOrders -> sound.start) still see the current
+  // isUnlocked/start/stop, not the mount-time snapshot.
+  const soundRef = useRef(sound);
+  useEffect(() => {
+    soundRef.current = sound;
+  });
+  const alertedOrderIdsRef = useRef<Set<string>>(new Set());
+  const hasLoadedOnceRef = useRef(false);
 
   const showNotification = (msg: string) => {
     setNotification(msg);
     setTimeout(() => setNotification(null), 3000);
   };
 
+  const applyOrders = useCallback((liveOrders: VendorOrder[]) => {
+    setOrders(liveOrders);
+
+    const currentPlacedIds = liveOrders
+      .filter((o) => o.status === "placed")
+      .map((o) => o.id);
+
+    if (!hasLoadedOnceRef.current) {
+      // First load: these are pre-existing pending orders, not new
+      // arrivals — mark them seen without ringing (req #10).
+      currentPlacedIds.forEach((id) => alertedOrderIdsRef.current.add(id));
+      hasLoadedOnceRef.current = true;
+      return;
+    }
+
+    const genuinelyNewIds = currentPlacedIds.filter(
+      (id) => !alertedOrderIdsRef.current.has(id),
+    );
+    currentPlacedIds.forEach((id) => alertedOrderIdsRef.current.add(id));
+
+    if (genuinelyNewIds.length > 0) {
+      soundRef.current.start();
+    }
+  }, []);
+
   const fetchOrders = useCallback(async () => {
     setIsLoading(true);
-    const liveOrders = await getLiveVendorOrders();
-    setOrders(liveOrders);
+    const liveOrders = canteenIdRef.current
+      ? await getLiveVendorOrders(canteenIdRef.current)
+      : [];
+    applyOrders(liveOrders);
     setIsLoading(false);
-  }, []);
+  }, [applyOrders]);
 
   useEffect(() => {
     let isMounted = true;
-    getLiveVendorOrders().then((liveOrders) => {
-      if (isMounted) {
-        setOrders(liveOrders);
-        setIsLoading(false);
-      }
-    });
-
-    // Supabase Realtime Subscription for incoming vendor orders
+    let channel: ReturnType<ReturnType<typeof createClient>["channel"]> | null = null;
     const supabase = createClient();
-    const channel = supabase
-      .channel("vendor-orders-realtime")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "orders" },
-        () => {
-          playNotificationChime();
-          showNotification("Orders updated in real time!");
-          fetchOrders();
-        },
-      )
-      .subscribe();
+
+    getLiveVendorCanteenId().then((id) => {
+      if (!isMounted) return;
+      canteenIdRef.current = id;
+
+      getLiveVendorOrders(id ?? undefined).then((liveOrders) => {
+        if (isMounted) {
+          applyOrders(liveOrders);
+          setIsLoading(false);
+        }
+      });
+
+      if (!id) return;
+
+      // Realtime, scoped strictly to this vendor's own canteen — never
+      // subscribe to platform-wide order events (vendor isolation, req #16).
+      channel = supabase
+        .channel(`vendor-orders-realtime-${id}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "orders", filter: `canteen_id=eq.${id}` },
+          () => {
+            fetchOrders();
+          },
+        )
+        .subscribe();
+    });
 
     return () => {
       isMounted = false;
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
+      sound.stop();
     };
-  }, [fetchOrders]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const pendingPlacedOrders = useMemo(
+    () => orders.filter((o) => o.status === "placed"),
+    [orders],
+  );
+
+  // Stop ringing the instant there's nothing left to act on — covers
+  // accept, reject, external cancellation, or the order simply leaving
+  // the "placed" state (req #7).
+  useEffect(() => {
+    if (pendingPlacedOrders.length === 0) {
+      sound.stop();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingPlacedOrders.length]);
+
+  // Tab title flashes while any order is awaiting vendor action (req #11).
+  useEffect(() => {
+    document.title = pendingPlacedOrders.length > 0 ? TAB_TITLE_ALERT : TAB_TITLE_DEFAULT;
+    return () => {
+      document.title = TAB_TITLE_DEFAULT;
+    };
+  }, [pendingPlacedOrders.length]);
 
   const handleToggleStoreStatus = () => {
     setStore((prev) => {
@@ -129,15 +194,15 @@ export default function VendorActiveOrdersPage() {
       }
 
       showNotification(
-        `Order ${targetOrder.orderNumber} advanced to ${
-          nextStatus === "preparing"
-            ? "ACCEPTED"
-            : nextStatus === "ready"
-              ? "READY FOR PICKUP"
-              : nextStatus === "picked_up"
-                ? "PICKED UP"
-                : "COMPLETED"
-        }`,
+        targetOrder.status === "placed" && nextStatus === "preparing"
+          ? `Order ${targetOrder.orderNumber} accepted`
+          : `Order ${targetOrder.orderNumber} advanced to ${
+              nextStatus === "ready"
+                ? "READY FOR PICKUP"
+                : nextStatus === "picked_up"
+                  ? "PICKED UP"
+                  : "COMPLETED"
+            }`,
       );
       fetchOrders();
     } catch {
@@ -164,7 +229,11 @@ export default function VendorActiveOrdersPage() {
         return;
       }
 
-      showNotification(`Order ${targetOrder.orderNumber} CANCELLED.`);
+      showNotification(
+        targetOrder.status === "placed"
+          ? `Order ${targetOrder.orderNumber} rejected`
+          : `Order ${targetOrder.orderNumber} CANCELLED.`,
+      );
       fetchOrders();
     } catch {
       showNotification("Network error cancelling order.");
@@ -195,18 +264,54 @@ export default function VendorActiveOrdersPage() {
   }, [orders]);
 
   return (
-    <div className="min-h-dvh bg-background text-foreground flex flex-col">
+    <div
+      className="min-h-dvh bg-background text-foreground flex flex-col"
+      onClickCapture={sound.isUnlocked ? undefined : sound.unlock}
+    >
       <VendorHeader
         store={store}
         onToggleStatus={handleToggleStoreStatus}
         onChangePrepTime={handleChangePrepTime}
         onOpenNotifications={() => setIsNotificationsOpen(true)}
+        pendingOrderCount={pendingPlacedOrders.length}
       />
 
       <main className="flex-1 p-4 sm:p-6 flex flex-col gap-6 max-w-7xl mx-auto w-full">
         {notification && (
           <div className="rounded-xl border border-primary/30 bg-primary/10 p-3 text-center text-body-sm font-semibold text-primary animate-fade-in">
             {notification}
+          </div>
+        )}
+
+        {!sound.isUnlocked && pendingPlacedOrders.length > 0 && (
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/40 bg-primary/10 p-3">
+            <span className="text-body-sm font-semibold text-foreground">
+              Enable sound to receive order alerts.
+            </span>
+            <button
+              type="button"
+              onClick={sound.unlock}
+              className="shrink-0 rounded-lg bg-primary px-4 py-2 font-display text-caption font-extrabold uppercase tracking-wider text-on-primary hover:opacity-90 active:scale-95"
+            >
+              Enable Sound
+            </button>
+          </div>
+        )}
+
+        {sound.isUnlocked && pendingPlacedOrders.length > 0 && !sound.isRinging && (
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface-elevated p-3">
+            <span className="text-body-sm font-semibold text-foreground">
+              You have {pendingPlacedOrders.length} pending order
+              {pendingPlacedOrders.length > 1 ? "s" : ""}.
+            </span>
+            <button
+              type="button"
+              onClick={sound.start}
+              className="shrink-0 flex items-center gap-1.5 rounded-lg border border-border px-4 py-2 font-display text-caption font-extrabold uppercase tracking-wider text-primary hover:bg-primary/10 active:scale-95"
+            >
+              <span className="material-symbols-outlined text-[16px]">volume_up</span>
+              Play Alert
+            </button>
           </div>
         )}
 
@@ -227,6 +332,12 @@ export default function VendorActiveOrdersPage() {
           />
         )}
       </main>
+
+      <IncomingOrderAlert
+        pendingOrders={pendingPlacedOrders}
+        onAccept={handleAdvanceOrderStatus}
+        onReject={handleCancelOrder}
+      />
 
       <VendorNotificationsDrawer
         isOpen={isNotificationsOpen}

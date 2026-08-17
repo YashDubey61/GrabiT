@@ -2,25 +2,31 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import type { StudentProfile } from "@/lib/mock/student";
 
 interface ProfileHeaderProps {
-  profile: StudentProfile;
-  onEditAvatar?: () => void;
+  fullName: string;
+  grabitUserId: string;
+  avatarUrl: string;
+  onEditProfile?: () => void;
 }
 
-export function ProfileHeader({ profile, onEditAvatar }: ProfileHeaderProps) {
+export function ProfileHeader({
+  fullName,
+  grabitUserId,
+  avatarUrl,
+  onEditProfile,
+}: ProfileHeaderProps) {
   const [imageError, setImageError] = useState(false);
 
   return (
     <section className="flex flex-col items-center mb-6 text-center">
       {/* Avatar Container with Edit Badge */}
       <div className="relative mb-4 h-24 w-24">
-        <div className="h-full w-full rounded-full border-2 border-primary p-1 shadow-glow-primary">
-          {!imageError ? (
+        <div className="h-full w-full rounded-full border-2 border-primary p-1 shadow-glow-primary overflow-hidden">
+          {!imageError && avatarUrl ? (
             <Image
-              src={profile.avatarUrl}
-              alt={profile.name}
+              src={avatarUrl}
+              alt={fullName}
               width={96}
               height={96}
               onError={() => setImageError(true)}
@@ -37,30 +43,44 @@ export function ProfileHeader({ profile, onEditAvatar }: ProfileHeaderProps) {
         </div>
 
         <button
-          onClick={onEditAvatar}
+          onClick={onEditProfile}
           type="button"
-          aria-label="Edit avatar"
-          className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-background bg-primary text-on-primary shadow-md transition-transform hover:scale-110 active:scale-95"
+          aria-label="Edit profile photo"
+          className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-primary text-on-primary shadow-md transition-transform hover:scale-110 active:scale-95"
         >
-          <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+          <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
             edit
           </span>
         </button>
       </div>
 
-      {/* Name */}
+      {/* Full Name */}
       <h2 className="font-display text-title font-bold text-foreground">
-        {profile.name}
+        {fullName}
       </h2>
 
-      {/* Meta Info */}
-      <div className="mt-1 flex flex-col items-center gap-0.5 text-muted">
+      {/* Permanent GRABIT User ID */}
+      <div className="mt-1 flex items-center justify-center gap-1.5 text-muted">
+        <span className="material-symbols-outlined text-[16px] text-primary" aria-hidden="true">
+          verified_user
+        </span>
         <span className="font-display text-label font-bold tracking-wider uppercase text-primary">
-          ID: {profile.studentIdCode}
+          ID: {grabitUserId}
         </span>
-        <span className="text-body-sm text-faint">
-          {profile.campus} • {profile.department}
-        </span>
+      </div>
+
+      {/* Edit Profile Action Button */}
+      <div className="mt-3">
+        <button
+          type="button"
+          onClick={onEditProfile}
+          className="inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-surface-elevated px-4 py-1.5 text-caption font-bold text-muted transition-colors hover:border-primary/50 hover:text-foreground active:scale-95"
+        >
+          <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+            settings
+          </span>
+          Edit Profile Details
+        </button>
       </div>
     </section>
   );

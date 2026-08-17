@@ -25,14 +25,19 @@ export interface SupabaseVendorOrderRow {
   }[];
 }
 
-const DEFAULT_CANTEEN_ID = "ca000001-1111-1111-1111-111111111111";
-
 /**
- * Fetch live vendor active orders from Supabase database.
+ * Fetch live vendor active orders from Supabase database, strictly
+ * scoped to the given canteen. Fails closed (returns []) when no
+ * canteenId is provided — a vendor must never see another vendor's
+ * orders, so there is no "fetch everything" fallback.
  */
 export async function getLiveVendorOrders(
-  canteenId: string = DEFAULT_CANTEEN_ID,
+  canteenId?: string,
 ): Promise<VendorOrder[]> {
+  if (!canteenId) {
+    return [];
+  }
+
   try {
     const supabase = createClient();
     const { data: orders, error } = await supabase
@@ -92,6 +97,7 @@ export function mapSupabaseVendorOrderToUI(row: SupabaseVendorOrderRow): VendorO
     elapsedTimeText,
     paymentType: "PREPAID",
     status: row.status,
+    totalAmount: Number(row.total_amount) || 0,
     items,
     otpCode: row.status === "ready" ? otpSuffix : undefined,
     prepProgressPercent: row.status === "preparing" ? Math.min(85, 30 + elapsedMinutes * 10) : undefined,

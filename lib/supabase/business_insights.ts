@@ -325,7 +325,7 @@ export async function getSuperAdminBusinessInsights(
   const topOpportunities: OpportunityItem[] = [
     {
       id: "opp_1",
-      name: "PSIT Kanpur - Peak Hours Expansion",
+      name: "Top Campus - Peak Hours Expansion",
       entityType: "campus",
       score: 88,
       metric: "Active Students",
@@ -391,8 +391,8 @@ export async function getSuperAdminBusinessInsights(
     },
     {
       priority: 2,
-      title: "Expand Peak Hour Vendor Preparation Capacity at PSIT Kanpur",
-      why: "PSIT Kanpur generates 57.4% of total food GMV with high order density.",
+      title: "Expand Peak Hour Vendor Preparation Capacity at Top Campus",
+      why: "The top campus generates the largest share of total food GMV with high order density.",
       evidence: "280 active students, ₹4,420 GMV, 184 AOV.",
       expectedImpact: "Prevents queue bottlenecks and preserves high 94.4% completion rates.",
     },

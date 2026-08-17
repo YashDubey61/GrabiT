@@ -3,6 +3,7 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { getAuthenticatedVendorContext } from "@/lib/supabase/vendor_auth";
 import { trackProductEvent } from "@/lib/analytics/events";
 import { recordOrderStatusHistory } from "@/lib/supabase/order_status_history";
+import { validateOrderStatusTransition } from "@/lib/orders/status_transitions";
 import type { VendorOrderStatus } from "@/lib/mock/vendor";
 
 interface UpdateOrderStatusPayload {
@@ -73,23 +74,11 @@ export async function PATCH(
     const targetStatus = payload.status;
 
     // 2. Validate strict status transition rules (placed -> preparing -> ready -> picked_up -> completed)
-    const validTransitions: Record<VendorOrderStatus, VendorOrderStatus[]> = {
-      placed: ["preparing", "cancelled"],
-      preparing: ["ready", "cancelled"],
-      ready: ["picked_up"],
-      picked_up: ["completed"],
-      completed: [],
-      cancelled: [],
-    };
+    const transitionCheck = validateOrderStatusTransition(currentStatus, targetStatus, "vendor");
 
-    const allowedNextStatuses = validTransitions[currentStatus] ?? [];
-
-    if (!allowedNextStatuses.includes(targetStatus)) {
+    if (!transitionCheck.ok) {
       return NextResponse.json(
-        {
-          ok: false,
-          error: `Invalid status transition from "${currentStatus}" to "${targetStatus}".`,
-        },
+        { ok: false, error: transitionCheck.error },
         { status: 400 },
       );
     }

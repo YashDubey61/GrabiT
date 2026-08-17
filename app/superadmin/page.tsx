@@ -2,9 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  MOCK_SUPERADMIN_KPIS,
-  MOCK_SYSTEM_ALERTS,
-  MOCK_TRANSACTION_LOGS,
   type SuperAdminKpis,
   type SystemAlertItem,
   type TransactionStreamLog,
@@ -16,16 +13,28 @@ import { GrowthForecastCard } from "@/components/superadmin/dashboard/GrowthFore
 import { SystemAlertsCard } from "@/components/superadmin/dashboard/SystemAlertsCard";
 import { TransactionStreamTable } from "@/components/superadmin/dashboard/TransactionStreamTable";
 
+const EMPTY_KPIS: SuperAdminKpis = {
+  totalGmv: 0,
+  gmvGrowthPercent: 0,
+  activeCampuses: 0,
+  activeStudents: 0,
+  studentsGrowthText: "—",
+  platformCommissionPercent: 0,
+  netRevenue: 0,
+};
+
 export default function SuperAdminDashboardPage() {
-  const [kpis, setKpis] = useState<SuperAdminKpis>(MOCK_SUPERADMIN_KPIS);
+  // No hardcoded initial data — starts empty/zeroed, populated exclusively
+  // from GET /api/superadmin/dashboard (Supabase-backed).
+  const [kpis, setKpis] = useState<SuperAdminKpis>(EMPTY_KPIS);
   const [campusHealth, setCampusHealth] = useState({
-    activeCampuses: 4,
-    northVol: "8.2k vol",
-    westVol: "5.4k vol",
-    southVol: "12.1k vol",
+    activeCampuses: 0,
+    northVol: "0 vol",
+    westVol: "0 vol",
+    southVol: "0 vol",
   });
-  const [alerts, setAlerts] = useState<SystemAlertItem[]>(MOCK_SYSTEM_ALERTS);
-  const [transactions, setTransactions] = useState<TransactionStreamLog[]>(MOCK_TRANSACTION_LOGS);
+  const [alerts, setAlerts] = useState<SystemAlertItem[]>([]);
+  const [transactions, setTransactions] = useState<TransactionStreamLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [notification, setNotification] = useState<string | null>(null);

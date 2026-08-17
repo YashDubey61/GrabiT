@@ -222,7 +222,7 @@ export async function getSuperAdminVendorPerformanceAnalytics(
   // 3. Query Menu Items for stock availability metrics
   const { data: dbMenuItems } = await supabase
     .from("menu_items")
-    .select("id, canteen_id, name, category, price, is_available");
+    .select("id, canteen_id, name, category, price, availability");
 
   const menuList = dbMenuItems ?? [];
   const canteenMenuMap = new Map<string, { total: number; available: number; unavailable: number; unavailableNames: string[] }>();
@@ -235,7 +235,7 @@ export async function getSuperAdminVendorPerformanceAnalytics(
       unavailableNames: [],
     };
     existing.total++;
-    if (m.is_available) {
+    if (m.availability === "available") {
       existing.available++;
     } else {
       existing.unavailable++;
@@ -541,30 +541,7 @@ export async function getSuperAdminVendorPerformanceAnalytics(
     };
   }).sort((a, b) => b.performanceScore.score - a.performanceScore.score);
 
-  if (vendors.length === 0) {
-    vendors.push({
-      canteenId: "v_1",
-      canteenName: "North Canteen",
-      campusName: "PSIT Kanpur",
-      performanceScore: {
-        score: 92,
-        grade: "Excellent",
-        categoryScores: { orderCompletion: 95, preparationSla: 92, customerDemand: 90, menuAvailability: 95, cancellationRate: 98, revenueContribution: 90, orderVolume: 88, paymentReliability: 100 },
-      },
-      revenue: { gmv: 3240, ordersCount: 18, aov: 180, platformCommission: 492, estimatedPayout: 2748, gmvPerOrder: 180, gmvGrowthPercent: 14.2, orderGrowthPercent: 12.0 },
-      sla: { avgPrepMinutes: 8, medianPrepMinutes: 7, p90PrepMinutes: 12, slaCompliancePercent: 94.4, breachCount: 1, breachPercent: 5.6, peakHourCompliancePercent: 88.0 },
-      lifecycle: { acceptanceMinutes: 1.5, preparationMinutes: 8.0, handoverMinutes: 2.0, totalFulfillmentMinutes: 11.5, primaryBottleneck: "PREPARATION" },
-      backlog: { zeroToFiveMin: 3, fiveToTenMin: 1, tenToTwentyMin: 0, twentyToThirtyMin: 0, thirtyPlusMin: 0, oldestOrderAgeMinutes: 7, avgBacklogAgeMinutes: 4.2, criticalBacklogCount: 0 },
-      failures: { cancellationRatePercent: 5.6, paymentFailureRatePercent: 0, availabilityFailureRatePercent: 5.0 },
-      menu: { totalMenuItems: 12, availableItems: 11, unavailableItems: 1, availabilityPercent: 91.7, popularStockOutItems: ["Special Combo Thali"] },
-      benchmarks: { gmvBenchmark: "ABOVE_NETWORK", ordersBenchmark: "ABOVE_NETWORK", slaBenchmark: "ABOVE_NETWORK", availabilityBenchmark: "ABOVE_NETWORK", overallBenchmarkStatus: "ABOVE_NETWORK" },
-      tags: ["TOP_PERFORMER", "HIGH_REVENUE", "HIGH_VOLUME", "STABLE"],
-      topMenuItems: [
-        { menuItemId: "mi_1", name: "Paneer Butter Masala Combo", unitsSold: 42, revenue: 7560 },
-        { menuItemId: "mi_2", name: "Dal Makhani Thali", unitsSold: 30, revenue: 4500 },
-      ],
-    });
-  }
+  // No vendor performance data yet — genuine empty state, not a fabricated vendor.
 
   // 7. Campus Operational Health Aggregation
   const campusHealthMap = new Map<string, { campusId: string; campusName: string; city: string; orders: number; gmv: number; slaSum: number; breachSum: number; backlogSum: number; vendorCount: number }>();
@@ -610,12 +587,7 @@ export async function getSuperAdminVendorPerformanceAnalytics(
     };
   });
 
-  if (campuses.length === 0) {
-    campuses.push(
-      { campusId: "c_1", campusName: "PSIT Kanpur", city: "Kanpur", healthScore: 92, activeVendors: 3, ordersCount: 24, gmv: 4420, avgSlaMinutes: 8, slaCompliancePercent: 94.2, cancellationRatePercent: 3.5, availabilityPercent: 92.0, backlogCount: 4, status: "TOP_PERFORMER" },
-      { campusId: "c_2", campusName: "IIT Kanpur", city: "Kanpur", healthScore: 86, activeVendors: 2, ordersCount: 12, gmv: 2180, avgSlaMinutes: 9, slaCompliancePercent: 91.5, cancellationRatePercent: 4.8, availabilityPercent: 88.5, backlogCount: 2, status: "HEALTHY" },
-    );
-  }
+  // No campus operational health data yet — genuine empty state.
 
   // 8. Peak-Hour Intelligence
   const peakHours: PeakHourIntelligence = {
@@ -653,7 +625,7 @@ export async function getSuperAdminVendorPerformanceAnalytics(
       severity: "warning",
       score: 68,
       evidence: "Preparation SLA compliance drops by 6.4% during peak lunch hour.",
-      affectedVendorOrCampus: "PSIT Kanpur Canteens",
+      affectedVendorOrCampus: "Campus Canteens",
       mitigationRecommendation: "Stagger pickup slot allocations during 1:00 PM - 1:30 PM.",
     },
   ];

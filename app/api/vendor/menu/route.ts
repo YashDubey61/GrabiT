@@ -31,7 +31,7 @@ export async function GET() {
       .from("menu_items")
       .select("*")
       .eq("canteen_id", vendorCtx.canteenId)
-      .order("created_at", { ascending: false });
+      .order("name", { ascending: true });
 
     if (error) {
       return NextResponse.json(

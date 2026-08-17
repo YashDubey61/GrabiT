@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
   signStudentIn,
@@ -10,13 +10,13 @@ import {
   sendPasswordResetEmail,
 } from "@/lib/supabase/auth";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { getSafeRedirectUrl, hardNavigate, authLog, authError } from "@/lib/auth/redirect";
 
 type ViewMode = "signin" | "forgot";
 
 function SuperAdminAuthFormContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, role } = useAuth();
+  const { user, role, refreshAuth } = useAuth();
 
   const nextParam = searchParams.get("next");
   const errorParam = searchParams.get("error");
@@ -33,9 +33,11 @@ function SuperAdminAuthFormContent() {
   // If already authenticated as an admin, redirect to /superadmin
   useEffect(() => {
     if (user && role === "admin") {
-      router.replace(nextParam || "/superadmin");
+      const destination = getSafeRedirectUrl(nextParam, "admin");
+      authLog("Already authenticated as admin on mount, target:", destination);
+      hardNavigate(destination);
     }
-  }, [user, role, router, nextParam]);
+  }, [user, role, nextParam]);
 
   const isEmailValid = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
 
@@ -53,11 +55,13 @@ function SuperAdminAuthFormContent() {
     }
 
     setIsSubmitting(true);
+    authLog("Login submitted (superadmin portal)");
 
     // 1. Authenticate credentials via Supabase Auth
     const res = await signStudentIn(email, password);
 
     if (!res.ok) {
+      authError("Authentication failed:", res.error);
       setIsSubmitting(false);
       if (res.error?.toLowerCase().includes("invalid login credentials")) {
         setErrorMessage("Invalid email or password. Please try again.");
@@ -67,6 +71,15 @@ function SuperAdminAuthFormContent() {
       return;
     }
 
+    if (!res.session) {
+      authError("Authentication reported ok but no session was returned");
+      setIsSubmitting(false);
+      setErrorMessage("We couldn't complete your sign in. Please try again.");
+      return;
+    }
+
+    authLog("Authentication successful, session confirmed");
+
     // 2. Authoritative role check against public.users (role must be 'admin')
     try {
       const supabase = createClient();
@@ -75,6 +88,7 @@ function SuperAdminAuthFormContent() {
       } = await supabase.auth.getUser();
 
       if (!authUser) {
+        authError("Failed to resolve authenticated user after sign-in");
         setIsSubmitting(false);
         setErrorMessage("Failed to resolve authentication session.");
         return;
@@ -87,22 +101,38 @@ function SuperAdminAuthFormContent() {
         .maybeSingle();
 
       const userRole = profile?.role;
+      authLog("Role detected:", userRole ?? "(none)");
 
       if (userRole !== "admin") {
         // Explicit Fail-Closed: Log out non-admin account attempting superadmin access
+        authError("Account is not an admin (role:", userRole, ") — rejecting superadmin portal access");
         await signStudentOut();
         setIsSubmitting(false);
         setErrorMessage("This account does not have Super Admin access.");
         return;
       }
-
-      setIsSubmitting(false);
-      router.push(nextParam || "/superadmin");
-    } catch {
+    } catch (roleCheckErr) {
+      authError("Unexpected error verifying administrator role:", roleCheckErr);
       await signStudentOut();
       setIsSubmitting(false);
       setErrorMessage("An unexpected error occurred verifying administrator identity.");
+      return;
     }
+
+    // 3. Refresh AuthContext, then hand off with a full navigation so
+    // middleware re-evaluates against the just-established session.
+    try {
+      await refreshAuth();
+      authLog("User/profile loaded via refreshAuth");
+    } catch (refreshErr) {
+      authError("refreshAuth failed (non-fatal, session already confirmed):", refreshErr);
+    }
+
+    const destination = getSafeRedirectUrl(nextParam, "admin");
+    authLog("Target route:", destination);
+    setSuccessMessage("Signed in successfully as Super Admin. Redirecting to Super Admin Portal...");
+    authLog("Redirecting...");
+    hardNavigate(destination);
   };
 
   const handleForgot = async (e: React.FormEvent) => {

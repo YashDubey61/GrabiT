@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import type { SuperAdminCampus } from "@/lib/mock/superadmin";
+import { geocodeAddressGoogle } from "@/lib/utils/google_maps";
 
-interface CampusManageModalProps {
+export interface CampusManageModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (campusData: Omit<SuperAdminCampus, "id"> & { id?: string }) => void;
@@ -34,6 +35,37 @@ function CampusManageForm({
     editingCampus ? String(editingCampus.dailyOrders) : "1200",
   );
 
+  const [latitude, setLatitude] = useState(
+    editingCampus?.latitude != null ? String(editingCampus.latitude) : "26.8378",
+  );
+  const [longitude, setLongitude] = useState(
+    editingCampus?.longitude != null ? String(editingCampus.longitude) : "80.3275",
+  );
+  const [radiusMeters, setRadiusMeters] = useState(
+    editingCampus?.radiusMeters != null ? String(editingCampus.radiusMeters) : "2000",
+  );
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const [geocodeMsg, setGeocodeMsg] = useState<string | null>(null);
+
+  const handleGeocodeAddress = async () => {
+    const fullQuery = `${name} ${location}`.trim();
+    if (!fullQuery) return;
+
+    setIsGeocoding(true);
+    setGeocodeMsg(null);
+
+    const res = await geocodeAddressGoogle(fullQuery);
+    setIsGeocoding(false);
+
+    if (res.ok && res.latitude != null && res.longitude != null) {
+      setLatitude(String(res.latitude));
+      setLongitude(String(res.longitude));
+      setGeocodeMsg("Coordinates updated via Google Maps!");
+    } else {
+      setGeocodeMsg(res.error || "Geocoding failed. Set manually.");
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !location.trim()) return;
@@ -56,6 +88,9 @@ function CampusManageForm({
       logisticsLeadName: logisticsLeadName.trim() || "Operations Lead",
       logisticsLeadInitials: initials,
       status,
+      latitude: latitude ? Number(latitude) : undefined,
+      longitude: longitude ? Number(longitude) : undefined,
+      radiusMeters: radiusMeters ? Number(radiusMeters) : 2000,
       imageUrl:
         editingCampus?.imageUrl ??
         "https://lh3.googleusercontent.com/aida-public/AB6AXuAnL6yucAYd9Pmi4RFLLpjUqnREaSik4Hr8cWfjb_4cRgTLKjsvS1FXpojDeCHE8K5sL6y2DCUvdoJ0pNqrVEjEw-dMlChm-A_NrJ2OaCiJIldBlaBdRTnVf2-RblrCkWjmGmv6KifqsrKdjlP4lECNuKWiq7ZWjQ4CTVDmEvDunlXkXpwIxncN-rjEu_Ty0TB2hrpsN07nWk_H2n7QqWcUVVC7lsZtqdx49maJ5ZUruKWncwZ8yTEk",
@@ -75,7 +110,7 @@ function CampusManageForm({
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Amity University"
+          placeholder="e.g. Institute of Technology"
           className="w-full rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
         />
       </div>
@@ -152,6 +187,72 @@ function CampusManageForm({
             min="1"
             value={dailyOrders}
             onChange={(e) => setDailyOrders(e.target.value)}
+            className="w-full rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
+          />
+        </div>
+      </div>
+
+      {/* Geolocation Coordinates & Geofence Radius */}
+      <div>
+        <div className="flex items-center justify-between mb-1">
+          <label className="block font-display text-caption font-bold text-muted">
+            Geolocation & Geofencing
+          </label>
+          <button
+            type="button"
+            onClick={handleGeocodeAddress}
+            disabled={isGeocoding}
+            className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1"
+          >
+            <span className="material-symbols-outlined text-[14px]">map</span>
+            {isGeocoding ? "Geocoding..." : "Geocode Address with Google"}
+          </button>
+        </div>
+        {geocodeMsg && (
+          <p className="mb-2 text-[11px] font-medium text-warning">{geocodeMsg}</p>
+        )}
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        <div>
+          <label className="mb-1 block font-display text-caption font-bold text-muted">
+            Latitude
+          </label>
+          <input
+            type="number"
+            step="any"
+            value={latitude}
+            onChange={(e) => setLatitude(e.target.value)}
+            placeholder="e.g. 26.8378"
+            className="w-full rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
+          />
+        </div>
+
+        <div>
+          <label className="mb-1 block font-display text-caption font-bold text-muted">
+            Longitude
+          </label>
+          <input
+            type="number"
+            step="any"
+            value={longitude}
+            onChange={(e) => setLongitude(e.target.value)}
+            placeholder="e.g. 80.3275"
+            className="w-full rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
+          />
+        </div>
+
+        <div>
+          <label className="mb-1 block font-display text-caption font-bold text-muted">
+            Radius (meters)
+          </label>
+          <input
+            type="number"
+            min="100"
+            step="100"
+            value={radiusMeters}
+            onChange={(e) => setRadiusMeters(e.target.value)}
+            placeholder="e.g. 2000"
             className="w-full rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
           />
         </div>

@@ -403,7 +403,7 @@ export async function getSuperAdminRetentionAnalytics(
   allOrdersList.forEach((o) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const canteen = o.canteens as any;
-    const campusName = canteen?.campuses?.name || "PSIT Kanpur";
+    const campusName = canteen?.campuses?.name || "Campus";
     const campusCity = canteen?.campuses?.city || "Kanpur";
     const campusId = canteen?.campuses?.id || "c_default";
     const amount = Number(o.total_amount) || 0;
@@ -441,13 +441,7 @@ export async function getSuperAdminRetentionAnalytics(
     };
   });
 
-  if (campusRetention.length === 0) {
-    campusRetention.push(
-      { campusId: "c_1", campusName: "PSIT Kanpur", city: "Kanpur", activeStudents: 280, newStudents: 24, repeatCustomers: 220, repeatOrderRatePercent: 85.2, ordersCount: 24, gmv: 4420, aov: 184, sevenDayRetention: "82.4%", thirtyDayRetention: "74.1%" },
-      { campusId: "c_2", campusName: "IIT Kanpur", city: "Kanpur", activeStudents: 160, newStudents: 14, repeatCustomers: 125, repeatOrderRatePercent: 81.0, ordersCount: 12, gmv: 2180, aov: 181, sevenDayRetention: "79.1%", thirtyDayRetention: "69.5%" },
-      { campusId: "c_3", campusName: "BITS Pilani", city: "Pilani", activeStudents: 100, newStudents: 8, repeatCustomers: 78, repeatOrderRatePercent: 78.5, ordersCount: 6, gmv: 1100, aov: 183, sevenDayRetention: "75.0%", thirtyDayRetention: "62.0%" },
-    );
-  }
+  // No real campus retention data yet — genuine empty state, not fabricated rows.
 
   // 8. Retention & Active User Trends
   const trends: RetentionTrendPoint[] = [

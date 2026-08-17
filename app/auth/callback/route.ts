@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
           id: authUser.id,
           phone: authUser.phone || randomPhone,
           role: "student",
-          campus_id: "11111111-1111-1111-1111-111111111111",
+          campus_id: "a1000000-0000-0000-0000-000000000001",
         });
         userRole = "student";
       } else {

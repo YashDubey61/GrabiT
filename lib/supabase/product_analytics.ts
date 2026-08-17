@@ -665,13 +665,7 @@ export async function getSuperAdminProductAnalytics(
     gmvSharePercent: foodGmv > 0 ? Number(((c.gmv / foodGmv) * 100).toFixed(1)) : 25,
   }));
 
-  if (campusList.length === 0) {
-    campusList.push(
-      { campusId: "c_1", campusName: "PSIT Kanpur", city: "Kanpur", activeStudents: 280, orders: 24, gmv: 4420, averageOrderValue: 184, activeVendors: 3, ordersPerStudent: 0.1, gmvSharePercent: 57.4 },
-      { campusId: "c_2", campusName: "IIT Kanpur", city: "Kanpur", activeStudents: 160, orders: 12, gmv: 2180, averageOrderValue: 181, activeVendors: 2, ordersPerStudent: 0.1, gmvSharePercent: 28.3 },
-      { campusId: "c_3", campusName: "BITS Pilani", city: "Pilani", activeStudents: 100, orders: 6, gmv: 1100, averageOrderValue: 183, activeVendors: 2, ordersPerStudent: 0.1, gmvSharePercent: 14.3 },
-    );
-  }
+  // No campus order data yet — genuine empty state, not fabricated rows.
 
   // 11. Vendor Analytics List
   const vendorList: VendorAnalyticsItem[] = Array.from(canteenOrderMap.values()).map((v) => ({
@@ -684,13 +678,7 @@ export async function getSuperAdminProductAnalytics(
     completionRatePercent: v.count > 0 ? Number(((v.completedCount / v.count) * 100).toFixed(1)) : 100,
   }));
 
-  if (vendorList.length === 0) {
-    vendorList.push(
-      { canteenId: "v_1", canteenName: "North Canteen", campusName: "PSIT Kanpur", orders: 18, gmv: 3240, averageOrderValue: 180, completionRatePercent: 94.4 },
-      { canteenId: "v_2", canteenName: "Snack Shack", campusName: "IIT Kanpur", orders: 12, gmv: 2180, averageOrderValue: 181, completionRatePercent: 91.7 },
-      { canteenId: "v_3", canteenName: "Nescafe Kiosk", campusName: "BITS Pilani", orders: 6, gmv: 1100, averageOrderValue: 183, completionRatePercent: 100 },
-    );
-  }
+  // No vendor order data yet — genuine empty state, not fabricated rows.
 
   // 12. Retention Analytics
   const retention: RetentionAnalytics = {

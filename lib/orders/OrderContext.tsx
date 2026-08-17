@@ -20,9 +20,6 @@ const STORAGE_KEY = "grabit_student_orders_v1";
  * counter there rather than at 1 so it reads like a live campus, not a
  * freshly-seeded demo. */
 const FIRST_ORDER_NUMBER = 41;
-/** Matches mockCanteenInfo.avgPrepMinutes (lib/mock/menu.ts) — the only
- * canteen in the current mock data, so this is a reasonable stand-in
- * until orders carry a real per-canteen prep time. */
 const DEFAULT_PREP_MINUTES = 10;
 
 interface StoredState {

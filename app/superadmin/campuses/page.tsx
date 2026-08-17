@@ -1,12 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import {
-  INITIAL_SUPERADMIN_CAMPUSES,
-  MOCK_CAMPUS_ACTIVITIES,
-  type SuperAdminCampus,
-  type CampusActivityFeedItem,
-} from "@/lib/mock/superadmin";
+import type { SuperAdminCampus, CampusActivityFeedItem } from "@/lib/mock/superadmin";
 import { CampusHeader } from "@/components/superadmin/campuses/CampusHeader";
 import { CampusStatsGrid } from "@/components/superadmin/campuses/CampusStatsGrid";
 import { CampusRegistryTable } from "@/components/superadmin/campuses/CampusRegistryTable";
@@ -14,18 +9,18 @@ import { CampusManageModal } from "@/components/superadmin/campuses/CampusManage
 import { CampusInsightsSection } from "@/components/superadmin/campuses/CampusInsightsSection";
 
 export default function SuperAdminCampusesPage() {
-  const [campuses, setCampuses] = useState<SuperAdminCampus[]>(
-    INITIAL_SUPERADMIN_CAMPUSES,
-  );
+  // No hardcoded initial data — starts empty, populated exclusively from
+  // GET /api/superadmin/campuses (Supabase-backed). isLoading gates the
+  // registry table so it never flashes a zero-campus empty state before
+  // the first fetch resolves.
+  const [campuses, setCampuses] = useState<SuperAdminCampus[]>([]);
   const [stats, setStats] = useState({
-    totalCampusesCount: 4,
-    totalVendorsCount: 253,
-    dailyVolume: "10,790 orders",
-    networkHealth: "99.8% Operational",
+    totalCampusesCount: 0,
+    totalVendorsCount: 0,
+    dailyVolume: "0 orders",
+    networkHealth: "—",
   });
-  const [activities, setActivities] = useState<CampusActivityFeedItem[]>(
-    MOCK_CAMPUS_ACTIVITIES,
-  );
+  const [activities, setActivities] = useState<CampusActivityFeedItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,7 +52,7 @@ export default function SuperAdminCampusesPage() {
         if (result.data.activities) setActivities(result.data.activities);
       }
     } catch {
-      // Retain fallback data on network exception
+      // Retain current data on network exception
     } finally {
       setIsLoading(false);
     }
@@ -157,6 +152,7 @@ export default function SuperAdminCampusesPage() {
         {/* Institutional Registry Table */}
         <CampusRegistryTable
           campuses={campuses}
+          isLoading={isLoading}
           onManageCampus={handleOpenManageModal}
           onDownloadRegistry={() =>
             showNotification("Institutional campus registry CSV exported")

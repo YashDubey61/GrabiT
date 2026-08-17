@@ -18,6 +18,7 @@ import {
   toggleLiveVendorMenuItemStock,
   updateLiveVendorMenuItem,
 } from "@/lib/supabase/vendor_menu";
+import { getLiveVendorCanteenId } from "@/lib/supabase/vendor_context";
 
 const CATEGORIES: VendorMenuCategory[] = [
   "Breakfast",
@@ -44,7 +45,8 @@ export default function VendorMenuManagementPage() {
 
   const loadMenuItems = async () => {
     setIsLoading(true);
-    const items = await getLiveVendorMenuItems();
+    const canteenId = await getLiveVendorCanteenId();
+    const items = await getLiveVendorMenuItems(canteenId);
     setMenuItems(items);
     setIsLoading(false);
   };
