@@ -155,7 +155,21 @@ export default function StudentTrackOrderPage({
         )}
 
         {!isCancelled && (
-          <PickupPassCard orderNumber={order.orderNumber} validUntilLabel={validUntilLabel} />
+          <PickupPassCard
+            orderNumber={order.orderNumber}
+            validUntilLabel={validUntilLabel}
+            pickupQrToken={order.pickupQrToken}
+            status={order.status}
+            completedAtLabel={
+              order.completedAt
+                ? new Date(order.completedAt).toLocaleTimeString("en-US", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true,
+                  })
+                : null
+            }
+          />
         )}
 
         <OrderItemsBento items={order.items} />

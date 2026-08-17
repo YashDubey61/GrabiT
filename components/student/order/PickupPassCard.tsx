@@ -1,28 +1,64 @@
 "use client";
 
-import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import QRCode from "qrcode";
+import { buildPickupQrPayload } from "@/lib/orders/pickup_qr";
+import type { OrderStatus } from "@/types";
 
 /**
- * Converted from grabit_track_order_premium_black's "Pickup Pass" QR
- * section. The Stitch source's QR image is decorative placeholder
- * artwork (not a functioning encoded code), reused as-is per the "reuse
- * existing assets" rule rather than substituted.
+ * Renders the order's own unique pickup QR, encoded from that order's
+ * secret verification token. Two different orders always produce two
+ * different QR images because the token is per-order.
  *
- * Shows the order's own orderNumber ("#41") in the code chip instead of
- * inventing a second, separate pickup-code identifier ("GI9876" in the
- * source) — the PRD only specifies one human-readable order number, and
- * introducing a second ID format here isn't asked for anywhere in the
- * spec.
+ * The QR only ever carries the opaque token — no student identity,
+ * contact details, or payment info.
  */
 export function PickupPassCard({
   orderNumber,
   validUntilLabel,
+  pickupQrToken,
+  status,
+  completedAtLabel,
 }: {
   orderNumber: string;
   validUntilLabel: string;
+  pickupQrToken?: string | null;
+  status: OrderStatus;
+  completedAtLabel?: string | null;
 }) {
   const [copied, setCopied] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+
+  const isCompleted = status === "completed";
+  const isScannable = status === "ready" || status === "picked_up";
+
+  useEffect(() => {
+    let cancelled = false;
+
+    // Once completed the QR is spent — stop presenting it as an active
+    // pickup credential. No state reset needed: the completed branch is
+    // rendered before any QR image, so a stale data URL can't surface.
+    if (!pickupQrToken || isCompleted) {
+      return;
+    }
+
+    QRCode.toDataURL(buildPickupQrPayload(pickupQrToken), {
+      errorCorrectionLevel: "M",
+      margin: 1,
+      width: 384,
+      color: { dark: "#000000", light: "#ffffff" },
+    })
+      .then((url) => {
+        if (!cancelled) setQrDataUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setQrDataUrl(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pickupQrToken, isCompleted]);
 
   function handleCopy() {
     navigator.clipboard?.writeText(orderNumber).catch(() => {});
@@ -37,21 +73,55 @@ export function PickupPassCard({
         aria-hidden="true"
       />
       <div className="text-center">
-        <h3 className="font-display text-heading font-700 text-foreground">Pickup Pass</h3>
-        <p className="text-caption text-muted">Scan this at the counter to collect</p>
+        <h3 className="font-display text-heading font-700 text-foreground">
+          {isCompleted ? "Order Completed" : "Pickup Pass"}
+        </h3>
+        <p className="text-caption text-muted">
+          {isCompleted
+            ? "This order has been handed over"
+            : isScannable
+              ? "Scan this at the counter to collect"
+              : "Your QR activates once the order is Ready"}
+        </p>
       </div>
 
-      <div className="relative rounded-[2rem] bg-white p-6 shadow-xl">
-        <div className="flex h-48 w-48 items-center justify-center overflow-hidden bg-slate-100">
-          <Image
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFvzgTz7lTyXo_ripZZrAVBNSDcGyCxoTLypawFPpkj9m-Xf7e2Ilqkwy3mviks0gzBDdBMKPfyP-Eb29SW5-j5rdeuiOPbgrtfaqGLFIcUlFjktqdSkCJCL8qGtD4lMhuKgxZSecz7zkUQbuBz4VCV58wAKk-wAAhzS8Sw2-1_l2pnBB9a-WNUBGMOcSNf_tOxmWk2JacY1KzifoeY82isKI4V8gqDpmfJFsltNRJ-KhR94qu-Xmk"
-            alt="Pickup QR code"
-            width={192}
-            height={192}
-            className="h-full w-full object-contain"
-          />
+      {isCompleted ? (
+        <div className="flex h-48 w-48 flex-col items-center justify-center gap-2 rounded-[2rem] border border-success/30 bg-success/10 text-success">
+          <span className="material-symbols-outlined text-[56px]">check_circle</span>
+          <span className="font-display text-caption font-bold uppercase tracking-wider">
+            QR Verified
+          </span>
         </div>
-      </div>
+      ) : (
+        <div className="relative rounded-[2rem] bg-white p-6 shadow-xl">
+          <div className="relative flex h-48 w-48 items-center justify-center overflow-hidden bg-white">
+            {qrDataUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={qrDataUrl}
+                alt={`Pickup QR code for order ${orderNumber}`}
+                width={192}
+                height={192}
+                className={`h-full w-full object-contain transition-opacity ${
+                  isScannable ? "opacity-100" : "opacity-40"
+                }`}
+              />
+            ) : (
+              <span className="material-symbols-outlined animate-spin text-[32px] text-slate-400">
+                progress_activity
+              </span>
+            )}
+
+            {!isScannable && qrDataUrl && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="rounded-lg bg-black/80 px-3 py-1.5 text-center font-display text-[10px] font-bold uppercase tracking-wider text-white">
+                  Not ready yet
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col items-center gap-2">
         <div className="flex items-center gap-2 rounded-full border border-white/10 bg-surface px-6 py-2">
@@ -70,7 +140,11 @@ export function PickupPassCard({
           </button>
         </div>
         <p className="text-[10px] font-700 uppercase tracking-tight text-muted">
-          Valid until {validUntilLabel}
+          {isCompleted
+            ? completedAtLabel
+              ? `Completed at ${completedAtLabel}`
+              : "Completed"
+            : `Valid until ${validUntilLabel}`}
         </p>
       </div>
     </section>

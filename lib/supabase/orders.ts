@@ -10,6 +10,9 @@ export interface SupabaseOrderRow {
   order_number: string;
   total_amount: number;
   created_at: string;
+  pickup_qr_token?: string | null;
+  pickup_qr_used_at?: string | null;
+  completed_at?: string | null;
   canteens?: { name: string };
   order_items?: {
     id: string;
@@ -136,5 +139,8 @@ function mapSupabaseOrderToUI(row: SupabaseOrderRow): Order {
     totalAmount,
     createdAt,
     estimatedReadyAt,
+    pickupQrToken: row.pickup_qr_token ?? null,
+    pickupQrUsedAt: row.pickup_qr_used_at ?? null,
+    completedAt: row.completed_at ?? null,
   };
 }

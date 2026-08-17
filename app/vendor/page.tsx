@@ -12,6 +12,7 @@ import { VendorStatsBar } from "@/components/vendor/orders/VendorStatsBar";
 import { VendorOrdersBoard } from "@/components/vendor/orders/VendorOrdersBoard";
 import { VendorNotificationsDrawer } from "@/components/vendor/notifications/VendorNotificationsDrawer";
 import { IncomingOrderAlert } from "@/components/vendor/orders/IncomingOrderAlert";
+import { VendorQrScanner } from "@/components/vendor/orders/VendorQrScanner";
 import { getLiveVendorOrders } from "@/lib/supabase/vendor_orders";
 import { getLiveVendorCanteenId } from "@/lib/supabase/vendor_context";
 import { createClient } from "@/lib/supabase/client";
@@ -28,6 +29,7 @@ export default function VendorActiveOrdersPage() {
   const [notification, setNotification] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   const canteenIdRef = useRef<string | null>(null);
 
   // Order-alert ringing: alertedOrderIds tracks every "placed" order id
@@ -348,6 +350,15 @@ export default function VendorActiveOrdersPage() {
           </div>
         )}
 
+        <button
+          type="button"
+          onClick={() => setIsScannerOpen(true)}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/10 py-3.5 font-display text-body-sm font-extrabold uppercase tracking-widest text-primary transition-all active:scale-[0.98] hover:bg-primary/20"
+        >
+          <span className="material-symbols-outlined text-[20px]">qr_code_scanner</span>
+          Scan Order QR
+        </button>
+
         <VendorStatsBar stats={computedStats} />
 
         {isLoading ? (
@@ -371,6 +382,15 @@ export default function VendorActiveOrdersPage() {
         onAccept={handleAdvanceOrderStatus}
         onReject={handleCancelOrder}
         errorMessage={actionError}
+      />
+
+      <VendorQrScanner
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onCompleted={(orderNumber) => {
+          showNotification(`Order ${orderNumber} completed`);
+          fetchOrders();
+        }}
       />
 
       <VendorNotificationsDrawer

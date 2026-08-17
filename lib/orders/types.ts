@@ -52,4 +52,9 @@ export interface Order {
   createdAt: string;
   /** ISO timestamp — drives Track Order's "Ready in ~N mins" while preparing. */
   estimatedReadyAt: string;
+  /** Opaque per-order pickup-verification token encoded into the QR. */
+  pickupQrToken?: string | null;
+  /** Non-null once a vendor has scanned and consumed the pickup QR. */
+  pickupQrUsedAt?: string | null;
+  completedAt?: string | null;
 }

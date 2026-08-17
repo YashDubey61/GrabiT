@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
@@ -243,6 +244,11 @@ export async function POST(request: Request) {
           ? "lunch"
           : "short_break";
 
+    // Unique pickup-verification token for this order's QR. Generated
+    // server-side with crypto randomness — never derived from the order
+    // id / order number, which are guessable.
+    const pickupQrToken = randomBytes(32).toString("hex");
+
     // 9. Atomic Order Insertion
     const { data: createdOrder, error: orderErr } = await supabase
       .from("orders")
@@ -253,6 +259,8 @@ export async function POST(request: Request) {
         status: "placed",
         total_amount: totalAmount,
         slot: dbSlot,
+        pickup_qr_token: pickupQrToken,
+        pickup_qr_created_at: new Date().toISOString(),
       })
       .select("id, order_number, created_at, canteen_id, student_id")
       .single();
