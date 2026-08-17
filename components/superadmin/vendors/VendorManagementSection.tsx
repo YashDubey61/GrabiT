@@ -199,6 +199,7 @@ export function VendorManagementSection() {
   };
 
   return (
+    <>
     <section className="flex flex-col gap-4 rounded-2xl border border-border bg-[#1e1f26]/60 p-5 backdrop-blur-md">
       {notification && (
         <div className="rounded-xl border border-primary/30 bg-primary/10 p-3 text-center text-body-sm font-semibold text-primary animate-fade-in">
@@ -311,7 +312,12 @@ export function VendorManagementSection() {
           ))}
         </div>
       )}
-
+    </section>
+    {/* Modals render outside the section on purpose: the section has
+        backdrop-blur-md, and backdrop-filter establishes a containing
+        block for position:fixed descendants — nesting the modals
+        inside it trapped them within the section's box instead of
+        covering the full screen. */}
       {/* Create Vendor Modal */}
       {isCreateOpen && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
@@ -530,6 +536,6 @@ export function VendorManagementSection() {
           </div>
         </div>
       )}
-    </section>
+    </>
   );
 }
