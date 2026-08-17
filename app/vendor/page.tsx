@@ -16,6 +16,7 @@ import { getLiveVendorOrders } from "@/lib/supabase/vendor_orders";
 import { getLiveVendorCanteenId } from "@/lib/supabase/vendor_context";
 import { createClient } from "@/lib/supabase/client";
 import { useOrderAlertSound } from "@/lib/vendor/useOrderAlertSound";
+import { hardNavigate } from "@/lib/auth/redirect";
 
 const TAB_TITLE_DEFAULT = "GrabIt Vendor";
 const TAB_TITLE_ALERT = "🔔 NEW ORDER — GRABIT Vendor";
@@ -25,6 +26,7 @@ export default function VendorActiveOrdersPage() {
   const [orders, setOrders] = useState<VendorOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [notification, setNotification] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const canteenIdRef = useRef<string | null>(null);
 
@@ -166,6 +168,17 @@ export default function VendorActiveOrdersPage() {
     showNotification(`Default prep time updated to ${nextPrepTime} mins`);
   };
 
+  // A 401 means the vendor's server-side session is gone/expired. The
+  // dashboard can still *look* alive (order reads go through the browser
+  // client), so this must be surfaced loudly and the ring stopped —
+  // otherwise the vendor clicks Accept forever with no feedback.
+  const handleAuthExpired = useCallback(() => {
+    soundRef.current.stop();
+    setActionError("Your vendor session expired. Please sign in again to manage orders.");
+    showNotification("Session expired — redirecting to sign in…");
+    setTimeout(() => hardNavigate("/vendor/auth?next=%2Fvendor"), 2500);
+  }, []);
+
   const handleAdvanceOrderStatus = async (orderId: string) => {
     const targetOrder = orders.find((o) => o.id === orderId);
     if (!targetOrder) return;
@@ -178,6 +191,7 @@ export default function VendorActiveOrdersPage() {
 
     if (nextStatus === targetOrder.status) return;
 
+    setActionError(null);
     try {
       const response = await fetch(`/api/vendor/orders/${orderId}`, {
         method: "PATCH",
@@ -185,10 +199,17 @@ export default function VendorActiveOrdersPage() {
         body: JSON.stringify({ status: nextStatus }),
       });
 
+      if (response.status === 401) {
+        handleAuthExpired();
+        return;
+      }
+
       const data = await response.json();
 
       if (!response.ok || !data.ok) {
-        showNotification(data.error ?? "Failed to update order status.");
+        const msg = data.error ?? "Failed to update order status.";
+        setActionError(msg);
+        showNotification(msg);
         fetchOrders();
         return;
       }
@@ -206,7 +227,9 @@ export default function VendorActiveOrdersPage() {
       );
       fetchOrders();
     } catch {
-      showNotification("Network error updating order status.");
+      const msg = "Network error updating order status.";
+      setActionError(msg);
+      showNotification(msg);
     }
   };
 
@@ -214,6 +237,7 @@ export default function VendorActiveOrdersPage() {
     const targetOrder = orders.find((o) => o.id === orderId);
     if (!targetOrder) return;
 
+    setActionError(null);
     try {
       const response = await fetch(`/api/vendor/orders/${orderId}`, {
         method: "PATCH",
@@ -221,10 +245,17 @@ export default function VendorActiveOrdersPage() {
         body: JSON.stringify({ status: "cancelled", reason }),
       });
 
+      if (response.status === 401) {
+        handleAuthExpired();
+        return;
+      }
+
       const data = await response.json();
 
       if (!response.ok || !data.ok) {
-        showNotification(data.error ?? "Failed to cancel order.");
+        const msg = data.error ?? "Failed to cancel order.";
+        setActionError(msg);
+        showNotification(msg);
         fetchOrders();
         return;
       }
@@ -236,7 +267,9 @@ export default function VendorActiveOrdersPage() {
       );
       fetchOrders();
     } catch {
-      showNotification("Network error cancelling order.");
+      const msg = "Network error cancelling order.";
+      setActionError(msg);
+      showNotification(msg);
     }
   };
 
@@ -337,6 +370,7 @@ export default function VendorActiveOrdersPage() {
         pendingOrders={pendingPlacedOrders}
         onAccept={handleAdvanceOrderStatus}
         onReject={handleCancelOrder}
+        errorMessage={actionError}
       />
 
       <VendorNotificationsDrawer

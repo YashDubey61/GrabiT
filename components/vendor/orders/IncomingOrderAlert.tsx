@@ -9,12 +9,16 @@ interface IncomingOrderAlertProps {
   pendingOrders: VendorOrder[];
   onAccept: (orderId: string) => Promise<void> | void;
   onReject: (orderId: string, reason: string) => Promise<void> | void;
+  /** Rendered inside the card — the page-level toast sits underneath this
+   *  fixed overlay, so failures must surface here or they're invisible. */
+  errorMessage?: string | null;
 }
 
 export function IncomingOrderAlert({
   pendingOrders,
   onAccept,
   onReject,
+  errorMessage,
 }: IncomingOrderAlertProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
@@ -111,6 +115,15 @@ export function IncomingOrderAlert({
               <p className="mb-3 text-center text-caption text-faint">
                 +{pendingOrders.length - 1} more waiting · ₹{total} total
               </p>
+            )}
+
+            {errorMessage && (
+              <div className="mb-3 flex items-start gap-2 rounded-xl border border-danger/40 bg-danger-soft/40 p-3 text-caption font-semibold text-danger">
+                <span className="material-symbols-outlined text-[18px] shrink-0" aria-hidden="true">
+                  error
+                </span>
+                <span>{errorMessage}</span>
+              </div>
             )}
 
             <div className="flex gap-3">
