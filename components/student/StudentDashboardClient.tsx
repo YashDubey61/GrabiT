@@ -7,6 +7,8 @@ import { CategoryChips } from "@/components/student/CategoryChips";
 import { CanteenCard } from "@/components/student/CanteenCard";
 import { CampusSelectorModal } from "@/components/student/CampusSelectorModal";
 import { StudentRecommendationsSection } from "@/components/student/StudentRecommendationsSection";
+import { CartBar } from "@/components/student/CartBar";
+import { useCart } from "@/lib/cart/CartContext";
 
 import {
   getLiveCampusList,
@@ -46,6 +48,19 @@ export function StudentDashboardClient({
   });
   const [canteens, setCanteens] = useState<MockCanteen[]>(initialCanteens);
   const [isLoadingCanteens, setIsLoadingCanteens] = useState(false);
+
+  // Shared cart — same store the Menu screen and Checkout read from.
+  const cart = useCart();
+  // Cart clears canteenName the instant the last item is removed, which
+  // would cut the CartBar's exit animation off mid-fade — so remember the
+  // last known name/total to render while it animates out.
+  const [lastCartSnapshot, setLastCartSnapshot] = useState<{ canteenName: string; total: number; itemCount: number } | null>(null);
+  useEffect(() => {
+    if (cart.canteenName) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLastCartSnapshot({ canteenName: cart.canteenName, total: cart.subtotal, itemCount: cart.itemCount });
+    }
+  }, [cart.canteenName, cart.subtotal, cart.itemCount]);
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState("");
@@ -198,7 +213,11 @@ export function StudentDashboardClient({
         onOpenCampusSelector={() => setIsModalOpen(true)}
       />
 
-      <main className="mx-auto max-w-2xl px-5 pt-20 pb-10 md:px-16 md:pt-24">
+      <main
+        className={`mx-auto max-w-2xl px-5 pt-20 md:px-16 md:pt-24 ${
+          cart.itemCount > 0 ? "pb-32" : "pb-10"
+        }`}
+      >
         {/* Dynamic Canteen Status Banner */}
         <CanteenStatusBanner
           canteensOpen={canteenStats.canteensOpen}
@@ -284,6 +303,15 @@ export function StudentDashboardClient({
           )}
         </section>
       </main>
+
+      {lastCartSnapshot && (
+        <CartBar
+          canteenName={lastCartSnapshot.canteenName}
+          itemCount={cart.itemCount > 0 ? cart.itemCount : lastCartSnapshot.itemCount}
+          total={cart.itemCount > 0 ? cart.subtotal : lastCartSnapshot.total}
+          visible={cart.itemCount > 0}
+        />
+      )}
 
       {/* Interactive Campus Selector Modal */}
       <CampusSelectorModal

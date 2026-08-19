@@ -89,9 +89,12 @@ export function MenuBrowser({
         )}
       </div>
 
-      {cart.itemCount > 0 && (
-        <CartBar canteenName={cart.canteenName ?? canteenName} itemCount={cart.itemCount} total={cart.subtotal} />
-      )}
+      <CartBar
+        canteenName={cart.canteenName ?? canteenName}
+        itemCount={cart.itemCount}
+        total={cart.subtotal}
+        visible={cart.itemCount > 0}
+      />
     </>
   );
 }
