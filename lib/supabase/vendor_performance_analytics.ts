@@ -1,4 +1,4 @@
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export type VendorTimeframe = "today" | "7d" | "30d" | "90d";
 
@@ -173,13 +173,6 @@ export interface VendorPerformanceAnalyticsData {
   risks: OperationalRisk[];
   dataQuality: VendorPerformanceDataQuality;
   updatedAt: string;
-}
-
-function getSupabaseAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createAdminClient(url, serviceKey);
 }
 
 /**

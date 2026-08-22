@@ -26,7 +26,7 @@ export function ProfileMenuItem({
       className={`flex items-center justify-between rounded-xl border p-4 backdrop-blur-md transition-all duration-150 active:scale-[0.98] ${
         isDanger
           ? "border-danger/20 bg-danger-soft/40 hover:border-danger/40"
-          : "border-border bg-[#1e1f26]/80 hover:border-white/20"
+          : "border-border bg-surface-elevated hover:border-white/20"
       }`}
     >
       <div className="flex items-center gap-3.5">

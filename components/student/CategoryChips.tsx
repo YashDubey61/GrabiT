@@ -30,10 +30,8 @@ export function CategoryChips<T extends string>({
             role="tab"
             aria-selected={isSelected}
             onClick={() => onSelect(category.id)}
-            className={`shrink-0 whitespace-nowrap rounded-full px-6 py-2 text-label font-700 uppercase tracking-[0.04em] transition-all duration-150 active:scale-95 ${
-              isSelected
-                ? "bg-primary text-on-primary shadow-[0_4px_12px_-2px_rgb(255_109_0_/_0.4)]"
-                : "border border-border-subtle bg-surface-elevated text-muted hover:bg-surface"
+            className={`glass-chip shrink-0 whitespace-nowrap px-6 py-2 text-label font-700 uppercase tracking-[0.04em] active:scale-95 ${
+              isSelected ? "is-selected" : "text-muted"
             }`}
           >
             {category.label}

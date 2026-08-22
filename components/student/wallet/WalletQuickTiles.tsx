@@ -14,7 +14,7 @@ export function WalletQuickTiles({ wallet, onTileClick }: WalletQuickTilesProps)
       <button
         type="button"
         onClick={() => onTileClick?.("bank")}
-        className="flex flex-col gap-1 rounded-2xl border border-border bg-[#1e1f26]/80 p-4 text-left backdrop-blur-md transition-all duration-150 active:scale-[0.98] hover:border-white/20"
+        className="flex flex-col gap-1 rounded-2xl border border-border bg-surface-elevated p-4 text-left backdrop-blur-md transition-all duration-150 active:scale-[0.98] hover:border-white/20"
       >
         <span className="material-symbols-outlined text-[24px] text-primary" aria-hidden="true">
           account_balance
@@ -29,7 +29,7 @@ export function WalletQuickTiles({ wallet, onTileClick }: WalletQuickTilesProps)
       <button
         type="button"
         onClick={() => onTileClick?.("cashback")}
-        className="flex flex-col gap-1 rounded-2xl border border-border bg-[#1e1f26]/80 p-4 text-left backdrop-blur-md transition-all duration-150 active:scale-[0.98] hover:border-white/20"
+        className="flex flex-col gap-1 rounded-2xl border border-border bg-surface-elevated p-4 text-left backdrop-blur-md transition-all duration-150 active:scale-[0.98] hover:border-white/20"
       >
         <span className="material-symbols-outlined text-[24px] text-primary" aria-hidden="true">
           savings

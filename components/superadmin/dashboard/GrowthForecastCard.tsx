@@ -12,7 +12,7 @@ export function GrowthForecastCard() {
   return (
     <div className="flex flex-col gap-4">
       {/* Forecast Bar Chart Card */}
-      <div className="flex flex-col rounded-2xl border border-border bg-[#1e1f26]/80 p-5 backdrop-blur-md">
+      <div className="flex flex-col rounded-2xl border border-border bg-surface-elevated/80 p-5 backdrop-blur-md">
         <h4 className="font-display text-caption font-bold uppercase tracking-widest text-faint mb-4">
           Growth Forecast
         </h4>

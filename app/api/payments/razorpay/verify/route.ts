@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { verifyRazorpaySignature, GOLD_PLANS, type GoldPlanId } from "@/lib/payments/razorpay";
 
 export async function POST(request: Request) {
@@ -58,10 +58,7 @@ export async function POST(request: Request) {
     }
 
     // Service-role Supabase client for idempotent database transactions
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const serviceKey =
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const supabaseAdmin = createAdminClient(url, serviceKey);
+    const supabaseAdmin = getSupabaseAdminClient();
 
     // 1. Idempotency Check: Verify if this payment has already been recorded
     const { data: existingPayments } = await supabaseAdmin

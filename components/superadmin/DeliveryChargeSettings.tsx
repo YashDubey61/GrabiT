@@ -91,7 +91,7 @@ export function DeliveryChargeSettings() {
             min="0"
             value={config.amount}
             onChange={(e) => setConfig({ ...config, amount: Number(e.target.value) })}
-            className="w-full rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
+            className="w-full rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
           />
         </div>
 
@@ -102,7 +102,7 @@ export function DeliveryChargeSettings() {
           <select
             value={config.reason}
             onChange={(e) => setConfig({ ...config, reason: e.target.value as DeliveryChargeConfig["reason"] })}
-            className="w-full rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
+            className="w-full rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
           >
             {DELIVERY_CHARGE_REASONS.map((r) => (
               <option key={r} value={r}>
@@ -120,7 +120,7 @@ export function DeliveryChargeSettings() {
             rows={2}
             value={config.description}
             onChange={(e) => setConfig({ ...config, description: e.target.value })}
-            className="w-full resize-none rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
+            className="w-full resize-none rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
           />
         </div>
 

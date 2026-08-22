@@ -251,32 +251,54 @@ export async function signInWithGoogle(): Promise<{ ok: boolean; error?: string 
     });
 
     if (error) {
-      return { ok: false, error: error.message };
+      const msg = error.message?.toLowerCase() || "";
+      if (
+        msg.includes("unsupported provider") ||
+        msg.includes("not enabled") ||
+        msg.includes("validation_failed")
+      ) {
+        return {
+          ok: false,
+          error: "Google Sign-In is temporarily unavailable. Please try again later.",
+        };
+      }
+      return {
+        ok: false,
+        error: "We couldn’t complete Google Sign-In. Please try again.",
+      };
     }
 
     return { ok: true };
   } catch {
-    return { ok: false, error: "Network error initiating Google Sign-In." };
+    return {
+      ok: false,
+      error: "Google Sign-In is temporarily unavailable. Please try again later.",
+    };
   }
 }
 
 /**
- * Send password reset email via Supabase Auth.
+ * Requests a password reset. Goes through our own server route rather
+ * than calling supabase.auth.resetPasswordForEmail() directly — that
+ * client-side call would trigger Supabase's own built-in mailer
+ * ("Supabase Auth" sender, "powered by Supabase" footer). Our route
+ * still uses Supabase Auth's real recovery-token mechanism
+ * (admin.generateLink) underneath; only the email delivery + branding
+ * changes, via Resend.
  */
 export async function sendPasswordResetEmail(
   email: string,
 ): Promise<{ ok: boolean; error?: string }> {
   try {
-    const supabase = createClient();
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
-    const redirectTo = `${origin}/auth/reset-password`;
-
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo,
+    const res = await fetch("/api/auth/password-reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim() }),
     });
+    const data = await res.json().catch(() => null);
 
-    if (error) {
-      return { ok: false, error: error.message };
+    if (!res.ok || !data || !data.ok) {
+      return { ok: false, error: data?.error || "Failed to request password reset." };
     }
 
     return { ok: true };

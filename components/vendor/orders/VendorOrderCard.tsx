@@ -2,11 +2,15 @@
 
 import { useState } from "react";
 import type { VendorOrder } from "@/lib/mock/vendor";
+import { ReceiptPrinter } from "@/components/shared/receipt-printer/ReceiptPrinter";
+import { vendorOrderToReceipt } from "@/components/shared/receipt-printer/adapters";
 
 interface VendorOrderCardProps {
   order: VendorOrder;
+  vendorName: string;
   onAdvanceStatus: (orderId: string) => Promise<void> | void;
   onCancelOrder?: (orderId: string, reason: string) => Promise<void>;
+  onSelectOrder?: (order: VendorOrder) => void;
 }
 
 const CANCELLATION_REASONS = [
@@ -19,9 +23,12 @@ const CANCELLATION_REASONS = [
 
 export function VendorOrderCard({
   order,
+  vendorName,
   onAdvanceStatus,
   onCancelOrder,
+  onSelectOrder,
 }: VendorOrderCardProps) {
+  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const isNew = order.status === "placed";
   const isPreparing = order.status === "preparing";
   const isReady = order.status === "ready";
@@ -76,9 +83,12 @@ export function VendorOrderCard({
         }`}
       >
         {/* Top Header */}
-        <div className="flex items-start justify-between">
-          <div>
-            <h3 className="font-display text-body font-bold text-foreground">
+        <div
+          className={`flex items-start justify-between gap-2 ${onSelectOrder ? "cursor-pointer hover:opacity-90" : ""}`}
+          onClick={() => onSelectOrder?.(order)}
+        >
+          <div className="min-w-0 flex-1">
+            <h3 className="font-display text-body font-bold text-foreground hover:text-primary truncate" title={`${order.orderNumber} • ${order.studentName}`}>
               {order.orderNumber} • {order.studentName}
             </h3>
             <p className="text-caption text-faint font-medium">
@@ -86,19 +96,27 @@ export function VendorOrderCard({
             </p>
           </div>
 
-          <span
-            className={`rounded-md px-2 py-0.5 font-display text-[10px] font-bold uppercase tracking-wider ${
-              isCancelled
-                ? "bg-danger/20 text-danger border border-danger/30"
-                : isCompleted
-                  ? "bg-surface-elevated text-faint border border-border"
-                  : order.paymentType === "PREPAID"
-                    ? "bg-primary/20 text-primary border border-primary/30"
-                    : "bg-surface-sunken text-muted border border-border"
-            }`}
-          >
-            {isCancelled ? "CANCELLED" : isCompleted ? "COMPLETED" : order.paymentType}
-          </span>
+          <div className="flex shrink-0 items-center gap-1.5">
+            {(order.isManual || order.orderType === "MANUAL_CASH_ORDER" || order.orderNumber.includes("-M-")) && (
+              <span className="rounded-md bg-amber-950/80 text-amber-400 border border-amber-800/80 px-2 py-0.5 font-display text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                <span className="material-symbols-outlined text-[12px]">payments</span>
+                MANUAL CASH
+              </span>
+            )}
+            <span
+              className={`rounded-md px-2 py-0.5 font-display text-[10px] font-bold uppercase tracking-wider ${
+                isCancelled
+                  ? "bg-danger/20 text-danger border border-danger/30"
+                  : isCompleted
+                    ? "bg-surface-elevated text-faint border border-border"
+                    : order.paymentType === "PREPAID"
+                      ? "bg-primary/20 text-primary border border-primary/30"
+                      : "bg-surface-sunken text-muted border border-border"
+              }`}
+            >
+              {isCancelled ? "CANCELLED" : isCompleted ? "COMPLETED" : order.paymentType}
+            </span>
+          </div>
         </div>
 
         {/* Cancellation Reason Badge */}
@@ -125,7 +143,12 @@ export function VendorOrderCard({
         )}
 
         {/* Items List */}
-        <div className="flex flex-col gap-2 border-y border-border/50 py-3">
+        <div
+          className={`flex flex-col gap-2 border-y border-border/50 py-3 ${
+            onSelectOrder ? "cursor-pointer hover:opacity-90" : ""
+          }`}
+          onClick={() => onSelectOrder?.(order)}
+        >
           {order.items.map((item, idx) => (
             <div key={idx} className="flex items-center justify-between">
               <span className="font-display text-body-sm font-semibold text-foreground">
@@ -139,6 +162,22 @@ export function VendorOrderCard({
             </div>
           ))}
         </div>
+
+        {/* Print Kitchen Receipt — available regardless of status, never
+            forces navigation away from this order card. */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsReceiptOpen(true);
+          }}
+          className="flex h-10 items-center justify-center gap-1.5 rounded-lg border border-border text-caption font-semibold text-muted transition-colors hover:border-primary/40 hover:text-foreground"
+        >
+          <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+            receipt_long
+          </span>
+          Print Kitchen Receipt
+        </button>
 
         {/* OTP Code Badge if Ready */}
         {isReady && order.otpCode && (
@@ -227,9 +266,13 @@ export function VendorOrderCard({
         )}
 
         {isCompleted && (
-          <div className="rounded-xl border border-border bg-surface-sunken p-2.5 text-center font-display text-caption font-bold text-faint uppercase tracking-wider">
-            ✓ Order Completed
-          </div>
+          <button
+            type="button"
+            onClick={() => onSelectOrder?.(order)}
+            className="w-full rounded-xl border border-border bg-surface-sunken p-2.5 text-center font-display text-caption font-bold text-faint uppercase tracking-wider hover:text-foreground transition-colors"
+          >
+            View Details
+          </button>
         )}
       </div>
 
@@ -299,6 +342,13 @@ export function VendorOrderCard({
           </div>
         </div>
       )}
+
+      <ReceiptPrinter
+        mode="vendor"
+        order={vendorOrderToReceipt(order, vendorName)}
+        open={isReceiptOpen}
+        onClose={() => setIsReceiptOpen(false)}
+      />
     </>
   );
 }

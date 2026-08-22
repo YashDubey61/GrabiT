@@ -1,6 +1,8 @@
 import { createClient } from "./client";
 import type { MockCanteen } from "@/lib/mock/campus";
 import type { MockMenuItem } from "@/lib/mock/menu";
+import { resolveImageUrl } from "@/lib/utils/image";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export interface SupabaseCampus {
   id: string;
@@ -25,6 +27,9 @@ export interface SupabaseCanteen {
   cuisine_tags?: string | null;
   description?: string | null;
   image_url?: string | null;
+  photo_urls?: string[] | null;
+  operating_hours?: string | null;
+  pickup_location?: string | null;
 }
 
 export interface SupabaseMenuItem {
@@ -38,11 +43,6 @@ export interface SupabaseMenuItem {
   description?: string | null;
   image_url?: string | null;
 }
-
-const DEFAULT_ITEM_IMAGE =
-  "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80";
-const DEFAULT_CANTEEN_IMAGE =
-  "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=80";
 
 function toMenuCategory(category: string | null | undefined): MockMenuItem["category"] {
   const normalized = (category || "").toLowerCase();
@@ -134,18 +134,26 @@ export async function getLiveCampusCanteens(campusId?: string): Promise<MockCant
     return [];
   }
 
-  return (canteens as SupabaseCanteen[]).map((c, idx) => ({
-    id: c.id,
-    name: c.name,
-    cuisineTags: c.cuisine_tags || "Campus Vendor",
-    category: toCanteenCategory(c.category),
-    waitMinutes: 8 + idx * 4,
-    rating: 4.8,
-    ratingNote: "Live",
-    trending: idx === 0,
-    image: c.image_url || DEFAULT_CANTEEN_IMAGE,
-    imageAlt: `${c.name} canteen stall`,
-  }));
+  return (canteens as SupabaseCanteen[]).map((c, idx) => {
+    const rawImages = c.photo_urls && c.photo_urls.length > 0 ? c.photo_urls : [c.image_url];
+    const resolvedImages = rawImages
+      .map((url) => resolveImageUrl(url, "canteen"))
+      .filter(Boolean);
+
+    return {
+      id: c.id,
+      name: c.name,
+      cuisineTags: c.cuisine_tags || "Campus Vendor",
+      category: toCanteenCategory(c.category),
+      waitMinutes: 8 + idx * 4,
+      rating: 4.8,
+      ratingNote: "Live",
+      trending: idx === 0,
+      image: resolveImageUrl(c.image_url, "canteen"),
+      imageAlt: `${c.name} canteen stall`,
+      images: resolvedImages.length > 0 ? resolvedImages : [resolveImageUrl(null, "canteen")],
+    };
+  });
 }
 
 /**
@@ -162,6 +170,10 @@ export async function getLiveCanteenMenuItems(canteenId: string): Promise<{
     ratingCount: string;
     isOpen: boolean;
     description: string;
+    images: string[];
+    operatingHours: string | null;
+    pickupLocation: string | null;
+    campusName: string | null;
   } | null;
   items: MockMenuItem[];
 }> {
@@ -187,6 +199,22 @@ export async function getLiveCanteenMenuItems(canteenId: string): Promise<{
 
   const items = mapDbItemsToUI((dbItems as SupabaseMenuItem[]) ?? []);
 
+  const rawImages = canteen.photo_urls && canteen.photo_urls.length > 0 ? canteen.photo_urls : [canteen.image_url];
+  const resolvedImages = rawImages
+    .map((url) => resolveImageUrl(url, "canteen"))
+    .filter(Boolean);
+
+  let campusName: string | null = null;
+  if (canteen.campus_id) {
+    const { data: campus } = await supabase
+      .from("campuses")
+      .select("name")
+      .eq("id", canteen.campus_id)
+      .limit(1)
+      .maybeSingle();
+    campusName = campus?.name ?? null;
+  }
+
   return {
     canteenInfo: {
       id: canteen.id,
@@ -196,9 +224,102 @@ export async function getLiveCanteenMenuItems(canteenId: string): Promise<{
       ratingCount: "Live",
       isOpen: canteen.status === "active",
       description: canteen.description || "",
+      images: resolvedImages.length > 0 ? resolvedImages : [resolveImageUrl(null, "canteen")],
+      operatingHours: canteen.operating_hours || null,
+      pickupLocation: canteen.pickup_location || null,
+      campusName,
     },
     items,
   };
+}
+
+export interface CanteenActiveOffer {
+  id: string;
+  code: string;
+  description: string | null;
+  discountType: "PERCENTAGE" | "FLAT";
+  discountValue: number;
+  maxDiscount: number | null;
+  minOrderValue: number;
+  expiresAt: string | null;
+}
+
+interface SupabasePromoCodeRow {
+  id: string;
+  code: string;
+  description: string | null;
+  discount_type: "PERCENTAGE" | "FLAT";
+  discount_value: number;
+  max_discount: number | null;
+  min_order_value: number;
+  usage_limit: number | null;
+  starts_at: string | null;
+  expires_at: string | null;
+}
+
+/**
+ * Live, canteen-scoped active offers for the student-facing vendor page.
+ * Reads the SAME `promo_codes` table used by Vendor Offers and checkout
+ * coupon validation — no separate "display" copy. Only offers that are
+ * published, active, within their start/expiry window, and (if capped)
+ * under their total redemption limit are returned; historical/expired
+ * rows are never deleted, just excluded from this student-facing read.
+ */
+export async function getLiveCanteenActiveOffers(canteenId: string): Promise<CanteenActiveOffer[]> {
+  const supabase = createClient();
+
+  const { data: promoCodes } = await supabase
+    .from("promo_codes")
+    .select("id, code, description, discount_type, discount_value, max_discount, min_order_value, usage_limit, starts_at, expires_at")
+    .eq("canteen_id", canteenId)
+    .eq("is_published", true)
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
+
+  if (!promoCodes || promoCodes.length === 0) {
+    return [];
+  }
+
+  const now = Date.now();
+  const inWindow = (promoCodes as SupabasePromoCodeRow[]).filter((p) => {
+    if (p.starts_at && new Date(p.starts_at).getTime() > now) return false;
+    if (p.expires_at && new Date(p.expires_at).getTime() < now) return false;
+    return true;
+  });
+
+  if (inWindow.length === 0) {
+    return [];
+  }
+
+  // Redemption counts are cross-student aggregates — RLS intentionally
+  // scopes promo_code_redemptions reads to a student's own rows, so an
+  // accurate total requires the service-role client here (same pattern
+  // the vendor offers route already uses for the identical computation).
+  const cappedIds = inWindow.filter((p) => p.usage_limit !== null).map((p) => p.id);
+  const usageCounts = new Map<string, number>();
+  if (cappedIds.length > 0) {
+    const admin = getSupabaseAdminClient();
+    const { data: redemptions } = await admin
+      .from("promo_code_redemptions")
+      .select("promo_code_id")
+      .in("promo_code_id", cappedIds);
+    (redemptions ?? []).forEach((r) => {
+      usageCounts.set(r.promo_code_id, (usageCounts.get(r.promo_code_id) ?? 0) + 1);
+    });
+  }
+
+  return inWindow
+    .filter((p) => p.usage_limit === null || (usageCounts.get(p.id) ?? 0) < p.usage_limit)
+    .map((p) => ({
+      id: p.id,
+      code: p.code,
+      description: p.description,
+      discountType: p.discount_type,
+      discountValue: Number(p.discount_value),
+      maxDiscount: p.max_discount !== null ? Number(p.max_discount) : null,
+      minOrderValue: Number(p.min_order_value),
+      expiresAt: p.expires_at,
+    }));
 }
 
 function mapDbItemsToUI(dbItems: SupabaseMenuItem[]): MockMenuItem[] {
@@ -210,6 +331,7 @@ function mapDbItemsToUI(dbItems: SupabaseMenuItem[]): MockMenuItem[] {
     available: item.availability === "available",
     category: toMenuCategory(item.category),
     isVeg: true,
-    image: item.image_url || DEFAULT_ITEM_IMAGE,
+    image: resolveImageUrl(item.image_url, "dish"),
   }));
 }
+

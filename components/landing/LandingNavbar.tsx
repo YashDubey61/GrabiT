@@ -3,18 +3,15 @@
 import Link from "next/link";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { ROLE_HOME } from "@/lib/auth/roles";
+import { GrabItLogo } from "@/components/shared/GrabItLogo";
 
 export function LandingNavbar() {
   const { user, role, signOut } = useAuth();
   const homePath = role ? ROLE_HOME[role] : "/auth";
 
   return (
-    <nav className="fixed top-0 inset-x-0 z-50 flex h-16 items-center justify-between border-b border-white/10 bg-black/80 px-6 backdrop-blur-xl md:px-12">
-      <Link href="/" className="flex items-center gap-2">
-        <span className="font-display text-2xl font-black tracking-tighter text-primary">
-          GrabIt
-        </span>
-      </Link>
+    <nav className="fixed top-0 inset-x-0 z-50 flex h-16 items-center justify-between border-b border-border bg-background/80 px-6 backdrop-blur-xl md:px-12">
+      <GrabItLogo href="/" heightClassName="h-9 md:h-10" priority />
 
       <div className="hidden items-center gap-8 md:flex">
         <Link

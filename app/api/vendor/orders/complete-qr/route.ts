@@ -117,7 +117,7 @@ export async function POST(request: Request) {
       const { createStudentNotification } = await import("@/lib/notifications/student_notifications");
       const { data: orderRow } = await supabase
         .from("orders")
-        .select("student_id")
+        .select("student_id, gifted_by_id")
         .eq("id", updated.id)
         .maybeSingle();
 
@@ -134,8 +134,32 @@ export async function POST(request: Request) {
           dedupeKey: `order-completed:${updated.id}`,
         });
       }
+
+      // Same rule as the standard status-transition route: gift-food
+      // orders were already paid for in points, so no fresh points on
+      // completion — only genuinely paid orders earn.
+      if (orderRow?.student_id && !orderRow.gifted_by_id) {
+        const { data: pointsResult } = await supabase.rpc("award_order_points", {
+          p_order_id: updated.id,
+        });
+        const awarded = (pointsResult as { awarded?: number } | null)?.awarded ?? 0;
+        if (awarded > 0) {
+          await createStudentNotification({
+            userId: orderRow.student_id,
+            type: "POINTS_EARNED",
+            title: "GRABIT Points earned!",
+            message: `You earned ${awarded} GRABIT Points from your order.`,
+            severity: "SUCCESS",
+            category: "REWARDS",
+            relatedOrderId: updated.id,
+            actionUrl: "/customer/rewards",
+            dedupeKey: `order-points:${updated.id}`,
+          });
+        }
+      }
     } catch {
-      // Notification is a non-critical side effect.
+      // Notification/points side-effects are non-critical — the pickup
+      // itself already succeeded via the atomic UPDATE above.
     }
 
     return NextResponse.json({

@@ -14,7 +14,7 @@ export interface SupabaseOrderRow {
   pickup_qr_used_at?: string | null;
   pickup_otp_code?: string | null;
   completed_at?: string | null;
-  canteens?: { name: string };
+  canteens?: { name: string; phone?: string };
   order_items?: {
     id: string;
     menu_item_id: string;
@@ -34,7 +34,7 @@ export async function getLiveOrderById(orderId: string): Promise<Order | null> {
     // Query order by UUID or order_number
     let query = supabase.from("orders").select(`
       *,
-      canteens ( name ),
+      canteens ( name, phone ),
       order_items (
         id,
         menu_item_id,
@@ -74,7 +74,7 @@ export async function getLiveOrdersForStudent(): Promise<Order[]> {
       .from("orders")
       .select(`
         *,
-        canteens ( name ),
+        canteens ( name, phone ),
         order_items (
           id,
           menu_item_id,
@@ -97,6 +97,7 @@ export async function getLiveOrdersForStudent(): Promise<Order[]> {
 
 function mapSupabaseOrderToUI(row: SupabaseOrderRow): Order {
   const canteenName = row.canteens?.name ?? "Campus Canteen";
+  const vendorPhone = row.canteens?.phone ?? undefined;
   const items = (row.order_items ?? []).map((item) => {
     const itemName = item.menu_items?.name ?? "Canteen Dish";
     const price = Number(item.price_at_order);
@@ -113,6 +114,10 @@ function mapSupabaseOrderToUI(row: SupabaseOrderRow): Order {
 
   const subtotal = items.reduce((sum, i) => sum + i.lineTotal, 0);
   const totalAmount = Number(row.total_amount);
+  // Derived from the stored total rather than recomputed via
+  // calculateOrderPricing(), since delivery_charge is always 0 going
+  // forward this correctly equals platformFee alone for new orders,
+  // while still reflecting whatever was actually charged historically.
   const platformFee = Math.max(0, totalAmount - subtotal);
 
   const createdAt = row.created_at;
@@ -130,6 +135,7 @@ function mapSupabaseOrderToUI(row: SupabaseOrderRow): Order {
     orderNumber: row.order_number.startsWith("#") ? row.order_number : `#${row.order_number}`,
     canteenId: row.canteen_id,
     canteenName,
+    vendorPhone,
     studentId: row.student_id,
     slot: slotMap[row.slot] ?? "ASAP",
     status: row.status,

@@ -14,9 +14,6 @@ import { signStudentIn } from "../lib/supabase/auth";
 import { ROLE_HOME, isAuthorizedForPath } from "../lib/auth/roles";
 import type { UserRole } from "../types";
 
-// Helper regex matching app email validation
-const isEmailValid = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
-
 // Safe redirect URL validator matching app/auth/page.tsx
 function getSafeRedirectUrl(next: string | null, userRole: UserRole = "student"): string {
   const defaultPath = ROLE_HOME[userRole] || "/customer";

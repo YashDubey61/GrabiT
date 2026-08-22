@@ -9,7 +9,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { calculateSubtotal, getMockPlatformFee } from "@/lib/cart/calculations";
+import { calculateSubtotal } from "@/lib/cart/calculations";
+import { calculateOrderPricing } from "@/lib/pricing/order_pricing";
 import type { CartItem } from "@/lib/cart/types";
 import type { PickupSlot } from "@/components/student/PickupSlotSelector";
 import type { PaymentMethod } from "@/components/student/PaymentMethodSelector";
@@ -104,7 +105,8 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       return { ok: false, error: "Order total must be greater than zero." };
     }
 
-    const platformFee = getMockPlatformFee(subtotal);
+    const pricing = calculateOrderPricing(subtotal);
+    const platformFee = pricing.platformFee;
     const now = new Date();
     const estimatedReadyAt = new Date(
       now.getTime() + DEFAULT_PREP_MINUTES * 60_000,
@@ -132,7 +134,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         })),
         subtotal,
         platformFee,
-        totalAmount: subtotal + platformFee,
+        totalAmount: pricing.totalPayable,
         createdAt: now.toISOString(),
         estimatedReadyAt,
       };

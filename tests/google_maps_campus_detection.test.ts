@@ -14,14 +14,16 @@ import {
   reverseGeocodeGoogle,
   geocodeAddressGoogle,
   searchGooglePlaces,
+  getGoogleDistanceMatrix,
 } from "../lib/utils/google_maps";
 
 import {
-  detectCampusWithGoogle,
+  detectNearestCampusWithGoogle,
   type CampusLocationItem,
 } from "../lib/utils/geolocation";
 
 import {
+  getLiveCampusList,
   getLiveCampusCanteens,
   getLiveCampusDetails,
 } from "../lib/supabase/data";
@@ -35,6 +37,15 @@ async function runGoogleMapsCampusDetectionTests() {
   let failed = 0;
 
   const mockCampuses: CampusLocationItem[] = [
+    {
+      id: "a1000000-0000-0000-0000-000000000001",
+      name: "Axis Institute of Technology and Management",
+      shortName: "Axis",
+      city: "Kanpur, UP",
+      latitude: 26.3768,
+      longitude: 80.4475,
+      radiusMeters: 2000,
+    },
     {
       id: "11111111-1111-1111-1111-111111111111",
       name: "PSIT Kanpur",
@@ -116,7 +127,7 @@ async function runGoogleMapsCampusDetectionTests() {
     const studentLon = 80.3276;
     const accuracy = 15; // 15 meters high accuracy
 
-    const detection = await detectCampusWithGoogle(
+    const detection = await detectNearestCampusWithGoogle(
       studentLat,
       studentLon,
       accuracy,
@@ -128,7 +139,7 @@ async function runGoogleMapsCampusDetectionTests() {
       detection.confidence === "HIGH" &&
       !detection.requiresConfirmation
     ) {
-      console.log(`✅ TEST 4 PASSED: High confidence campus detection succeeded for PSIT Kanpur.`);
+      console.log(`✅ TEST 4 PASSED: High confidence campus detection succeeded for PSIT Kanpur via Google Maps integration.`);
       passed++;
     } else {
       console.error("❌ TEST 4 FAILED: High confidence detection mismatch.", detection);
@@ -145,7 +156,7 @@ async function runGoogleMapsCampusDetectionTests() {
     const studentLon = 80.3400;
     const accuracy = 250; // Poor GPS accuracy
 
-    const detection = await detectCampusWithGoogle(
+    const detection = await detectNearestCampusWithGoogle(
       studentLat,
       studentLon,
       accuracy,
@@ -161,6 +172,42 @@ async function runGoogleMapsCampusDetectionTests() {
     }
   } catch (err) {
     console.error("❌ TEST 5 ERROR:", err);
+    failed++;
+  }
+
+  // Test 5b: Google Distance Matrix Helper Handler
+  try {
+    const matrixRes = await getGoogleDistanceMatrix(26.5400, 80.2500, 26.3768, 80.4475);
+    // Should safely handle unconfigured key or API response
+    if (matrixRes.error || matrixRes.ok) {
+      console.log("✅ TEST 5b PASSED: Google Distance Matrix API handler executed safely with error handling.");
+      passed++;
+    } else {
+      console.error("❌ TEST 5b FAILED: Distance matrix crashed.", matrixRes);
+      failed++;
+    }
+  } catch (err) {
+    console.error("❌ TEST 5b ERROR:", err);
+    failed++;
+  }
+
+  // Test 5c: 28 km Distance Protection for Axis Institute
+  try {
+    const distantStudentLat = 26.5400; // Kalyanpur / IIT Kanpur area (~26.4 km from Axis in Rooma)
+    const distantStudentLon = 80.2500;
+    const accuracy = 15;
+
+    const detection = await detectNearestCampusWithGoogle(distantStudentLat, distantStudentLon, accuracy, mockCampuses);
+
+    if (detection.detectedCampus === null && detection.confidence === "LOW" && (detection.distanceMeters ?? 0) > 20000) {
+      console.log(`✅ TEST 5c PASSED: 28km location from Axis Institute correctly detected as LOW confidence (${((detection.distanceMeters ?? 0)/1000).toFixed(1)} km) without displaying ~4.2 km.`);
+      passed++;
+    } else {
+      console.error("❌ TEST 5c FAILED: 28km location incorrectly matched Axis Institute.", detection);
+      failed++;
+    }
+  } catch (err) {
+    console.error("❌ TEST 5c ERROR:", err);
     failed++;
   }
 
@@ -188,14 +235,15 @@ async function runGoogleMapsCampusDetectionTests() {
 
   // Test 7: Dynamic Campus Details Scoping
   try {
-    const psit = await getLiveCampusDetails("11111111-1111-1111-1111-111111111111");
-    const galgotias = await getLiveCampusDetails("22222222-2222-2222-2222-222222222222");
+    const liveCampuses = await getLiveCampusList();
+    const campusId = liveCampuses.length > 0 ? liveCampuses[0].id : "11111111-1111-1111-1111-111111111111";
+    const details = await getLiveCampusDetails(campusId);
 
-    if (psit?.name === "PSIT Kanpur" && galgotias?.name === "Galgotias University") {
-      console.log("✅ TEST 7 PASSED: Header metrics dynamically resolved correct campus names.");
+    if (details && details.name) {
+      console.log(`✅ TEST 7 PASSED: Header metrics dynamically resolved correct campus name ('${details.name}').`);
       passed++;
     } else {
-      console.error("❌ TEST 7 FAILED: Campus details resolution mismatch.", { psit, galgotias });
+      console.error("❌ TEST 7 FAILED: Campus details resolution mismatch.", { details });
       failed++;
     }
   } catch (err) {

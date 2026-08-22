@@ -16,7 +16,7 @@ export function VendorTopItemsList({
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
 
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-border bg-[#1e1f26]/80 p-6 backdrop-blur-md">
+    <div className="flex flex-col gap-4 rounded-2xl border border-border bg-surface-elevated p-6 backdrop-blur-md">
       <h3 className="font-display text-title font-bold text-foreground">
         Top Items
       </h3>

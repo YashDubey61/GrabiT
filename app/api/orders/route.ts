@@ -1,9 +1,11 @@
 import { randomBytes, randomInt } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { trackProductEvent } from "@/lib/analytics/events";
 import { PICKUP_OTP_LENGTH } from "@/lib/orders/pickup_otp";
+import { calculateOrderPricing } from "@/lib/pricing/order_pricing";
+import { computeRewardCheckoutDiscount, isRewardCodeFormat, type RewardCodeConfig } from "@/lib/rewards/checkout";
 
 interface IncomingOrderItem {
   menuItemId: string;
@@ -16,9 +18,35 @@ interface CreateOrderPayload {
   canteenId: string;
   canteenName?: string;
   slot: string;
-  paymentMethod: "upi" | "wallet";
+  paymentMethod: "wallet";
   items: IncomingOrderItem[];
+  promoCode?: string | null;
+  rewardCode?: string | null;
 }
+
+const REWARD_ERROR_MESSAGES: Record<string, string> = {
+  INVALID_CODE_FORMAT: "Enter a valid 16-digit reward code.",
+  INVALID_CODE: "This reward code doesn't exist.",
+  NOT_YOUR_CODE: "This reward code doesn't belong to your account.",
+  CODE_ALREADY_USED: "This reward code has already been used.",
+  CODE_EXPIRED: "This reward code has expired.",
+  CODE_NOT_VALID: "This reward code is no longer valid.",
+  CODE_NOT_APPLICABLE_AT_CHECKOUT: "This reward can't be applied at checkout.",
+  CODE_NOT_VALID_FOR_VENDOR: "This reward isn't valid for this vendor.",
+  REQUIRED_ITEM_NOT_IN_CART: "Add the required item to your cart to use this reward.",
+};
+
+const PROMO_ERROR_MESSAGES: Record<string, string> = {
+  INVALID_CODE: "This promo code doesn't exist.",
+  CODE_UNAVAILABLE: "This promo code isn't available right now.",
+  CODE_NOT_YET_ACTIVE: "This promo code isn't active yet.",
+  CODE_EXPIRED: "This promo code has expired.",
+  CODE_NOT_VALID_FOR_CAMPUS: "This promo code isn't valid at your campus.",
+  CODE_NOT_VALID_FOR_VENDOR: "This promo code isn't valid for this vendor.",
+  BELOW_MINIMUM_ORDER: "Your order doesn't meet the minimum amount for this code.",
+  USAGE_LIMIT_REACHED: "This promo code has reached its usage limit.",
+  PER_USER_LIMIT_REACHED: "You've already used this promo code the maximum number of times.",
+};
 
 export async function POST(request: Request) {
   try {
@@ -35,6 +63,25 @@ export async function POST(request: Request) {
     if (!payload.items || !Array.isArray(payload.items) || payload.items.length === 0) {
       return NextResponse.json(
         { ok: false, error: "Your cart is empty." },
+        { status: 400 },
+      );
+    }
+
+    // This route only ever handles GrabIt Wallet payments — UPI is no
+    // longer a standalone GRABIT payment option (online payments,
+    // including UPI, go through /api/payments/cashfree/create-order).
+    if (payload.paymentMethod !== "wallet") {
+      return NextResponse.json(
+        { ok: false, error: "Invalid payment method." },
+        { status: 400 },
+      );
+    }
+
+    // A promo code and a reward code can never be combined — one or
+    // the other, matching the product's explicit "prefer one, not both" rule.
+    if (payload.promoCode && payload.rewardCode) {
+      return NextResponse.json(
+        { ok: false, error: "Only one promo or reward code can be applied at a time." },
         { status: 400 },
       );
     }
@@ -63,15 +110,12 @@ export async function POST(request: Request) {
     }
 
     // Initialize Admin Supabase Client for bypassing RLS during order placement
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const serviceKey =
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const supabase = createAdminClient(url, serviceKey);
+    const supabase = getSupabaseAdminClient();
 
     // 3. Authoritative Role Verification from Database
     const { data: userRow } = await supabase
       .from("users")
-      .select("id, role, campus_id")
+      .select("id, role, campus_id, full_name")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -87,7 +131,7 @@ export async function POST(request: Request) {
     // 4. Authoritative Canteen & Campus Validation
     const { data: canteenRow, error: canteenErr } = await supabase
       .from("canteens")
-      .select("id, campus_id, status, name, is_paused, pause_reason")
+      .select("id, campus_id, status, name, is_paused, pause_reason, pickup_location")
       .eq("id", effectiveCanteenId)
       .maybeSingle();
 
@@ -195,71 +239,7 @@ export async function POST(request: Request) {
       });
     }
 
-    const platformFee = Math.round(subtotal * 0.05); // 5% platform fee
-
-    // Authoritative delivery charge — always re-read server-side from
-    // platform_settings (Super Admin-controlled), never trusted from
-    // the client, so it can never be manipulated at checkout.
-    const { data: deliveryChargeSetting } = await supabase
-      .from("platform_settings")
-      .select("value")
-      .eq("key", "delivery_charge")
-      .maybeSingle();
-    const deliveryCharge = Number(
-      (deliveryChargeSetting?.value as { amount?: number } | null)?.amount ?? 2.5,
-    );
-
-    const totalAmount = subtotal + platformFee + deliveryCharge;
-
-    // 7. Auto-Initialize Wallet & Handle Wallet Debit
-    if (payload.paymentMethod === "wallet") {
-      // Ensure student wallet exists
-      const { data: existingWallet } = await supabase
-        .from("wallets")
-        .select("id, balance")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (!existingWallet) {
-        await supabase.from("wallets").insert({
-          user_id: user.id,
-          balance: 500, // Initialize starting balance for student
-        });
-      } else if (Number(existingWallet.balance) < totalAmount) {
-        // Auto-topup demo student wallet if balance is lower than total
-        await supabase
-          .from("wallets")
-          .update({ balance: Number(existingWallet.balance) + totalAmount + 500 })
-          .eq("id", existingWallet.id);
-      }
-
-      const { data: debitResult, error: debitErr } = await supabase.rpc(
-        "debit_student_wallet",
-        {
-          p_user_id: user.id,
-          p_amount: totalAmount,
-          p_order_id: null,
-        },
-      );
-
-      if (debitErr) {
-        console.error("Wallet debit RPC error:", debitErr);
-        return NextResponse.json(
-          { ok: false, error: "Failed to debit student wallet. Please try again." },
-          { status: 500 },
-        );
-      }
-
-      const resultObj = debitResult as { ok: boolean; error?: string };
-      if (!resultObj || !resultObj.ok) {
-        return NextResponse.json(
-          { ok: false, error: resultObj?.error || "Insufficient wallet balance." },
-          { status: 400 },
-        );
-      }
-    }
-
-    // 8. Generate human-readable order number
+    // 7. Generate human-readable order number + pickup verification tokens
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const orderNumber = `#${randomSuffix}`;
 
@@ -270,21 +250,14 @@ export async function POST(request: Request) {
           ? "lunch"
           : "short_break";
 
-    // Unique pickup-verification token for this order's QR. Generated
-    // server-side with crypto randomness — never derived from the order
-    // id / order number, which are guessable.
     const pickupQrToken = randomBytes(32).toString("hex");
+    const pickupOtpCode = String(randomInt(0, 10 ** PICKUP_OTP_LENGTH)).padStart(PICKUP_OTP_LENGTH, "0");
 
-    // Manual-entry fallback for the same verification: a short numeric
-    // code the student reads out loud when the QR can't be scanned.
-    // Independent random value from the QR token — not derived from the
-    // order number, which is guessable/sequential.
-    const pickupOtpCode = String(randomInt(0, 10 ** PICKUP_OTP_LENGTH)).padStart(
-      PICKUP_OTP_LENGTH,
-      "0",
-    );
-
-    // 9. Atomic Order Insertion
+    // Insert the order first (with a placeholder total) so a promo
+    // code can be atomically redeemed against a real order_id —
+    // redeem_promo_code locks the promo row and inserts the
+    // redemption+order_id together, so two concurrent orders can never
+    // both slip through a usage limit of 1.
     const { data: createdOrder, error: orderErr } = await supabase
       .from("orders")
       .insert({
@@ -292,8 +265,8 @@ export async function POST(request: Request) {
         canteen_id: effectiveCanteenId,
         order_number: orderNumber,
         status: "placed",
-        total_amount: totalAmount,
-        delivery_charge: deliveryCharge,
+        total_amount: subtotal,
+        delivery_charge: 0,
         slot: dbSlot,
         pickup_qr_token: pickupQrToken,
         pickup_qr_created_at: new Date().toISOString(),
@@ -310,7 +283,152 @@ export async function POST(request: Request) {
       );
     }
 
-    // 10. Insert order_items
+    // 7b. Server-side promo code redemption — never trusts a
+    // client-supplied discount amount. Rolls back the order on any
+    // validation failure so an invalid/expired/limit-exceeded code
+    // never results in a placed order.
+    let discount = 0;
+    if (payload.promoCode) {
+      const { data: promoResult, error: promoErr } = await supabase.rpc("redeem_promo_code", {
+        p_code: payload.promoCode,
+        p_user_id: user.id,
+        p_order_id: createdOrder.id,
+        p_subtotal: subtotal,
+        p_campus_id: userRow?.campus_id ?? null,
+        p_canteen_id: effectiveCanteenId,
+      });
+
+      if (promoErr) {
+        await supabase.from("orders").delete().eq("id", createdOrder.id);
+        const code = promoErr.message?.split(":")[0]?.trim() ?? "";
+        return NextResponse.json(
+          { ok: false, error: PROMO_ERROR_MESSAGES[code] ?? "Couldn't apply promo code. Please try again." },
+          { status: 400 },
+        );
+      }
+      discount = Number((promoResult as { discountAmount: number }).discountAmount);
+    } else if (payload.rewardCode) {
+      if (!isRewardCodeFormat(payload.rewardCode)) {
+        await supabase.from("orders").delete().eq("id", createdOrder.id);
+        return NextResponse.json({ ok: false, error: REWARD_ERROR_MESSAGES.INVALID_CODE_FORMAT }, { status: 400 });
+      }
+
+      const { data: rewardResult, error: rewardErr } = await supabase.rpc("consume_reward_code", {
+        p_code: payload.rewardCode,
+        p_user_id: user.id,
+        p_order_id: createdOrder.id,
+      });
+
+      if (rewardErr) {
+        await supabase.from("orders").delete().eq("id", createdOrder.id);
+        const code = rewardErr.message?.split(":")[0]?.trim() ?? "";
+        return NextResponse.json(
+          { ok: false, error: REWARD_ERROR_MESSAGES[code] ?? "Couldn't apply reward code. Please try again." },
+          { status: 400 },
+        );
+      }
+
+      const reward = rewardResult as RewardCodeConfig & { redemptionId: string };
+      const discountResult = computeRewardCheckoutDiscount(reward, {
+        canteenId: effectiveCanteenId,
+        items: validatedLineItems.map((i) => ({ menuItemId: i.menuItemId, lineTotal: i.lineTotal })),
+        subtotal,
+      });
+
+      if (!discountResult.ok) {
+        // The consumption already happened atomically — this is a
+        // cart-mismatch case (e.g. required item removed between
+        // preview and submit). Undo the consumption and the order.
+        await supabase
+          .from("reward_redemptions")
+          .update({ code_status: "GENERATED", redeemed_at: null, order_id: null })
+          .eq("id", reward.redemptionId);
+        await supabase.from("orders").delete().eq("id", createdOrder.id);
+        return NextResponse.json(
+          { ok: false, error: REWARD_ERROR_MESSAGES[discountResult.error ?? ""] ?? "This reward can't be applied to your cart." },
+          { status: 400 },
+        );
+      }
+      discount = discountResult.discountAmount;
+    }
+
+    // Single authoritative pricing calculation — platformFee is ₹2.50
+    // when subtotal > ₹25 else ₹0; deliveryCharge is always ₹0. Never
+    // trust a client-supplied fee/discount/total.
+    const pricing = calculateOrderPricing({ subtotal, discount });
+    const platformFee = pricing.platformFee;
+    const deliveryCharge = pricing.deliveryCharge;
+    const totalAmount = pricing.totalPayable;
+
+    await supabase.from("orders").update({ total_amount: totalAmount }).eq("id", createdOrder.id);
+
+    // 8. Auto-Initialize Wallet & Handle Wallet Debit — skipped
+    // entirely when a reward/promo code covers the full order (₹0
+    // payable). Nothing to charge, so nothing to debit.
+    if (payload.paymentMethod === "wallet" && totalAmount > 0) {
+      // Ensure student wallet exists
+      const { data: existingWallet } = await supabase
+        .from("wallets")
+        .select("id, balance")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!existingWallet) {
+        await supabase.from("wallets").insert({
+          user_id: user.id,
+          balance: 0,
+        });
+        await supabase.from("orders").update({ status: "cancelled", cancellation_reason: "Insufficient wallet balance" }).eq("id", createdOrder.id);
+        return NextResponse.json(
+          {
+            ok: false,
+            error: `Insufficient wallet balance (Available: ₹0.00, Required: ₹${totalAmount.toFixed(2)}). Please top up your wallet.`,
+          },
+          { status: 400 },
+        );
+      }
+
+      const availableBalance = Number(existingWallet.balance ?? 0);
+      if (availableBalance < totalAmount) {
+        await supabase.from("orders").update({ status: "cancelled", cancellation_reason: "Insufficient wallet balance" }).eq("id", createdOrder.id);
+        return NextResponse.json(
+          {
+            ok: false,
+            error: `Insufficient wallet balance (Available: ₹${availableBalance.toFixed(2)}, Required: ₹${totalAmount.toFixed(2)}). Please top up your wallet.`,
+          },
+          { status: 400 },
+        );
+      }
+
+      const { data: debitResult, error: debitErr } = await supabase.rpc(
+        "debit_student_wallet",
+        {
+          p_user_id: user.id,
+          p_amount: totalAmount,
+          p_order_id: createdOrder.id,
+        },
+      );
+
+      if (debitErr) {
+        console.error("Wallet debit RPC error:", debitErr);
+        await supabase.from("orders").update({ status: "cancelled", cancellation_reason: "Wallet debit failed" }).eq("id", createdOrder.id);
+        return NextResponse.json(
+          { ok: false, error: "Failed to debit student wallet. Please try again." },
+          { status: 500 },
+        );
+      }
+
+      const resultObj = debitResult as { ok: boolean; error?: string };
+      if (!resultObj || !resultObj.ok) {
+        await supabase.from("orders").update({ status: "cancelled", cancellation_reason: "Insufficient wallet balance" }).eq("id", createdOrder.id);
+        return NextResponse.json(
+          { ok: false, error: resultObj?.error || "Insufficient wallet balance." },
+          { status: 400 },
+        );
+      }
+    }
+
+    // 9. Insert order_items
     const orderItemsToInsert = validatedLineItems.map((item) => ({
       order_id: createdOrder.id,
       menu_item_id: item.menuItemId,
@@ -319,6 +437,21 @@ export async function POST(request: Request) {
     }));
 
     await supabase.from("order_items").insert(orderItemsToInsert);
+
+    // 9b. Deduct stock for each ordered item atomically
+    for (const lineItem of validatedLineItems) {
+      try {
+        await supabase.rpc("adjust_inventory_stock", {
+          p_menu_item_id: lineItem.menuItemId,
+          p_quantity_delta: -lineItem.quantity,
+          p_adjustment_type: "order_deduction",
+          p_reason: `Order ${createdOrder.order_number}`,
+          p_user_id: user.id,
+        });
+      } catch (invErr) {
+        console.warn("Non-critical inventory deduction warning:", invErr);
+      }
+    }
 
     // 11. Insert Audit History Record
     try {
@@ -337,11 +470,11 @@ export async function POST(request: Request) {
     // 12. Insert Payment Record
     await supabase.from("payments").insert({
       order_id: createdOrder.id,
-      method: payload.paymentMethod === "upi" ? "upi" : "wallet",
+      method: "wallet",
       amount: totalAmount,
       platform_fee: platformFee,
       vendor_settlement: subtotal,
-      status: payload.paymentMethod === "wallet" ? "success" : "pending",
+      status: "success",
     });
 
     // 13. Server Analytics Event Tracking
@@ -390,6 +523,35 @@ export async function POST(request: Request) {
       console.warn("Non-critical notification side-effect error:", notifErr);
     }
 
+    // 14b. Order Confirmation Email — this order is only reached after
+    // payment (wallet debit or ₹0 total) already succeeded, so it is
+    // always a genuine confirmation. A Resend failure here must never
+    // fail the order response; sendOrderConfirmationEmail never throws
+    // and is idempotent per order id.
+    if (user.email) {
+      try {
+        const { sendOrderConfirmationEmail } = await import("@/lib/email/email-service");
+        await sendOrderConfirmationEmail({
+          orderId: createdOrder.id,
+          customerEmail: user.email,
+          data: {
+            customerName: userRow?.full_name || "GRABIT Student",
+            orderNumber: createdOrder.order_number ?? createdOrder.id.slice(0, 6),
+            orderDateIso: createdOrder.created_at,
+            vendorName: payload.canteenName ?? canteenRow.name ?? "Campus Canteen",
+            items: validatedLineItems.map((i) => ({ name: i.name, quantity: i.quantity, price: i.unitPrice })),
+            subtotal,
+            discount,
+            deliveryFee: platformFee,
+            total: totalAmount,
+            pickupLocation: canteenRow.pickup_location ?? null,
+          },
+        });
+      } catch (emailErr) {
+        console.warn("Non-critical order confirmation email error:", emailErr);
+      }
+    }
+
     // 15. Return Created Order to Client
     return NextResponse.json({
       ok: true,
@@ -414,6 +576,9 @@ export async function POST(request: Request) {
         subtotal,
         platformFee,
         deliveryCharge,
+        promoCode: payload.promoCode && discount > 0 ? payload.promoCode.toUpperCase() : null,
+        rewardCode: payload.rewardCode && discount > 0 ? payload.rewardCode : null,
+        discount,
         totalAmount,
         createdAt: createdOrder.created_at,
         estimatedReadyAt: new Date(

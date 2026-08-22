@@ -1,5 +1,5 @@
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { createStudentNotification } from "./student_notifications";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export type StudentLifecycleSegment =
   | "NEW"
@@ -8,13 +8,6 @@ export type StudentLifecycleSegment =
   | "LOYAL"
   | "AT_RISK"
   | "DORMANT";
-
-function getSupabaseAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createAdminClient(url, serviceKey);
-}
 
 /**
  * Derives student engagement lifecycle segment and triggers relevant non-transactional recommendations

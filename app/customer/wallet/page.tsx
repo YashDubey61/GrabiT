@@ -6,7 +6,7 @@ import { WalletBalanceCard } from "@/components/student/wallet/WalletBalanceCard
 import { WalletQuickTiles } from "@/components/student/wallet/WalletQuickTiles";
 import { WalletTransactionList } from "@/components/student/wallet/WalletTransactionList";
 import { WalletTopUpSelector } from "@/components/student/wallet/WalletTopUpSelector";
-import { MOCK_WALLET, MOCK_TRANSACTIONS, type Wallet, type WalletTransaction, type TopUpOption } from "@/lib/mock/wallet";
+import { MOCK_WALLET, MOCK_TRANSACTIONS, type Wallet, type WalletTransaction } from "@/lib/mock/wallet";
 import { getLiveWalletForStudent, getLiveWalletTransactions } from "@/lib/supabase/wallet";
 
 export default function StudentWalletPage() {
@@ -15,22 +15,23 @@ export default function StudentWalletPage() {
   const [isTopUpOpen, setIsTopUpOpen] = useState(false);
   const [activeToast, setActiveToast] = useState<string | null>(null);
 
+  const loadLiveWallet = async () => {
+    const liveWallet = await getLiveWalletForStudent();
+    const liveTxs = await getLiveWalletTransactions();
+    if (liveWallet) setWallet(liveWallet);
+    if (liveTxs && liveTxs.length > 0) setTransactions(liveTxs);
+  };
+
   useEffect(() => {
     let isMounted = true;
-    async function loadLiveWallet() {
+    (async () => {
       const liveWallet = await getLiveWalletForStudent();
       const liveTxs = await getLiveWalletTransactions();
-
       if (isMounted) {
-        if (liveWallet) {
-          setWallet(liveWallet);
-        }
-        if (liveTxs && liveTxs.length > 0) {
-          setTransactions(liveTxs);
-        }
+        if (liveWallet) setWallet(liveWallet);
+        if (liveTxs && liveTxs.length > 0) setTransactions(liveTxs);
       }
-    }
-    loadLiveWallet();
+    })();
     return () => {
       isMounted = false;
     };
@@ -43,26 +44,12 @@ export default function StudentWalletPage() {
     }, 3000);
   };
 
-  const handleTopUpConfirm = (option: TopUpOption) => {
-    const addedAmount = option.amount;
-
-    setWallet((prev) => ({
-      ...prev,
-      balance: prev.balance + addedAmount,
-    }));
-
-    const newTx: WalletTransaction = {
-      id: `tx_${Date.now()}`,
-      title: "Wallet Top-up",
-      subtitle: "Just now",
-      amount: addedAmount,
-      type: "credit",
-      icon: "account_balance_wallet",
-      category: "topup",
-    };
-
-    setTransactions((prev) => [newTx, ...prev]);
-    showToast(`Top-up successful! Added ₹${addedAmount.toFixed(2)} to wallet.`);
+  // Wallet balance/transactions are only ever updated by re-fetching
+  // from the server after a webhook-verified top-up — never by
+  // incrementing local state here.
+  const handleTopUpSuccess = async () => {
+    await loadLiveWallet();
+    showToast("Top-up successful! Your wallet has been credited.");
   };
 
   return (
@@ -125,12 +112,12 @@ export default function StudentWalletPage() {
       <WalletTopUpSelector
         isOpen={isTopUpOpen}
         onClose={() => setIsTopUpOpen(false)}
-        onConfirmTopUp={handleTopUpConfirm}
+        onTopUpSuccess={handleTopUpSuccess}
       />
 
       {/* Toast Notification */}
       {activeToast && (
-        <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full border border-primary/30 bg-[#1e1f26] px-5 py-2.5 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-2">
+        <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full border border-primary/30 bg-surface-elevated px-5 py-2.5 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-2">
           <p className="font-display text-caption font-bold text-primary">{activeToast}</p>
         </div>
       )}

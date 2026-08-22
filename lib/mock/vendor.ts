@@ -23,6 +23,8 @@ export interface VendorOrder {
   completedAtIso?: string;
   cancelledAtIso?: string;
   cancellationReason?: string;
+  orderType?: string;
+  isManual?: boolean;
 }
 
 export interface VendorStoreConfig {

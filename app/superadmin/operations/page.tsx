@@ -86,8 +86,8 @@ export default function SuperAdminOperationsPage() {
               <h1 className="font-display text-heading-lg font-900 tracking-tight text-foreground">
                 Production Observability & Business Operations
               </h1>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-label font-bold text-emerald-400">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1 text-label font-bold text-success">
+                <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
                 LIVE TELEMETRY
               </span>
             </div>
@@ -174,8 +174,8 @@ export default function SuperAdminOperationsPage() {
                         isCritical
                           ? "border-destructive/40 bg-destructive/10 text-foreground"
                           : isWarning
-                          ? "border-amber-500/40 bg-amber-500/10 text-foreground"
-                          : "border-emerald-500/30 bg-emerald-500/5 text-foreground"
+                          ? "border-warning/40 bg-warning/10 text-foreground"
+                          : "border-success/30 bg-success/5 text-foreground"
                       }`}
                     >
                       <div className="flex items-start gap-3">
@@ -184,8 +184,8 @@ export default function SuperAdminOperationsPage() {
                             isCritical
                               ? "text-destructive"
                               : isWarning
-                              ? "text-amber-400"
-                              : "text-emerald-400"
+                              ? "text-warning"
+                              : "text-success"
                           }`}
                         >
                           {isCritical ? "error" : isWarning ? "warning" : "check_circle"}
@@ -200,8 +200,8 @@ export default function SuperAdminOperationsPage() {
                                 isCritical
                                   ? "bg-destructive/20 text-destructive"
                                   : isWarning
-                                  ? "bg-amber-500/20 text-amber-400"
-                                  : "bg-emerald-500/20 text-emerald-400"
+                                  ? "bg-warning/20 text-warning"
+                                  : "bg-success/20 text-success"
                               }`}
                             >
                               {alert.severity}
@@ -246,7 +246,7 @@ export default function SuperAdminOperationsPage() {
                 <div className="p-3.5 rounded-xl bg-background border border-border-subtle space-y-1">
                   <div className="text-muted font-semibold">Active Rules Engine</div>
                   <div className="text-lg font-bold text-foreground font-mono">10 / 10 Rules Enabled</div>
-                  <div className="text-[10px] text-emerald-400">Order aging, SLA, Gold, Wallet, Recon</div>
+                  <div className="text-[10px] text-success">Order aging, SLA, Gold, Wallet, Recon</div>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-background border border-border-subtle space-y-1">
@@ -257,8 +257,8 @@ export default function SuperAdminOperationsPage() {
 
                 <div className="p-3.5 rounded-xl bg-background border border-border-subtle space-y-1">
                   <div className="text-muted font-semibold">CRON Endpoint Protection</div>
-                  <div className="text-lg font-bold text-emerald-400 font-mono">CRON_SECRET Enforced</div>
-                  <div className="text-[10px] text-emerald-400">POST /api/internal/workflows/run</div>
+                  <div className="text-lg font-bold text-success font-mono">CRON_SECRET Enforced</div>
+                  <div className="text-[10px] text-success">POST /api/internal/workflows/run</div>
                 </div>
               </div>
             </section>
@@ -286,26 +286,26 @@ export default function SuperAdminOperationsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
                 <div className="p-3.5 rounded-xl bg-background border border-border-subtle space-y-1">
                   <div className="text-muted font-semibold">Open Incidents</div>
-                  <div className="text-lg font-bold text-amber-400 font-mono">2 Active Cases</div>
+                  <div className="text-lg font-bold text-warning font-mono">2 Active Cases</div>
                   <div className="text-[10px] text-muted">INC-2026-000001 / INC-2026-000002</div>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-background border border-border-subtle space-y-1">
                   <div className="text-muted font-semibold">Critical / High Severity</div>
-                  <div className="text-lg font-bold text-red-400 font-mono">2 High-Priority</div>
-                  <div className="text-[10px] text-red-400">Kitchen backlog &amp; webhook spike</div>
+                  <div className="text-lg font-bold text-danger font-mono">2 High-Priority</div>
+                  <div className="text-[10px] text-danger">Kitchen backlog &amp; webhook spike</div>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-background border border-border-subtle space-y-1">
                   <div className="text-muted font-semibold">SLA Targets</div>
-                  <div className="text-lg font-bold text-amber-300 font-mono">1 At Risk / 1 Breached</div>
-                  <div className="text-[10px] text-amber-300">CRITICAL: 15m, HIGH: 30m</div>
+                  <div className="text-lg font-bold text-warning font-mono">1 At Risk / 1 Breached</div>
+                  <div className="text-[10px] text-warning">CRITICAL: 15m, HIGH: 30m</div>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-background border border-border-subtle space-y-1">
                   <div className="text-muted font-semibold">Resolved Today</div>
-                  <div className="text-lg font-bold text-emerald-400 font-mono">1 Case Closed</div>
-                  <div className="text-[10px] text-emerald-400">Reconciliation audit variance</div>
+                  <div className="text-lg font-bold text-success font-mono">1 Case Closed</div>
+                  <div className="text-[10px] text-success">Reconciliation audit variance</div>
                 </div>
               </div>
             </section>
@@ -333,26 +333,26 @@ export default function SuperAdminOperationsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
                 <div className="p-3.5 rounded-xl bg-background border border-border-subtle space-y-1">
                   <div className="text-muted font-semibold">Overall Reliability</div>
-                  <div className="text-lg font-bold text-emerald-400 font-mono">99.8% Score</div>
-                  <div className="text-[10px] text-emerald-400">All 7 SLO targets meeting SLA</div>
+                  <div className="text-lg font-bold text-success font-mono">99.8% Score</div>
+                  <div className="text-[10px] text-success">All 7 SLO targets meeting SLA</div>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-background border border-border-subtle space-y-1">
                   <div className="text-muted font-semibold">Core API Latency</div>
                   <div className="text-lg font-bold text-white font-mono font-bold">45 ms P95</div>
-                  <div className="text-[10px] text-emerald-400">Target &lt; 1000 ms</div>
+                  <div className="text-[10px] text-success">Target &lt; 1000 ms</div>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-background border border-border-subtle space-y-1">
                   <div className="text-muted font-semibold">Webhook Reliability</div>
-                  <div className="text-lg font-bold text-emerald-400 font-mono">100.0% Success</div>
-                  <div className="text-[10px] text-emerald-400">Razorpay ledger processing</div>
+                  <div className="text-lg font-bold text-success font-mono">100.0% Success</div>
+                  <div className="text-[10px] text-success">Razorpay ledger processing</div>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-background border border-border-subtle space-y-1">
                   <div className="text-muted font-semibold">Cron Scheduler Freshness</div>
-                  <div className="text-lg font-bold text-emerald-400 font-mono">FRESH (Workflow &amp; SLA)</div>
-                  <div className="text-[10px] text-emerald-400">5-minute evaluation cadence</div>
+                  <div className="text-lg font-bold text-success font-mono">FRESH (Workflow &amp; SLA)</div>
+                  <div className="text-[10px] text-success">5-minute evaluation cadence</div>
                 </div>
               </div>
             </section>
@@ -380,26 +380,26 @@ export default function SuperAdminOperationsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
                 <div className="p-3.5 rounded-xl bg-background border border-border-subtle space-y-1">
                   <div className="text-muted font-semibold">Recovery Posture</div>
-                  <div className="text-lg font-bold text-emerald-400 font-mono">READY</div>
-                  <div className="text-[10px] text-emerald-400">All 5 domain targets met</div>
+                  <div className="text-lg font-bold text-success font-mono">READY</div>
+                  <div className="text-[10px] text-success">All 5 domain targets met</div>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-background border border-border-subtle space-y-1">
                   <div className="text-muted font-semibold">Target RTO / RPO</div>
                   <div className="text-lg font-bold text-white font-mono">RTO &lt;= 60m | RPO &lt;= 15m</div>
-                  <div className="text-[10px] text-emerald-400">Financial &amp; critical services</div>
+                  <div className="text-[10px] text-success">Financial &amp; critical services</div>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-background border border-border-subtle space-y-1">
                   <div className="text-muted font-semibold">Migration Chain</div>
-                  <div className="text-lg font-bold text-emerald-400 font-mono">100% SCORE (20/20)</div>
-                  <div className="text-[10px] text-emerald-400">0 gaps in schema sequence</div>
+                  <div className="text-lg font-bold text-success font-mono">100% SCORE (20/20)</div>
+                  <div className="text-[10px] text-success">0 gaps in schema sequence</div>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-background border border-border-subtle space-y-1">
                   <div className="text-muted font-semibold">Financial Integrity</div>
-                  <div className="text-lg font-bold text-emerald-400 font-mono">HEALTHY (0 Discrepancies)</div>
-                  <div className="text-[10px] text-emerald-400">Read-only audit verified</div>
+                  <div className="text-lg font-bold text-success font-mono">HEALTHY (0 Discrepancies)</div>
+                  <div className="text-[10px] text-success">Read-only audit verified</div>
                 </div>
               </div>
             </section>
@@ -413,15 +413,15 @@ export default function SuperAdminOperationsPage() {
                   {data.orders.totalOrders}
                 </p>
                 <div className="flex items-center justify-between text-label text-muted pt-2 border-t border-border">
-                  <span>Completed: <strong className="text-emerald-400">{data.orders.completedCount}</strong></span>
-                  <span>Preparing: <strong className="text-amber-400">{data.orders.preparingCount}</strong></span>
+                  <span>Completed: <strong className="text-success">{data.orders.completedCount}</strong></span>
+                  <span>Preparing: <strong className="text-warning">{data.orders.preparingCount}</strong></span>
                 </div>
               </div>
 
               {/* Payment Success Rate */}
               <div className="rounded-2xl border border-border bg-surface-elevated p-5 space-y-2">
                 <p className="text-label font-bold text-muted uppercase tracking-wider">Payment Success Rate</p>
-                <p className="font-display text-display font-900 text-emerald-400">
+                <p className="font-display text-display font-900 text-success">
                   {data.payments.successRatePercent}%
                 </p>
                 <div className="flex items-center justify-between text-label text-muted pt-2 border-t border-border">
@@ -449,7 +449,7 @@ export default function SuperAdminOperationsPage() {
                   {data.webhooks.totalEvents}
                 </p>
                 <div className="flex items-center justify-between text-label text-muted pt-2 border-t border-border">
-                  <span>Processed: <strong className="text-emerald-400">{data.webhooks.processedCount}</strong></span>
+                  <span>Processed: <strong className="text-success">{data.webhooks.processedCount}</strong></span>
                   <span>Failed: <strong className="text-destructive">{data.webhooks.failedCount}</strong></span>
                 </div>
               </div>
@@ -480,13 +480,13 @@ export default function SuperAdminOperationsPage() {
                   </div>
                   <div className="rounded-xl border border-border bg-surface p-4">
                     <p className="text-label font-semibold text-muted">Order Failure Rate</p>
-                    <p className="mt-1 font-display text-heading font-800 text-amber-400">
+                    <p className="mt-1 font-display text-heading font-800 text-warning">
                       {data.orders.failureRatePercent}%
                     </p>
                   </div>
                   <div className="rounded-xl border border-border bg-surface p-4">
                     <p className="text-label font-semibold text-muted">Orders Ready for Pickup</p>
-                    <p className="mt-1 font-display text-heading font-800 text-emerald-400">
+                    <p className="mt-1 font-display text-heading font-800 text-success">
                       {data.orders.readyCount}
                     </p>
                   </div>
@@ -503,7 +503,7 @@ export default function SuperAdminOperationsPage() {
               <div className="rounded-2xl border border-border bg-surface-elevated p-6 space-y-5">
                 <div className="flex items-center justify-between">
                   <h3 className="font-display text-heading-sm font-800 text-foreground flex items-center gap-2">
-                    <span className="material-symbols-outlined text-emerald-400 text-[20px]">
+                    <span className="material-symbols-outlined text-success text-[20px]">
                       payments
                     </span>
                     Payment Operations
@@ -534,7 +534,7 @@ export default function SuperAdminOperationsPage() {
                   </div>
                   <div className="rounded-xl border border-border bg-surface p-4">
                     <p className="text-label font-semibold text-muted">Pending Payments</p>
-                    <p className="mt-1 font-display text-heading font-800 text-amber-400">
+                    <p className="mt-1 font-display text-heading font-800 text-warning">
                       {data.payments.pendingPayments}
                     </p>
                   </div>
@@ -575,8 +575,8 @@ export default function SuperAdminOperationsPage() {
                           ₹{cp.totalGmv.toLocaleString("en-IN")}
                         </td>
                         <td className="py-3 px-3 text-right">
-                          <span className="inline-flex items-center gap-1 text-emerald-400 text-label font-bold">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                          <span className="inline-flex items-center gap-1 text-success text-label font-bold">
+                            <span className="h-1.5 w-1.5 rounded-full bg-success" />
                             OPTIMAL
                           </span>
                         </td>

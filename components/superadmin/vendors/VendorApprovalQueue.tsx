@@ -16,7 +16,7 @@ export function VendorApprovalQueue({
   onViewHistory,
 }: VendorApprovalQueueProps) {
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-[#1e1f26]/90 backdrop-blur-md shadow-xl sticky top-24">
+    <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-surface-elevated/90 backdrop-blur-md shadow-xl sticky top-24">
       {/* Queue Header */}
       <div className="flex items-center justify-between border-b border-border bg-surface-sunken p-4">
         <div>
@@ -42,7 +42,7 @@ export function VendorApprovalQueue({
           requests.map((req) => (
             <div
               key={req.id}
-              className="flex flex-col gap-3 rounded-xl border border-border/50 bg-[#12131a] p-3.5 transition-colors hover:border-primary/30"
+              className="flex flex-col gap-3 rounded-xl border border-border/50 bg-surface-elevated p-3.5 transition-colors hover:border-primary/30"
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2.5">

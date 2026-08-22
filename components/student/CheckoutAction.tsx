@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getMockPlatformFee } from "@/lib/cart/calculations";
+import { useState } from "react";
+import { calculateOrderPricing } from "@/lib/pricing/order_pricing";
 import { CheckoutBillDetails } from "@/components/student/CheckoutBillDetails";
-import { DEFAULT_DELIVERY_CHARGE, type DeliveryChargeConfig } from "@/lib/orders/delivery_charge";
 
 interface CheckoutActionProps {
   subtotal: number;
+  promoCode?: string | null;
+  discount?: number;
+  discountLabel?: string;
   onPlaceOrder: () => void;
   error?: string | null;
   isSubmitting?: boolean;
@@ -14,38 +16,31 @@ interface CheckoutActionProps {
 
 export function CheckoutAction({
   subtotal,
+  promoCode,
+  discount = 0,
+  discountLabel,
   onPlaceOrder,
   error,
   isSubmitting = false,
 }: CheckoutActionProps) {
-  const [deliveryCharge, setDeliveryCharge] = useState<DeliveryChargeConfig>(
-    DEFAULT_DELIVERY_CHARGE,
-  );
   const [isBreakupOpen, setIsBreakupOpen] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/settings/delivery-charge")
-      .then((r) => r.json())
-      .then((d) => {
-        if (!cancelled && d.ok) setDeliveryCharge(d.config);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   // Display-only — the server independently recomputes and validates
-  // every one of these numbers at order creation; nothing here is
-  // trusted for payment.
-  const total = subtotal + getMockPlatformFee(subtotal) + deliveryCharge.amount;
+  // every one of these numbers (including re-validating the promo code)
+  // at order creation via the same calculateOrderPricing() function;
+  // nothing here is trusted for payment. GRABIT does not charge
+  // delivery (always ₹0).
+  const pricing = calculateOrderPricing({ subtotal, discount });
 
   return (
     <>
       <CheckoutBillDetails
-        subtotal={subtotal}
-        deliveryCharge={deliveryCharge}
+        subtotal={pricing.subtotal}
+        promoCode={promoCode}
+        discount={pricing.discount}
+        discountLabel={discountLabel}
+        platformFee={pricing.platformFee}
+        total={pricing.totalPayable}
         isOpen={isBreakupOpen}
         onClose={() => setIsBreakupOpen(false)}
       />
@@ -58,7 +53,7 @@ export function CheckoutAction({
                 Total Payable
               </span>
               <span className="font-display text-heading font-800 tabular-nums text-foreground">
-                ₹{total}
+                ₹{pricing.totalPayable.toFixed(2)}
               </span>
             </div>
             <button
@@ -77,20 +72,21 @@ export function CheckoutAction({
             type="button"
             onClick={onPlaceOrder}
             disabled={isSubmitting}
-            className="w-full rounded-xl bg-primary py-4 text-body font-800 uppercase tracking-wide text-on-primary shadow-xl shadow-primary/20 transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full rounded-xl bg-primary py-4 text-body font-800 uppercase tracking-wide text-on-primary shadow-xl shadow-primary/20 transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {isSubmitting ? "Placing Order..." : "Pay & Place Order"}
+            {isSubmitting && (
+              <span className="material-symbols-outlined animate-spin text-[20px]">
+                progress_activity
+              </span>
+            )}
+            <span>{isSubmitting ? "Processing..." : "Proceed to Pay"}</span>
           </button>
 
           {error && (
-            <p role="alert" className="text-center text-caption text-danger">
+            <p role="alert" className="text-center text-caption font-semibold text-danger">
               {error}
             </p>
           )}
-
-          <p className="text-center text-[11px] text-faint">
-            Live Order Creation — verified against Supabase database.
-          </p>
         </div>
       </div>
     </>

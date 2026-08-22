@@ -1,4 +1,4 @@
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import type {
   CampusVendorHub,
   VendorApprovalRequest,
@@ -15,10 +15,7 @@ export interface SuperAdminVendorsData {
  * Fetch and aggregate campus vendor hubs, vendor commission structures, tiers, and pending verification requests from Supabase.
  */
 export async function getSuperAdminVendorOversight(): Promise<SuperAdminVendorsData> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  const supabase = createAdminClient(url, serviceKey);
+    const supabase = getSupabaseAdminClient();
 
   // 1. Fetch campuses and canteens
   const { data: dbCampuses } = await supabase.from("campuses").select("id, name");
@@ -161,10 +158,7 @@ export async function updateLiveVendorCommission(vendorId: string, commissionPer
     throw new Error("Commission rate must be a valid percentage between 0 and 100.");
   }
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  const supabase = createAdminClient(url, serviceKey);
+    const supabase = getSupabaseAdminClient();
 
   const { data, error } = await supabase
     .from("canteens")
@@ -188,10 +182,7 @@ export async function updateLiveVendorTier(vendorId: string, tier: "STD" | "PREM
     throw new Error("Tier must be either 'STD' or 'PREM'.");
   }
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  const supabase = createAdminClient(url, serviceKey);
+    const supabase = getSupabaseAdminClient();
 
   const { data, error } = await supabase
     .from("canteens")
@@ -211,10 +202,7 @@ export async function updateLiveVendorTier(vendorId: string, tier: "STD" | "PREM
  * Approve a pending vendor verification request in vendor_approval_requests table.
  */
 export async function approveLiveVendorRequest(requestId: string, reviewerId: string) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  const supabase = createAdminClient(url, serviceKey);
+    const supabase = getSupabaseAdminClient();
 
   const { data, error } = await supabase
     .from("vendor_approval_requests")
@@ -239,10 +227,7 @@ export async function approveLiveVendorRequest(requestId: string, reviewerId: st
  * Reject a pending vendor verification request in vendor_approval_requests table.
  */
 export async function rejectLiveVendorRequest(requestId: string, reviewerId: string) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  const supabase = createAdminClient(url, serviceKey);
+    const supabase = getSupabaseAdminClient();
 
   const { data, error } = await supabase
     .from("vendor_approval_requests")

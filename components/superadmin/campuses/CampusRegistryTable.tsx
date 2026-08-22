@@ -20,7 +20,7 @@ export function CampusRegistryTable({
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-border bg-[#1e1f26]/80 backdrop-blur-md">
+    <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated/80 backdrop-blur-md">
       {/* Table Header & Download Action */}
       <div className="flex items-center justify-between border-b border-border p-5 bg-surface-sunken/40">
         <h3 className="font-display text-title font-bold text-foreground">

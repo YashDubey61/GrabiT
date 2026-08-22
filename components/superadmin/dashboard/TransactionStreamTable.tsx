@@ -12,7 +12,7 @@ export function TransactionStreamTable({
   onViewAllLogs,
 }: TransactionStreamTableProps) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-[#1e1f26]/80 backdrop-blur-md">
+    <div className="overflow-hidden rounded-2xl border border-border bg-surface-elevated/80 backdrop-blur-md">
       <div className="flex items-center justify-between border-b border-border p-5">
         <h4 className="font-display text-caption font-bold uppercase tracking-widest text-foreground">
           Transaction Stream

@@ -22,6 +22,9 @@ export interface MockCanteen {
   trending?: boolean;
   image: string;
   imageAlt: string;
+  /** Full cafeteria photo gallery (up to 5), primary image first. Falls
+   * back to a single-item array of `image` when no gallery is set. */
+  images: string[];
 }
 
 export const mockCanteenCategories: { id: MockCanteenCategory; label: string }[] = [

@@ -44,3 +44,13 @@ export function authLog(...args: unknown[]): void {
 export function authError(...args: unknown[]): void {
   console.error("[AUTH ERROR]", ...args);
 }
+
+/**
+ * For expected, user-correctable auth outcomes (wrong role for this
+ * portal, missing role assignment) — not application errors. Uses
+ * console.warn so the dev overlay/browser console doesn't flag a normal
+ * fail-closed rejection as a red error.
+ */
+export function authReject(...args: unknown[]): void {
+  console.warn("[AUTH REJECTED]", ...args);
+}

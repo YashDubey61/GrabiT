@@ -27,7 +27,7 @@ export function SuperAdminHeader({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className="flex items-center gap-1.5 rounded-xl border border-border bg-[#1e1f26] px-3.5 py-2 font-display text-caption font-bold text-foreground transition-colors hover:border-primary/40 active:scale-95"
+            className="flex items-center gap-1.5 rounded-xl border border-border bg-surface-elevated px-3.5 py-2 font-display text-caption font-bold text-foreground transition-colors hover:border-primary/40 active:scale-95"
           >
             <span className="material-symbols-outlined text-[16px] text-muted" aria-hidden="true">
               calendar_today
@@ -58,7 +58,7 @@ export function SuperAdminHeader({
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search campus, transaction, or system log..."
-          className="w-full rounded-xl border border-border bg-[#1e1f26] py-3 pl-12 pr-4 font-body text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none transition-colors"
+          className="w-full rounded-xl border border-border bg-surface-elevated py-3 pl-12 pr-4 font-body text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none transition-colors"
         />
       </div>
     </section>

@@ -1,5 +1,5 @@
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { syncAndDeduplicateOperationalAlerts } from "./superadmin_alerts";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export type ReconciliationCategory =
   | "ORDERS"
@@ -43,13 +43,6 @@ export interface ReconciliationResult {
   lastReconciledAt: string;
   categories: CategoryStats[];
   findings: ReconciliationFinding[];
-}
-
-function getSupabaseAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createAdminClient(url, serviceKey);
 }
 
 /**

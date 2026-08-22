@@ -1,61 +1,72 @@
 @import "tailwindcss";
 
 /*
-  GrabIt design tokens — "Kinetic Stealth" (Premium Black variant)
-  Source of truth: stitch_grabit_campus_canteen_os/*_premium_black/code.html
-  (all 17 locked screens are Premium Black), cross-checked against
-  kinetic_stealth/DESIGN.md.
-
-  DAY 2 CORRECTION, flagged per the "don't silently resolve contradictions"
-  rule: the Day 1 prompt specified background #121212 / foreground #E2E1EB
-  as locked values. Inspecting the actual approved Premium Black exports
-  (the specific screens being implemented) shows solid #000000 backgrounds
-  and pure #FFFFFF on-surface text — visibly different from what Day 1
-  hardcoded from a paraphrase. Since Day 2's mandate is pixel-level fidelity
-  to the approved Stitch screens, the token *values* below are corrected to
-  match the real export files; the token *system* (names, structure) is
-  unchanged. Old values kept as a comment for traceability.
-
-  Old (Day 1, uncorrected): background #121212, foreground #E2E1EB
-  Corrected (Day 2, matches actual export): background #000000, foreground #FFFFFF
+  GrabIt design tokens — premium black + orange system.
+  Source of truth: GRABIT_DESIGN.md (colors, typography, spacing, radius,
+  elevation). Migrated from the prior "Kinetic Stealth" token values to
+  match DESIGN.md exactly.
 */
 
 :root {
-  /* ---- surfaces ---- */
-  --color-background: #000000;
-  --color-surface: #0f0f0f;
-  --color-surface-elevated: #121212;
-  --color-surface-sunken: #000000;
-  --color-border: #262626;
+  /* ---- surfaces (dark) ---- */
+  --color-background: #0a0a0a;
+  --color-surface: #111111;
+  --color-surface-elevated: #171717;
+  --color-surface-pressed: #202020;
+  --color-surface-strong: #242424;
+  --color-surface-sunken: #0a0a0a;
+  --color-border: #292929;
   --color-border-subtle: #1a1a1a;
+  --color-border-strong: #3a3a3a;
+
+  /* ---- surfaces (light, used for checkout/forms/marketing) ---- */
+  --color-canvas: #ffffff;
+  --color-canvas-soft: #f5f5f5;
+  --color-canvas-muted: #eeeeee;
+  --color-canvas-warm: #fff8f2;
 
   /* ---- brand ---- */
-  --color-primary: #ff6d00;
-  --color-primary-soft: #ffb692;
-  --color-on-primary: #ffffff;
+  --color-primary: #ff7a00;
+  --color-primary-soft: #ff922b;
+  --color-accent-pressed: #e96800;
+  --color-accent-soft: #24150a;
+  --color-accent-bright: #ff922b;
+  --color-on-primary: #000000;
 
-  /* ---- text ---- */
-  --color-foreground: #ffffff;
-  --color-muted: #c9beb5;
-  --color-faint: #7a7570;
+  /* ---- text (dark surfaces) ---- */
+  --color-foreground: #f5f5f5;
+  --color-on-dark: #ffffff;
+  --color-muted: #a3a3a3;
+  --color-faint: #737373;
+
+  /* ---- text (light surfaces) ---- */
+  --color-text-dark: #111111;
+  --color-text-dark-secondary: #5c5c5c;
 
   /* ---- semantic (status), independent of brand accent ---- */
-  --color-success: #4ade80;
+  --color-success: #22c55e;
   --color-success-soft: #14251b;
-  --color-warning: #eab308;
+  --color-warning: #f59e0b;
   --color-warning-soft: #2c2314;
-  --color-danger: #ff6d6d;
+  --color-danger: #ef4444;
   --color-danger-soft: #2c1616;
+  --color-info: #3b82f6;
 
   /* ---- radius ---- */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
-  --radius-full: 999px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-pill: 999px;
+  --radius-full: 9999px;
 
-  /* ---- shadow (used sparingly — Kinetic Stealth is a dark, low-glare system) ---- */
-  --shadow-elevated: 0 8px 24px -8px rgb(0 0 0 / 0.5);
-  --shadow-glow-primary: 0 0 0 1px rgb(255 109 0 / 0.25), 0 4px 16px -4px rgb(255 109 0 / 0.35);
+  /* ---- shadow (restrained depth — DESIGN.md Elevation levels) ---- */
+  --shadow-level-1: 0 2px 10px rgb(0 0 0 / 0.12);
+  --shadow-level-2: 0 6px 24px rgb(0 0 0 / 0.18);
+  --shadow-level-3: 0 10px 36px rgb(0 0 0 / 0.24);
+  --shadow-elevated: 0 2px 10px rgb(0 0 0 / 0.12);
+  --shadow-glow-primary: 0 0 20px rgb(255 122 0 / 0.12);
 
   /* ---- motion ---- */
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
@@ -63,6 +74,24 @@
   --duration-fast: 120ms;
   --duration-standard: 240ms;
   --duration-state: 360ms; /* order-status transitions: Placed → Preparing → Ready */
+
+  /* ---- glass (restrained glassmorphism, reserved for floating/elevated layers) ----
+     Black/white alpha layers only — never a new hue. Applied selectively per
+     GRABIT_DESIGN.md's elevation rules: solid surfaces stay solid, glass is
+     for navbars, sheets, drawers, chips, floating controls. */
+  --glass-surface: rgb(255 255 255 / 0.06);
+  --glass-surface-elevated: rgb(255 255 255 / 0.10);
+  --glass-surface-strong: rgb(255 255 255 / 0.14);
+  --glass-border: rgb(255 255 255 / 0.12);
+  --glass-border-strong: rgb(255 255 255 / 0.18);
+  --glass-blur: 20px;
+  --glass-blur-sm: 12px;
+  --glass-saturate: 160%;
+  --glass-shadow: 0 8px 32px rgb(0 0 0 / 0.28);
+  --glass-glow-primary: 0 0 16px rgb(255 122 0 / 0.10);
+  /* Non-supporting-browser fallback — a solid-enough dark surface so text
+     stays readable without blur. */
+  --glass-fallback-bg: rgb(20 20 20 / 0.92);
 }
 
 @theme inline {
@@ -75,11 +104,22 @@
 
   --color-primary: var(--color-primary);
   --color-primary-soft: var(--color-primary-soft);
+  --color-accent-pressed: var(--color-accent-pressed);
+  --color-accent-soft: var(--color-accent-soft);
+  --color-accent-bright: var(--color-accent-bright);
   --color-on-primary: var(--color-on-primary);
 
   --color-foreground: var(--color-foreground);
+  --color-on-dark: var(--color-on-dark);
   --color-muted: var(--color-muted);
   --color-faint: var(--color-faint);
+
+  --color-canvas: var(--color-canvas);
+  --color-canvas-soft: var(--color-canvas-soft);
+  --color-canvas-muted: var(--color-canvas-muted);
+  --color-canvas-warm: var(--color-canvas-warm);
+  --color-text-dark: var(--color-text-dark);
+  --color-text-dark-secondary: var(--color-text-dark-secondary);
 
   --color-success: var(--color-success);
   --color-success-soft: var(--color-success-soft);
@@ -87,25 +127,41 @@
   --color-warning-soft: var(--color-warning-soft);
   --color-danger: var(--color-danger);
   --color-danger-soft: var(--color-danger-soft);
+  --color-info: var(--color-info);
 
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
   --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-2xl: var(--radius-2xl);
+  --radius-pill: var(--radius-pill);
   --radius-full: var(--radius-full);
 
-  --font-display: var(--font-montserrat);
-  --font-body: var(--font-sora);
+  --font-display: var(--font-inter);
+  --font-body: var(--font-inter);
 
   --ease-standard: var(--ease-standard);
   --ease-emphasized: var(--ease-emphasized);
 
-  /* type scale — Apple-restraint discipline: a fixed scale, no ad hoc sizes */
-  --text-display: 2.25rem;   /* 36px — screen-level headlines */
-  --text-title: 1.5rem;      /* 24px — section titles */
-  --text-heading: 1.125rem;  /* 18px — card/list headings */
-  --text-body: 0.9375rem;    /* 15px — running text */
-  --text-caption: 0.8125rem; /* 13px — meta, timestamps */
-  --text-label: 0.6875rem;   /* 11px — uppercase eyebrows/labels */
+  /* type scale — DESIGN.md hierarchy, sentence case, restrained weights */
+  --text-display-xxl: 3.25rem;  /* 52px/700/60 — marketing hero */
+  --text-display-xl: 2.5rem;    /* 40px/700/48 — major page headlines */
+  --text-display-lg: 2rem;      /* 32px/700/40 — major section/promo */
+  --text-display-md: 1.5rem;    /* 24px/700/32 — card/module titles */
+  --text-display-sm: 1.25rem;   /* 20px/700/28 — subsection/card heading */
+  --text-body-lg: 1.125rem;     /* 18px/500/26 — lead/supporting copy */
+  --text-body-md: 1rem;         /* 16px/400/24 — default body */
+  --text-body-sm: 0.875rem;     /* 14px/400/20 — metadata/captions */
+  --text-caption: 0.75rem;      /* 12px/400/18 — fine print */
+  --text-numeric-xl: 2.25rem;   /* 36px/700/40 — wallet totals, points, prices */
+  --text-numeric-lg: 1.75rem;   /* 28px/700/34 — reward/value numbers */
+
+  /* legacy aliases kept for existing screens — map onto the DESIGN.md scale */
+  --text-display: var(--text-display-xl);
+  --text-title: var(--text-display-md);
+  --text-heading: var(--text-display-sm);
+  --text-body: var(--text-body-md);
+  --text-label: var(--text-body-sm);
 }
 
 html {
@@ -140,4 +196,236 @@ h1, h2, h3, h4 {
   outline: 2px solid var(--color-primary-soft);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
+}
+
+/* Material Icons / Symbols Outlined font styling fallback */
+.material-icons,
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined', sans-serif;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* =========================================================================
+   Glass system — restrained glassmorphism for floating/elevated layers only.
+   Solid black/white alpha over the #0A0A0A foundation, never a new hue.
+   Reserved for: navbars, bottom nav, drawers, modals/sheets, chips, floating
+   search/filter controls, floating action buttons, reward cards. Primary
+   content surfaces (lists, tables, dense dashboard panels) stay solid.
+   ========================================================================= */
+
+.glass-surface,
+.glass-card,
+.glass-navbar,
+.glass-bottom-nav,
+.glass-drawer,
+.glass-modal,
+.glass-chip,
+.glass-fab {
+  background: var(--glass-fallback-bg);
+  border: 1px solid var(--glass-border);
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-surface,
+  .glass-card,
+  .glass-navbar,
+  .glass-bottom-nav,
+  .glass-drawer,
+  .glass-modal,
+  .glass-chip,
+  .glass-fab {
+    background: var(--glass-surface);
+    -webkit-backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur));
+    backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur));
+  }
+}
+
+/* Base translucent surface — generic elevated panel. */
+.glass-surface {
+  border-radius: var(--radius-xl);
+  box-shadow: var(--glass-shadow);
+}
+
+/* Reward / featured cards — same glass base, slightly stronger tint since
+   they sit over imagery/gradients and need to stay legible. */
+.glass-card {
+  border-radius: var(--radius-xl);
+  background: var(--glass-surface-elevated);
+  box-shadow: var(--glass-shadow);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-card {
+    -webkit-backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur));
+    backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur));
+  }
+}
+
+/* Sticky/fixed top navigation. */
+.glass-navbar {
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+}
+
+/* Floating bottom tab bar — a fully-rounded pill that sits clear of the
+   screen edges (DESIGN.md pill system), not a full-width bar. */
+.glass-bottom-nav {
+  border-radius: var(--radius-pill);
+  box-shadow: var(--glass-shadow);
+}
+
+/* Side drawers / bottom sheets. */
+.glass-drawer {
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  background: var(--glass-surface-strong);
+  box-shadow: var(--glass-shadow);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-drawer {
+    -webkit-backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur));
+    backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur));
+  }
+}
+
+/* Modals / dialogs — centered, full radius, strongest tint (short-lived,
+   focused reading — a bit more opacity keeps body text crisp). */
+.glass-modal {
+  border-radius: var(--radius-2xl);
+  background: var(--glass-surface-strong);
+  border-color: var(--glass-border-strong);
+  box-shadow: var(--glass-shadow);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-modal {
+    -webkit-backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur));
+    backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur));
+  }
+}
+
+/* Category / filter chips — pill radius per DESIGN.md, compact blur (perf). */
+.glass-chip {
+  border-radius: var(--radius-pill);
+  transition: background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-chip {
+    -webkit-backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur-sm));
+    backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur-sm));
+  }
+}
+.glass-chip:hover {
+  background: var(--glass-surface-elevated);
+  border-color: var(--glass-border-strong);
+}
+.glass-chip:active {
+  background: var(--glass-surface-strong);
+}
+.glass-chip[aria-current="true"],
+.glass-chip[aria-selected="true"],
+.glass-chip[aria-pressed="true"],
+.glass-chip.is-selected {
+  background: var(--color-accent-soft);
+  border-color: rgb(255 122 0 / 0.35);
+  color: var(--color-primary);
+  box-shadow: var(--glass-glow-primary);
+}
+.glass-chip:disabled,
+.glass-chip[aria-disabled="true"] {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Text inputs on glass surfaces (e.g. floating search bars). Kept close to
+   opaque so placeholder/value text never fights the blurred background. */
+.glass-input {
+  border-radius: var(--radius-md);
+  background: var(--glass-surface-elevated);
+  border: 1px solid var(--glass-border);
+  transition: border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-input {
+    -webkit-backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur-sm));
+    backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur-sm));
+  }
+}
+.glass-input:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgb(255 122 0 / 0.25);
+}
+.glass-input:has(:disabled) {
+  opacity: 0.4;
+}
+
+/* Floating action button — circular, strongest orange presence but still a
+   restrained glow, never a solid neon ring. */
+.glass-fab {
+  border-radius: var(--radius-full);
+  background: var(--glass-surface-elevated);
+  box-shadow: var(--glass-shadow), var(--glass-glow-primary);
+  transition: transform var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-fab {
+    -webkit-backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur-sm));
+    backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur-sm));
+  }
+}
+.glass-fab:hover {
+  background: var(--glass-surface-strong);
+}
+.glass-fab:active {
+  transform: scale(0.94);
+}
+.glass-fab:focus-visible {
+  outline: 2px solid var(--color-primary-soft);
+  outline-offset: 2px;
+}
+.glass-fab:disabled {
+  opacity: 0.4;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+/* Lower-cost blur on small/low-powered viewports — mobile GPUs pay a real
+   compositing cost for large blurred layers, so trim the radius rather than
+   drop the effect outright. */
+@media (max-width: 640px) {
+  :root {
+    --glass-blur: 14px;
+    --glass-blur-sm: 8px;
+  }
+}
+
+/* Respect reduced-transparency preference: fall back to the solid tone. */
+@media (prefers-reduced-transparency: reduce) {
+  .glass-surface,
+  .glass-card,
+  .glass-navbar,
+  .glass-bottom-nav,
+  .glass-drawer,
+  .glass-modal,
+  .glass-chip,
+  .glass-input,
+  .glass-fab {
+    background: var(--glass-fallback-bg) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
 }

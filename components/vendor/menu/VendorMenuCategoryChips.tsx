@@ -28,7 +28,7 @@ export function VendorMenuCategoryChips({
             className={`shrink-0 rounded-full px-5 py-2 font-display text-caption font-semibold transition-all duration-150 active:scale-95 ${
               isActive
                 ? "bg-primary text-on-primary shadow-glow-primary"
-                : "border border-border bg-[#1e1f26] text-muted hover:border-white/20 hover:text-foreground"
+                : "border border-border bg-surface-elevated text-muted hover:border-white/20 hover:text-foreground"
             }`}
           >
             {cat}

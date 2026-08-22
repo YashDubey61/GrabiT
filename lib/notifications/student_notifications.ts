@@ -1,5 +1,5 @@
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { createClient as createServerClient } from "@/lib/supabase/server";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export type StudentNotificationType =
   | "ORDER_PLACED"
@@ -16,7 +16,16 @@ export type StudentNotificationType =
   | "GOLD_ACTIVATED"
   | "GOLD_EXPIRING"
   | "RECOMMENDATION_AVAILABLE"
-  | "CAMPUS_ANNOUNCEMENT";
+  | "CAMPUS_ANNOUNCEMENT"
+  | "POINTS_EARNED"
+  | "POINTS_REDEEMED"
+  | "POINTS_RECEIVED"
+  | "POINTS_SENT"
+  | "FOOD_GIFT_RECEIVED"
+  | "REWARD_GIFT_RECEIVED"
+  | "LEADERBOARD_MILESTONE"
+  | "GIFT_BONUS_EARNED"
+  | "REWARD_CODE_USED";
 
 export interface StudentNotificationItem {
   id: string;
@@ -25,7 +34,7 @@ export interface StudentNotificationItem {
   title: string;
   message: string;
   severity: "INFO" | "SUCCESS" | "WARNING" | "URGENT";
-  category: "ORDERS" | "PAYMENTS" | "WALLET" | "GOLD" | "RECOMMENDATIONS" | "GENERAL";
+  category: "ORDERS" | "PAYMENTS" | "WALLET" | "GOLD" | "RECOMMENDATIONS" | "GENERAL" | "REWARDS";
   relatedOrderId?: string | null;
   relatedMenuItemId?: string | null;
   relatedSubscriptionId?: string | null;
@@ -51,19 +60,12 @@ export interface CreateStudentNotificationParams {
   title: string;
   message: string;
   severity?: "INFO" | "SUCCESS" | "WARNING" | "URGENT";
-  category: "ORDERS" | "PAYMENTS" | "WALLET" | "GOLD" | "RECOMMENDATIONS" | "GENERAL";
+  category: "ORDERS" | "PAYMENTS" | "WALLET" | "GOLD" | "RECOMMENDATIONS" | "GENERAL" | "REWARDS";
   relatedOrderId?: string | null;
   relatedMenuItemId?: string | null;
   relatedSubscriptionId?: string | null;
   actionUrl?: string | null;
   dedupeKey?: string | null;
-}
-
-function getSupabaseAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createAdminClient(url, serviceKey);
 }
 
 /**
@@ -187,7 +189,7 @@ export async function getStudentNotifications(): Promise<{
       title: n.title,
       message: n.message,
       severity: (n.severity as "INFO" | "SUCCESS" | "WARNING" | "URGENT") || "INFO",
-      category: (n.category as "ORDERS" | "PAYMENTS" | "WALLET" | "GOLD" | "RECOMMENDATIONS" | "GENERAL") || "GENERAL",
+      category: (n.category as "ORDERS" | "PAYMENTS" | "WALLET" | "GOLD" | "RECOMMENDATIONS" | "GENERAL" | "REWARDS") || "GENERAL",
       relatedOrderId: n.related_order_id,
       relatedMenuItemId: n.related_menu_item_id,
       relatedSubscriptionId: n.related_subscription_id,

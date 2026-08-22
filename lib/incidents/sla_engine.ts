@@ -1,4 +1,3 @@
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import {
   OperationalIncident,
   IncidentStatus,
@@ -6,6 +5,7 @@ import {
   getSuperAdminIncidents,
 } from "./incident_service";
 import { createOperationalNotification } from "@/lib/notifications/operational_notifications";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export type EscalationLevel = 0 | 1 | 2 | 3; // L0: Created, L1: At Risk, L2: Breached, L3: Critical
 
@@ -40,13 +40,6 @@ export interface OnCallTelemetrySummary {
   responseAnalytics: ResponseTimeAnalytics;
   incidents: OperationalIncident[];
   escalationTimeline: IncidentEscalationRecord[];
-}
-
-function getSupabaseAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createAdminClient(url, serviceKey);
 }
 
 /**

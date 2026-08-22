@@ -1,5 +1,5 @@
 import { createClient as createServerClient } from "@/lib/supabase/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export interface VendorContext {
   userId: string;
@@ -25,9 +25,7 @@ export async function getAuthenticatedVendorContext(): Promise<VendorContext | n
       return null;
     }
 
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const supabaseAdmin = createAdminClient(url, key);
+    const supabaseAdmin = getSupabaseAdminClient();
 
     // Query public.users for vendor profile
     const { data: profiles, error: profileErr } = await supabaseAdmin

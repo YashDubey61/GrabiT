@@ -210,7 +210,7 @@ export default function SuperAdminNotificationsPage() {
           </div>
         ) : alerts.length === 0 ? (
           <div className="rounded-2xl border border-border bg-surface-elevated p-12 text-center space-y-3">
-            <span className="material-symbols-outlined text-4xl text-emerald-400">
+            <span className="material-symbols-outlined text-4xl text-success">
               check_circle
             </span>
             <h3 className="font-display text-heading-sm font-bold text-foreground">
@@ -244,8 +244,8 @@ export default function SuperAdminNotificationsPage() {
                       isCritical
                         ? "border-destructive/40 bg-destructive/10 text-foreground"
                         : isWarning
-                        ? "border-amber-500/40 bg-amber-500/10 text-foreground"
-                        : "border-emerald-500/30 bg-emerald-500/5 text-foreground"
+                        ? "border-warning/40 bg-warning/10 text-foreground"
+                        : "border-success/30 bg-success/5 text-foreground"
                     }`}
                   >
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -255,8 +255,8 @@ export default function SuperAdminNotificationsPage() {
                             isCritical
                               ? "text-destructive"
                               : isWarning
-                              ? "text-amber-400"
-                              : "text-emerald-400"
+                              ? "text-warning"
+                              : "text-success"
                           }`}
                         >
                           {isCritical ? "error" : isWarning ? "warning" : "info"}
@@ -272,8 +272,8 @@ export default function SuperAdminNotificationsPage() {
                                 isCritical
                                   ? "bg-destructive/20 text-destructive border border-destructive/40"
                                   : isWarning
-                                  ? "bg-amber-500/20 text-amber-400 border border-amber-500/40"
-                                  : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
+                                  ? "bg-warning/20 text-warning border border-warning/40"
+                                  : "bg-success/20 text-success border border-success/40"
                               }`}
                             >
                               {alertItem.severity}
@@ -283,10 +283,10 @@ export default function SuperAdminNotificationsPage() {
                             <span
                               className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase ${
                                 isOpen
-                                  ? "bg-blue-500/20 text-blue-400 border border-blue-500/40"
+                                  ? "bg-info/20 text-info border border-info/40"
                                   : isAcknowledged
-                                  ? "bg-amber-500/20 text-amber-400 border border-amber-500/40"
-                                  : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
+                                  ? "bg-warning/20 text-warning border border-warning/40"
+                                  : "bg-success/20 text-success border border-success/40"
                               }`}
                             >
                               {alertItem.status}
@@ -303,12 +303,12 @@ export default function SuperAdminNotificationsPage() {
                               Created: {new Date(alertItem.created_at).toLocaleString("en-IN")}
                             </span>
                             {alertItem.acknowledged_at && (
-                              <span className="text-amber-400">
+                              <span className="text-warning">
                                 Acknowledged: {new Date(alertItem.acknowledged_at).toLocaleTimeString("en-IN")}
                               </span>
                             )}
                             {alertItem.resolved_at && (
-                              <span className="text-emerald-400">
+                              <span className="text-success">
                                 Resolved: {new Date(alertItem.resolved_at).toLocaleTimeString("en-IN")}
                               </span>
                             )}
@@ -322,7 +322,7 @@ export default function SuperAdminNotificationsPage() {
                           <button
                             onClick={() => handleAcknowledge(alertItem.id)}
                             disabled={isBusy}
-                            className="rounded-xl border border-amber-500/50 bg-amber-500/10 px-3 py-1.5 text-label font-bold text-amber-300 hover:bg-amber-500/20 transition-colors disabled:opacity-50"
+                            className="rounded-xl border border-warning/50 bg-warning/10 px-3 py-1.5 text-label font-bold text-warning hover:bg-warning/20 transition-colors disabled:opacity-50"
                           >
                             Acknowledge
                           </button>
@@ -331,7 +331,7 @@ export default function SuperAdminNotificationsPage() {
                           <button
                             onClick={() => handleResolve(alertItem.id)}
                             disabled={isBusy}
-                            className="rounded-xl border border-emerald-500/50 bg-emerald-500/10 px-3 py-1.5 text-label font-bold text-emerald-300 hover:bg-emerald-500/20 transition-colors disabled:opacity-50"
+                            className="rounded-xl border border-success/50 bg-success/10 px-3 py-1.5 text-label font-bold text-success hover:bg-success/20 transition-colors disabled:opacity-50"
                           >
                             Mark Resolved
                           </button>

@@ -46,7 +46,7 @@ export function VendorMenuHeader({
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Quick find a dish by name..."
-          className="w-full rounded-xl border border-border bg-[#1e1f26] py-3.5 pl-12 pr-4 font-body text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none transition-colors"
+          className="w-full rounded-xl border border-border bg-surface-elevated py-3.5 pl-12 pr-4 font-body text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none transition-colors"
         />
       </div>
     </section>

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { updateUserPassword } from "@/lib/supabase/auth";
+import { GrabItLogo } from "@/components/shared/GrabItLogo";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -46,17 +47,10 @@ export default function ResetPasswordPage() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-4 py-12 text-foreground">
       {/* Brand Header */}
-      <div className="mb-8 text-center">
-        <Link href="/" className="inline-flex items-center gap-2">
-          <span className="material-symbols-outlined text-[36px] text-primary" aria-hidden="true">
-            local_fire_department
-          </span>
-          <span className="font-display text-3xl font-extrabold tracking-tight text-primary">
-            GrabIt
-          </span>
-        </Link>
+      <div className="mb-8 flex flex-col items-center text-center">
+        <GrabItLogo href="/" heightClassName="h-16 sm:h-20" priority />
         <p className="mt-2 font-body text-body-sm text-muted">
-          Campus Canteen OS — Secure Password Recovery
+          Secure Password Recovery
         </p>
       </div>
 

@@ -149,8 +149,8 @@ export default function SuperAdminReconciliationPage() {
                 data.overallStatus === "CRITICAL"
                   ? "border-destructive/40 bg-destructive/10 text-foreground"
                   : data.overallStatus === "WARNING"
-                  ? "border-amber-500/40 bg-amber-500/10 text-foreground"
-                  : "border-emerald-500/30 bg-emerald-500/5 text-foreground"
+                  ? "border-warning/40 bg-warning/10 text-foreground"
+                  : "border-success/30 bg-success/5 text-foreground"
               }`}
             >
               <div className="flex items-center gap-4">
@@ -159,8 +159,8 @@ export default function SuperAdminReconciliationPage() {
                     data.overallStatus === "CRITICAL"
                       ? "text-destructive"
                       : data.overallStatus === "WARNING"
-                      ? "text-amber-400"
-                      : "text-emerald-400"
+                      ? "text-warning"
+                      : "text-success"
                   }`}
                 >
                   {data.overallStatus === "CRITICAL"
@@ -200,8 +200,8 @@ export default function SuperAdminReconciliationPage() {
                         cat.criticals > 0
                           ? "bg-destructive/20 text-destructive"
                           : cat.warnings > 0
-                          ? "bg-amber-500/20 text-amber-400"
-                          : "bg-emerald-500/20 text-emerald-400"
+                          ? "bg-warning/20 text-warning"
+                          : "bg-success/20 text-success"
                       }`}
                     >
                       {cat.criticals > 0
@@ -220,7 +220,7 @@ export default function SuperAdminReconciliationPage() {
                   </div>
 
                   <div className="flex items-center justify-between text-label text-muted pt-2 border-t border-border">
-                    <span>Warnings: <strong className="text-amber-400">{cat.warnings}</strong></span>
+                    <span>Warnings: <strong className="text-warning">{cat.warnings}</strong></span>
                     <span>Critical: <strong className="text-destructive">{cat.criticals}</strong></span>
                   </div>
                 </div>
@@ -297,15 +297,15 @@ export default function SuperAdminReconciliationPage() {
                                 isCritical
                                   ? "bg-destructive/20 text-destructive"
                                   : isWarning
-                                  ? "bg-amber-500/20 text-amber-400"
-                                  : "bg-emerald-500/20 text-emerald-400"
+                                  ? "bg-warning/20 text-warning"
+                                  : "bg-success/20 text-success"
                               }`}
                             >
                               {f.severity}
                             </span>
                           </td>
-                          <td className="py-3.5 px-3 text-label text-emerald-400">{f.expectedValue}</td>
-                          <td className="py-3.5 px-3 text-label text-amber-400">{f.actualValue}</td>
+                          <td className="py-3.5 px-3 text-label text-success">{f.expectedValue}</td>
+                          <td className="py-3.5 px-3 text-label text-warning">{f.actualValue}</td>
                           <td className="py-3.5 px-3 text-label text-muted max-w-xs truncate">
                             {f.description}
                           </td>

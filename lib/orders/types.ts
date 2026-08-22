@@ -39,6 +39,7 @@ export interface Order {
   orderNumber: string;
   canteenId: string;
   canteenName: string;
+  vendorPhone?: string;
   /** Always null until real auth exists (TRD §8: OTP-gated, not implemented yet). */
   studentId: string | null;
   slot: PickupSlot;

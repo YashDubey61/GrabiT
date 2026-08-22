@@ -17,7 +17,7 @@ export function VendorAnalyticsQuickStats({
   return (
     <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
       {/* Card 1: Today's Sales */}
-      <div className="flex flex-col gap-2 rounded-2xl border border-border bg-[#1e1f26]/80 p-4 backdrop-blur-md">
+      <div className="flex flex-col gap-2 rounded-2xl border border-border bg-surface-elevated p-4 backdrop-blur-md">
         <span className="font-display text-caption font-bold uppercase tracking-wider text-faint">
           Today&apos;s Sales
         </span>
@@ -35,7 +35,7 @@ export function VendorAnalyticsQuickStats({
       </div>
 
       {/* Card 2: Total Orders */}
-      <div className="flex flex-col gap-2 rounded-2xl border border-border bg-[#1e1f26]/80 p-4 backdrop-blur-md">
+      <div className="flex flex-col gap-2 rounded-2xl border border-border bg-surface-elevated p-4 backdrop-blur-md">
         <span className="font-display text-caption font-bold uppercase tracking-wider text-faint">
           Total Orders
         </span>
@@ -56,7 +56,7 @@ export function VendorAnalyticsQuickStats({
       </div>
 
       {/* Card 3: Average Prep Time */}
-      <div className="flex flex-col gap-2 rounded-2xl border border-border bg-[#1e1f26]/80 p-4 backdrop-blur-md">
+      <div className="flex flex-col gap-2 rounded-2xl border border-border bg-surface-elevated p-4 backdrop-blur-md">
         <span className="font-display text-caption font-bold uppercase tracking-wider text-faint">
           Average Prep Time
         </span>

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { verifyRazorpayWebhookSignature, GOLD_PLANS, type GoldPlanId } from "@/lib/payments/razorpay";
 
 export async function POST(request: Request) {
@@ -36,10 +36,7 @@ export async function POST(request: Request) {
       `evt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 
     // 4. Initialize Supabase Admin Client
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const serviceKey =
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const supabaseAdmin = createAdminClient(url, serviceKey);
+    const supabaseAdmin = getSupabaseAdminClient();
 
     // 5. Idempotency Check: Verify if eventId has already been processed
     const { data: existingEvents } = await supabaseAdmin

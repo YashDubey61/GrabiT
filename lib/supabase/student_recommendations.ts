@@ -1,5 +1,6 @@
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import { resolveImageUrl } from "@/lib/utils/image";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export type RecommendationCategory =
   | "ORDER_AGAIN"
@@ -22,6 +23,7 @@ export interface RecommendationItem {
   price: number; // Current menu price (menu_items.price) for display
   isAvailable: boolean;
   itemCategory: string;
+  imageUrl: string;
 }
 
 export interface StudentRecommendationsPayload {
@@ -32,14 +34,8 @@ export interface StudentRecommendationsPayload {
   updatedAt: string;
 }
 
-function getSupabaseAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createAdminClient(url, serviceKey);
-}
-
-function getTimeBucket(): "BREAKFAST" | "LUNCH" | "SNACK" | "DINNER" | "LATE_NIGHT" {
+function getTimeBucket():
+  "BREAKFAST" | "LUNCH" | "SNACK" | "DINNER" | "LATE_NIGHT" {
   const hour = new Date().getHours();
   if (hour >= 7 && hour < 11) return "BREAKFAST";
   if (hour >= 11 && hour < 15) return "LUNCH";
@@ -67,14 +63,25 @@ export async function getStudentRecommendations(): Promise<StudentRecommendation
   // 2. Fetch all current menu items to get current prices and availability
   const { data: dbMenuItems } = await adminSupabase
     .from("menu_items")
-    .select("id, canteen_id, name, category, price, availability, canteens(id, name, campus_id, campuses(id, name))");
+    .select(
+      "id, canteen_id, name, category, price, availability, image_url, canteens(id, name, campus_id, campuses(id, name))",
+    );
 
   const menuItemsList = dbMenuItems ?? [];
 
   // Filter ONLY available items (Availability Filtering)
   const availableItemsMap = new Map<
     string,
-    { id: string; canteenId: string; name: string; category: string; price: number; canteenName: string; campusName: string }
+    {
+      id: string;
+      canteenId: string;
+      name: string;
+      category: string;
+      price: number;
+      canteenName: string;
+      campusName: string;
+      imageUrl: string;
+    }
   >();
 
   menuItemsList.forEach((m) => {
@@ -89,6 +96,7 @@ export async function getStudentRecommendations(): Promise<StudentRecommendation
         price: Number(m.price) || 0,
         canteenName: canteen?.name || "Campus Canteen",
         campusName: canteen?.campuses?.name || "Campus",
+        imageUrl: resolveImageUrl(m.image_url, "dish"),
       });
     }
   });
@@ -115,10 +123,16 @@ export async function getStudentRecommendations(): Promise<StudentRecommendation
         .select("menu_item_id, quantity, created_at")
         .in("order_id", completedOrderIds);
 
-      const itemFrequencyMap = new Map<string, { count: number; lastOrdered: string }>();
+      const itemFrequencyMap = new Map<
+        string,
+        { count: number; lastOrdered: string }
+      >();
 
       (studentItems ?? []).forEach((si) => {
-        const existing = itemFrequencyMap.get(si.menu_item_id) ?? { count: 0, lastOrdered: si.created_at || new Date().toISOString() };
+        const existing = itemFrequencyMap.get(si.menu_item_id) ?? {
+          count: 0,
+          lastOrdered: si.created_at || new Date().toISOString(),
+        };
         existing.count += Number(si.quantity) || 1;
         if (new Date(si.created_at) > new Date(existing.lastOrdered)) {
           existing.lastOrdered = si.created_at;
@@ -134,7 +148,7 @@ export async function getStudentRecommendations(): Promise<StudentRecommendation
           if (item) {
             // Formula: frequencyScore * 0.45 + recencyScore * 0.35 + completionScore * 0.20
             const freqScore = Math.min(100, stats.count * 25);
-            const score = Math.round(freqScore * 0.45 + 90 * 0.35 + 100 * 0.20);
+            const score = Math.round(freqScore * 0.45 + 90 * 0.35 + 100 * 0.2);
             campusName = item.campusName;
             isPersonalized = true;
 
@@ -149,6 +163,7 @@ export async function getStudentRecommendations(): Promise<StudentRecommendation
               price: item.price, // Current menu price (menu_items.price)
               isAvailable: true,
               itemCategory: item.category,
+              imageUrl: item.imageUrl,
             });
           }
         });
@@ -165,11 +180,15 @@ export async function getStudentRecommendations(): Promise<StudentRecommendation
   const globalPopularityMap = new Map<string, number>();
   (recentOrderItems ?? []).forEach((oi) => {
     const current = globalPopularityMap.get(oi.menu_item_id) ?? 0;
-    globalPopularityMap.set(oi.menu_item_id, current + (Number(oi.quantity) || 1));
+    globalPopularityMap.set(
+      oi.menu_item_id,
+      current + (Number(oi.quantity) || 1),
+    );
   });
 
-  const popularItems = Array.from(globalPopularityMap.entries())
-    .sort((a, b) => b[1] - a[1]);
+  const popularItems = Array.from(globalPopularityMap.entries()).sort(
+    (a, b) => b[1] - a[1],
+  );
 
   // Add Popular at Campus items
   popularItems.forEach(([itemId, qty]) => {
@@ -186,6 +205,7 @@ export async function getStudentRecommendations(): Promise<StudentRecommendation
         price: item.price,
         isAvailable: true,
         itemCategory: item.category,
+        imageUrl: item.imageUrl,
       });
     }
   });
@@ -193,7 +213,12 @@ export async function getStudentRecommendations(): Promise<StudentRecommendation
   // 5. TRENDING NOW ENGINE (Short-window demand velocity)
   popularItems.slice(0, 3).forEach(([itemId, qty]) => {
     const item = availableItemsMap.get(itemId);
-    if (item && !recommendationList.some((r) => r.itemId === item.id && r.category === "TRENDING_NOW")) {
+    if (
+      item &&
+      !recommendationList.some(
+        (r) => r.itemId === item.id && r.category === "TRENDING_NOW",
+      )
+    ) {
       recommendationList.push({
         itemId: item.id,
         title: item.name,
@@ -205,6 +230,7 @@ export async function getStudentRecommendations(): Promise<StudentRecommendation
         price: item.price,
         isAvailable: true,
         itemCategory: item.category,
+        imageUrl: item.imageUrl,
       });
     }
   });
@@ -212,10 +238,33 @@ export async function getStudentRecommendations(): Promise<StudentRecommendation
   // 6. TIME-OF-DAY ENGINE
   availableItemsMap.forEach((item) => {
     let matchesTime = false;
-    if (timeBucket === "BREAKFAST" && (item.category.toLowerCase().includes("snack") || item.name.toLowerCase().includes("tea") || item.name.toLowerCase().includes("dosa"))) matchesTime = true;
-    if (timeBucket === "LUNCH" && (item.category.toLowerCase().includes("meal") || item.name.toLowerCase().includes("thali") || item.name.toLowerCase().includes("combo"))) matchesTime = true;
-    if (timeBucket === "SNACK" && (item.category.toLowerCase().includes("beverage") || item.name.toLowerCase().includes("burger") || item.name.toLowerCase().includes("coffee"))) matchesTime = true;
-    if (timeBucket === "DINNER" && (item.category.toLowerCase().includes("meal") || item.name.toLowerCase().includes("paneer"))) matchesTime = true;
+    if (
+      timeBucket === "BREAKFAST" &&
+      (item.category.toLowerCase().includes("snack") ||
+        item.name.toLowerCase().includes("tea") ||
+        item.name.toLowerCase().includes("dosa"))
+    )
+      matchesTime = true;
+    if (
+      timeBucket === "LUNCH" &&
+      (item.category.toLowerCase().includes("meal") ||
+        item.name.toLowerCase().includes("thali") ||
+        item.name.toLowerCase().includes("combo"))
+    )
+      matchesTime = true;
+    if (
+      timeBucket === "SNACK" &&
+      (item.category.toLowerCase().includes("beverage") ||
+        item.name.toLowerCase().includes("burger") ||
+        item.name.toLowerCase().includes("coffee"))
+    )
+      matchesTime = true;
+    if (
+      timeBucket === "DINNER" &&
+      (item.category.toLowerCase().includes("meal") ||
+        item.name.toLowerCase().includes("paneer"))
+    )
+      matchesTime = true;
 
     if (matchesTime && !recommendationList.some((r) => r.itemId === item.id)) {
       recommendationList.push({
@@ -229,6 +278,7 @@ export async function getStudentRecommendations(): Promise<StudentRecommendation
         price: item.price,
         isAvailable: true,
         itemCategory: item.category,
+        imageUrl: item.imageUrl,
       });
     }
   });
@@ -247,6 +297,7 @@ export async function getStudentRecommendations(): Promise<StudentRecommendation
         price: item.price,
         isAvailable: true,
         itemCategory: item.category,
+        imageUrl: item.imageUrl,
       });
     });
   }

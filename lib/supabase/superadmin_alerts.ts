@@ -1,5 +1,5 @@
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { getSuperAdminOperationsMetrics } from "./superadmin_operations";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export type AlertStatus = "OPEN" | "ACKNOWLEDGED" | "RESOLVED";
 export type AlertSeverity = "INFO" | "WARNING" | "CRITICAL";
@@ -18,13 +18,6 @@ export interface PersistentOperationalAlert {
   acknowledged_by?: string | null;
   resolved_at?: string | null;
   resolved_by?: string | null;
-}
-
-function getSupabaseAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createAdminClient(url, serviceKey);
 }
 
 /**

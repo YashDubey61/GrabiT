@@ -1,5 +1,5 @@
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { createOrUpdateIncident } from "@/lib/incidents/incident_service";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export interface FinancialCheckItem {
   id: string;
@@ -17,13 +17,6 @@ export interface FinancialRecoveryCheckSummary {
   failedChecks: number;
   checks: FinancialCheckItem[];
   timestamp: string;
-}
-
-function getSupabaseAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createAdminClient(url, serviceKey);
 }
 
 /**

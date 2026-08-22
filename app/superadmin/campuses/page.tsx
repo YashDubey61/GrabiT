@@ -1,189 +1,303 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import type { SuperAdminCampus, CampusActivityFeedItem } from "@/lib/mock/superadmin";
-import { CampusHeader } from "@/components/superadmin/campuses/CampusHeader";
-import { CampusStatsGrid } from "@/components/superadmin/campuses/CampusStatsGrid";
-import { CampusRegistryTable } from "@/components/superadmin/campuses/CampusRegistryTable";
+import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
+import { CampusOverviewCards } from "@/components/superadmin/campuses/CampusOverviewCards";
+import { CampusFilterBar } from "@/components/superadmin/campuses/CampusFilterBar";
+import { CampusComparisonModal } from "@/components/superadmin/campuses/CampusComparisonModal";
 import { CampusManageModal } from "@/components/superadmin/campuses/CampusManageModal";
-import { CampusInsightsSection } from "@/components/superadmin/campuses/CampusInsightsSection";
+import type {
+  CampusDirectoryItem,
+  CampusOverviewStats,
+} from "@/lib/supabase/superadmin_campuses";
 
 export default function SuperAdminCampusesPage() {
-  // No hardcoded initial data — starts empty, populated exclusively from
-  // GET /api/superadmin/campuses (Supabase-backed). isLoading gates the
-  // registry table so it never flashes a zero-campus empty state before
-  // the first fetch resolves.
-  const [campuses, setCampuses] = useState<SuperAdminCampus[]>([]);
-  const [stats, setStats] = useState({
-    totalCampusesCount: 0,
-    totalVendorsCount: 0,
-    dailyVolume: "0 orders",
-    networkHealth: "—",
-  });
-  const [activities, setActivities] = useState<CampusActivityFeedItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const [searchQuery, setSearchQuery] = useState("");
+  const [stats, setStats] = useState<CampusOverviewStats>({
+    totalCampuses: 0,
+    activeCampuses: 0,
+    inactiveCampuses: 0,
+    totalStudents: 0,
+    totalVendors: 0,
+    activeVendors: 0,
+    todaysOrders: 0,
+    todaysGmv: 0,
+  });
+
+  const [campuses, setCampuses] = useState<CampusDirectoryItem[]>([]);
+
+  // Search & Filter State
+  const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCampus, setEditingCampus] = useState<SuperAdminCampus | null>(
-    null,
-  );
-  const [notification, setNotification] = useState<string | null>(null);
-
-  const showNotification = (msg: string) => {
-    setNotification(msg);
-    setTimeout(() => setNotification(null), 3000);
-  };
+  // Modals
+  const [isCompareOpen, setIsCompareOpen] = useState(false);
+  const [isManageModalOpen, setIsManageModalOpen] = useState(false);
 
   const loadData = useCallback(async () => {
-    setIsLoading(true);
     try {
-      const url = `/api/superadmin/campuses?q=${encodeURIComponent(
-        searchQuery,
-      )}&status=${encodeURIComponent(statusFilter)}`;
-      const res = await fetch(url);
-      const result = await res.json();
+      setLoading(true);
+      setErrorMsg(null);
 
-      if (result.ok && result.data) {
-        if (result.data.campuses) setCampuses(result.data.campuses);
-        if (result.data.stats) setStats(result.data.stats);
-        if (result.data.activities) setActivities(result.data.activities);
+      const params = new URLSearchParams();
+      if (search.trim()) params.set("q", search.trim());
+      if (statusFilter !== "ALL") params.set("status", statusFilter);
+
+      const res = await fetch(`/api/superadmin/campuses?${params.toString()}`);
+      const data = await res.json();
+
+      if (data.ok) {
+        setStats(data.stats);
+        setCampuses(data.campuses);
+      } else {
+        setErrorMsg(data.error || "Failed to load campus directory.");
       }
-    } catch {
-      // Retain current data on network exception
+    } catch (err: any) {
+      setErrorMsg(err?.message || "Network error loading campus directory.");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  }, [searchQuery, statusFilter]);
+  }, [search, statusFilter]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
   }, [loadData]);
 
-  const handleOpenAddModal = () => {
-    setEditingCampus(null);
-    setIsModalOpen(true);
+  // Real-time Supabase listener on `campuses`, `canteens`, `orders`
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel("superadmin_campuses_realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "campuses" },
+        () => {
+          loadData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [loadData]);
+
+  const handleResetFilters = () => {
+    setSearch("");
+    setStatusFilter("ALL");
   };
 
-  const handleOpenManageModal = (campus: SuperAdminCampus) => {
-    setEditingCampus(campus);
-    setIsModalOpen(true);
-  };
-
-  const handleSaveCampus = async (
-    campusData: Omit<SuperAdminCampus, "id"> & { id?: string },
-  ) => {
+  const handleExportCsv = async () => {
     try {
-      if (campusData.id) {
-        // Edit existing campus via PATCH API
-        const res = await fetch(`/api/superadmin/campuses/${campusData.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: campusData.name,
-            location: campusData.location,
-            status: campusData.status,
-            logisticsLeadName: campusData.logisticsLeadName,
-          }),
-        });
+      setExporting(true);
+      const params = new URLSearchParams();
+      if (search.trim()) params.set("q", search.trim());
+      if (statusFilter !== "ALL") params.set("status", statusFilter);
 
-        const data = await res.json();
-        if (data.ok) {
-          showNotification(`"${campusData.name}" updated successfully`);
-          await loadData();
-        } else {
-          showNotification(data.error || "Failed to update campus.");
-        }
+      const res = await fetch(`/api/superadmin/campuses/export?${params.toString()}`);
+      if (!res.ok) throw new Error("CSV Export failed");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `grabit_campus_report_${new Date().toISOString().split("T")[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (err: any) {
+      alert(err?.message || "Failed to export campus CSV report.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleSaveCampus = async (campusData: any) => {
+    try {
+      const res = await fetch("/api/superadmin/campuses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(campusData),
+      });
+      const data = await res.json();
+
+      if (data.ok) {
+        await loadData();
+        setIsManageModalOpen(false);
       } else {
-        // Add new campus via POST API
-        const res = await fetch("/api/superadmin/campuses", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: campusData.name,
-            location: campusData.location,
-            status: campusData.status,
-            logisticsLeadName: campusData.logisticsLeadName,
-          }),
-        });
-
-        const data = await res.json();
-        if (data.ok) {
-          showNotification(`"${campusData.name}" onboarded successfully`);
-          await loadData();
-        } else {
-          showNotification(data.error || "Failed to create campus.");
-        }
+        alert(data.error || "Failed to create campus.");
       }
     } catch {
-      showNotification("Network error saving campus.");
+      alert("Network error onboarding new campus.");
     }
   };
 
   return (
-    <div className="min-h-dvh bg-background text-foreground flex flex-col">
-      <main className="flex-1 p-4 sm:p-6 max-w-7xl mx-auto w-full flex flex-col gap-6 pb-24">
-        {notification && (
-          <div className="rounded-xl border border-primary/30 bg-primary/10 p-3 text-center text-body-sm font-semibold text-primary animate-fade-in">
-            {notification}
+    <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto space-y-6">
+      {/* Header & Title */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-white tracking-tight">Campus-Level Control Center</h1>
+            <span className="bg-orange-950/60 border border-orange-800/60 text-orange-400 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
+              Institutional Management
+            </span>
+          </div>
+          <p className="text-xs text-zinc-400 mt-1">
+            Monitor, manage, onboard, and compare institutional university campuses across the GRABIT network
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => loadData()}
+            className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5"
+          >
+            <span className={`material-icons text-xs ${loading ? "animate-spin" : ""}`}>refresh</span>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      {/* Error State Banner */}
+      {errorMsg && (
+        <div className="p-4 bg-rose-950/60 border border-rose-800 text-rose-300 rounded-xl text-xs flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="material-icons text-base text-rose-400">error</span>
+            <span>{errorMsg}</span>
+          </div>
+          <button
+            onClick={() => loadData()}
+            className="px-3 py-1 bg-rose-900 hover:bg-rose-800 text-white rounded font-semibold text-xs"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* Overview KPI Cards */}
+      <CampusOverviewCards stats={stats} loading={loading && campuses.length === 0} />
+
+      {/* Filter Bar */}
+      <CampusFilterBar
+        search={search}
+        setSearch={setSearch}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        onReset={handleResetFilters}
+        onCompare={() => setIsCompareOpen(true)}
+        onExport={handleExportCsv}
+        onAddNewCampus={() => setIsManageModalOpen(true)}
+        exporting={exporting}
+      />
+
+      {/* Campus Directory Table */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-xl">
+        {loading && campuses.length === 0 ? (
+          <div className="p-6 space-y-3">
+            {Array.from({ length: 5 }).map((_, idx) => (
+              <div key={idx} className="h-12 bg-zinc-950/60 border border-zinc-800 rounded-lg animate-pulse" />
+            ))}
+          </div>
+        ) : campuses.length === 0 ? (
+          <div className="p-12 text-center text-zinc-400">
+            <span className="material-icons text-5xl text-zinc-600 mb-3">school</span>
+            <h3 className="text-lg font-semibold text-zinc-200">No Institutional Campuses Found</h3>
+            <p className="text-sm text-zinc-400 mt-1 max-w-md mx-auto">
+              No campuses match your search query or status filters. Try clearing your search or onboarding a new campus.
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-zinc-950 border-b border-zinc-800 text-zinc-400 uppercase font-semibold">
+                  <th className="py-3.5 px-4">Campus Name & ID</th>
+                  <th className="py-3.5 px-4">Location / City</th>
+                  <th className="py-3.5 px-4">Status</th>
+                  <th className="py-3.5 px-4 text-right">Students</th>
+                  <th className="py-3.5 px-4 text-right">Vendors</th>
+                  <th className="py-3.5 px-4 text-right">Today's Orders</th>
+                  <th className="py-3.5 px-4 text-right">Today's GMV</th>
+                  <th className="py-3.5 px-4">Logistics Lead</th>
+                  <th className="py-3.5 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-800/60">
+                {campuses.map((c) => (
+                  <tr key={c.id} className="hover:bg-zinc-800/40 transition-colors group">
+                    <td className="py-3 px-4">
+                      <Link href={`/superadmin/campuses/${c.id}`} className="font-bold text-zinc-100 hover:text-orange-400">
+                        {c.name}
+                      </Link>
+                      <div className="font-mono text-[11px] text-zinc-500 mt-0.5">{c.id}</div>
+                    </td>
+
+                    <td className="py-3 px-4 text-zinc-300 whitespace-nowrap">{c.location}</td>
+
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider ${
+                          c.status === "ACTIVE"
+                            ? "bg-emerald-950/80 text-emerald-300 border-emerald-800"
+                            : "bg-zinc-800 text-zinc-400 border-zinc-700"
+                        }`}
+                      >
+                        {c.status}
+                      </span>
+                    </td>
+
+                    <td className="py-3 px-4 text-right font-mono text-zinc-200 font-semibold">
+                      {c.studentsCount.toLocaleString()}
+                    </td>
+
+                    <td className="py-3 px-4 text-right font-mono text-purple-300 font-semibold">
+                      {c.activeVendorsCount} / {c.vendorsCount}
+                    </td>
+
+                    <td className="py-3 px-4 text-right font-mono text-zinc-200 font-bold">
+                      {c.todaysOrders.toLocaleString()}
+                    </td>
+
+                    <td className="py-3 px-4 text-right font-mono text-emerald-400 font-bold">
+                      ₹{c.todaysGmv.toLocaleString()}
+                    </td>
+
+                    <td className="py-3 px-4 text-zinc-300 whitespace-nowrap">
+                      {c.logisticsLeadName || "Operations Lead"}
+                    </td>
+
+                    <td className="py-3 px-4 text-right whitespace-nowrap space-x-1.5">
+                      <Link
+                        href={`/superadmin/campuses/${c.id}`}
+                        className="px-3 py-1 bg-orange-600 hover:bg-orange-500 text-white rounded text-xs font-semibold transition-colors shadow-sm inline-block"
+                      >
+                        Control Console
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
+      </div>
 
-        {/* Header & Controls */}
-        <CampusHeader
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          onAddNewCampus={handleOpenAddModal}
-        />
+      {/* Comparison Modal */}
+      <CampusComparisonModal isOpen={isCompareOpen} onClose={() => setIsCompareOpen(false)} />
 
-        {/* Stats Grid */}
-        <CampusStatsGrid
-          totalCampusesCount={stats.totalCampusesCount}
-          totalVendorsCount={stats.totalVendorsCount}
-          dailyVolume={stats.dailyVolume}
-          networkHealth={stats.networkHealth}
-        />
-
-        {/* Institutional Registry Table */}
-        <CampusRegistryTable
-          campuses={campuses}
-          isLoading={isLoading}
-          onManageCampus={handleOpenManageModal}
-          onDownloadRegistry={() =>
-            showNotification("Institutional campus registry CSV exported")
-          }
-        />
-
-        {/* Insights & Recent Activity */}
-        <CampusInsightsSection
-          activities={activities}
-          onViewAllLogs={() =>
-            showNotification("Super Admin audit logs opened")
-          }
-        />
-
-        {/* Manage Campus Modal */}
-        <CampusManageModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onSave={handleSaveCampus}
-          editingCampus={editingCampus}
-        />
-
-        {/* Loading Footer Notice */}
-        <div className="text-center pt-2">
-          <span className="font-mono text-caption text-faint">
-            {isLoading
-              ? "Syncing live Super Admin campus registry..."
-              : "Live Supabase Campus Persistence Active"}
-          </span>
-        </div>
-      </main>
+      {/* Add New Campus Modal */}
+      <CampusManageModal
+        isOpen={isManageModalOpen}
+        onClose={() => setIsManageModalOpen(false)}
+        onSave={handleSaveCampus}
+        editingCampus={null}
+      />
     </div>
   );
 }

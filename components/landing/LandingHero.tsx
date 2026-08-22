@@ -85,7 +85,7 @@ export function LandingHero() {
 
         {/* Hero Visual Card Showcase */}
         <div className="relative hidden lg:block">
-          <div className="relative mx-auto max-w-sm rounded-[36px] border border-border bg-[#121212]/90 p-4 shadow-2xl backdrop-blur-xl">
+          <div className="relative mx-auto max-w-sm rounded-[36px] border border-border bg-surface-elevated/90 p-4 shadow-2xl backdrop-blur-xl">
             <Image
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuCiniHJLh_lHHwBLzWH9y6cc9d4XJUhDOBngyBDtgNruIG22uqUDJAoURjyqMURuPP4u2mkMMGrAyzVG9e8SL5Dd693ScKynXX7IP60woft0N0v6BjWXKHgvPsz2-vIuJy8mG86tDc6oiY1NqSSK4OhFRHaPQAwcipy_hxxTOa_pdSfcOohTG0o_SOL84wXuxogdg8OdufTXWBzDnHC-rde5mos4Q-lDbN34o1B5_Uw3_8kM9j2JUao"
               alt="GrabIt Mobile App Interface Showcase"
@@ -95,7 +95,7 @@ export function LandingHero() {
             />
 
             {/* Floating Badges */}
-            <div className="absolute -left-8 top-1/4 flex items-center gap-2.5 rounded-2xl border border-white/10 bg-[#1e1f26]/90 p-3.5 shadow-2xl backdrop-blur-md">
+            <div className="absolute -left-8 top-1/4 flex items-center gap-2.5 rounded-2xl border border-white/10 bg-surface-elevated/90 p-3.5 shadow-2xl backdrop-blur-md">
               <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
                 stars
               </span>
@@ -104,7 +104,7 @@ export function LandingHero() {
               </span>
             </div>
 
-            <div className="absolute -right-6 bottom-1/4 flex items-center gap-2.5 rounded-2xl border border-white/10 bg-[#1e1f26]/90 p-3.5 shadow-2xl backdrop-blur-md">
+            <div className="absolute -right-6 bottom-1/4 flex items-center gap-2.5 rounded-2xl border border-white/10 bg-surface-elevated/90 p-3.5 shadow-2xl backdrop-blur-md">
               <span className="material-symbols-outlined text-success">
                 schedule
               </span>

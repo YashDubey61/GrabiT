@@ -1,6 +1,6 @@
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { createOperationalNotification, autoResolveOperationalNotification } from "@/lib/notifications/operational_notifications";
 import { createStudentNotification } from "@/lib/notifications/student_notifications";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export type WorkflowActionType =
   | "CREATE_NOTIFICATION"
@@ -55,13 +55,6 @@ export interface WorkflowTelemetrySummary {
   stalenessStatus: "FRESH" | "STALE" | "NEVER_RUN";
   rules: WorkflowRule[];
   recentExecutions: WorkflowExecution[];
-}
-
-function getSupabaseAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createAdminClient(url, serviceKey);
 }
 
 const SEED_WORKFLOW_RULES: WorkflowRule[] = [

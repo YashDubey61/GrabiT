@@ -15,7 +15,7 @@ export function CampusHeader({
   isDetecting = false,
 }: CampusHeaderProps) {
   return (
-    <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between bg-background border-b border-border-subtle/50 px-5 md:px-16 backdrop-blur-md">
+    <header className="glass-navbar fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between px-5 md:px-16">
       {/* Location / Campus Selector Trigger */}
       <button
         type="button"
@@ -56,22 +56,22 @@ export function CampusHeader({
         <a
           href="/customer/notifications"
           aria-label="Notifications"
-          className="relative flex h-10 w-10 items-center justify-center rounded-xl text-primary hover:bg-surface-elevated transition-colors active:scale-95"
+          className="relative flex h-11 w-11 items-center justify-center rounded-xl text-primary hover:bg-white/10 transition-colors active:scale-95"
         >
           <span className="material-symbols-outlined" aria-hidden="true">
             notifications
           </span>
         </a>
 
-        <button
-          type="button"
-          aria-label="Scan QR code"
+        <a
+          href="/customer/rewards"
+          aria-label="Rewards"
           className="flex h-10 w-10 items-center justify-center rounded-xl text-primary hover:bg-surface-elevated transition-colors active:scale-95"
         >
           <span className="material-symbols-outlined" aria-hidden="true">
-            qr_code_scanner
+            card_giftcard
           </span>
-        </button>
+        </a>
       </div>
     </header>
   );

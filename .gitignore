@@ -40,3 +40,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local scratch/diagnostic scripts, not part of the app
+/scratch/
+/.agents/
+
+# Capacitor / Android build outputs — the android/ project itself is
+# committed, but generated build artifacts are not.
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+android/captures/
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json

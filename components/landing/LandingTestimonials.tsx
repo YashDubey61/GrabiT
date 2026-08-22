@@ -19,8 +19,8 @@ export function LandingTestimonials() {
               key={t.id}
               className={`relative flex flex-col justify-between rounded-3xl border p-6 sm:p-8 backdrop-blur-md transition-all duration-300 ${
                 t.isFeatured
-                  ? "border-primary/40 bg-[#1e1f26] shadow-glow-primary scale-105"
-                  : "border-border bg-[#1e1f26]/60 hover:border-white/20"
+                  ? "border-primary/40 bg-surface-elevated shadow-glow-primary scale-105"
+                  : "border-border bg-surface-elevated/60 hover:border-white/20"
               }`}
             >
               <span className="material-symbols-outlined absolute top-6 right-6 text-[48px] text-primary/20 pointer-events-none">

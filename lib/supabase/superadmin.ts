@@ -1,5 +1,5 @@
 import { createClient as createServerClient } from "./server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import type {
   SuperAdminKpis,
   SystemAlertItem,
@@ -60,10 +60,7 @@ export async function getAuthenticatedSuperAdminContext() {
  * Fetch and aggregate live Super Admin global dashboard metrics from Supabase.
  */
 export async function getSuperAdminGlobalMetrics(): Promise<SuperAdminDashboardData> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  const supabase = createAdminClient(url, serviceKey);
+  const supabase = getSupabaseAdminClient();
 
   // 1. Live GMV from Food Orders + Subscription Payments
   const { data: orders } = await supabase

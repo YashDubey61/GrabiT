@@ -1,21 +1,51 @@
 "use client";
 
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import dynamic from "next/dynamic";
 import {
   MOCK_VENDOR_STORE,
   MOCK_VENDOR_STATS,
   type VendorOrder,
   type VendorOrderStatus,
+  type VendorMenuItem,
 } from "@/lib/mock/vendor";
 import { VendorHeader } from "@/components/vendor/orders/VendorHeader";
 import { VendorMoreFeaturesSheet } from "@/components/vendor/orders/VendorMoreFeaturesSheet";
+import { VendorMobileNavMenu } from "@/components/vendor/orders/VendorMobileNavMenu";
 import { VendorProfileSheet } from "@/components/vendor/orders/VendorProfileSheet";
-import { VendorStatsBar } from "@/components/vendor/orders/VendorStatsBar";
+import { VENDOR_NAV } from "@/app/vendor/layout";
 import { VendorOrdersBoard } from "@/components/vendor/orders/VendorOrdersBoard";
 import { VendorNotificationsDrawer } from "@/components/vendor/notifications/VendorNotificationsDrawer";
 import { IncomingOrderAlert } from "@/components/vendor/orders/IncomingOrderAlert";
-import { VendorQrScanner } from "@/components/vendor/orders/VendorQrScanner";
+// Camera/canvas QR decoding (jsQR) is only needed once the vendor opens
+// the scanner sheet — deferring it out of the dashboard's initial bundle.
+// ssr:false is required (and safe) since it touches browser-only camera APIs.
+const VendorQrScanner = dynamic(
+  () => import("@/components/vendor/orders/VendorQrScanner").then((m) => m.VendorQrScanner),
+  { ssr: false },
+);
+import { VendorMenuItemModal } from "@/components/vendor/menu/VendorMenuItemModal";
+import { VendorMetricCards } from "@/components/vendor/dashboard/VendorMetricCards";
+import { VendorLiveOrderOverview } from "@/components/vendor/dashboard/VendorLiveOrderOverview";
+import { VendorSalesChart } from "@/components/vendor/dashboard/VendorSalesChart";
+import { VendorTopSellingItems } from "@/components/vendor/dashboard/VendorTopSellingItems";
+import { VendorLowStockAlerts } from "@/components/vendor/dashboard/VendorLowStockAlerts";
+import { VendorQuickActions } from "@/components/vendor/dashboard/VendorQuickActions";
+import { VendorRecentActivity } from "@/components/vendor/dashboard/VendorRecentActivity";
+import { ManualCashOrderModal } from "@/components/vendor/orders/ManualCashOrderModal";
+import { initAutomaticManualOrderSync, syncSingleManualOrder } from "@/lib/offline/manual_order_sync";
+import { cacheVendorMenuLocally, setDesiredStatus } from "@/lib/offline/manual_order_db";
 import { getLiveVendorOrders } from "@/lib/supabase/vendor_orders";
+import {
+  addLiveVendorMenuItem,
+  getLiveVendorMenuItems,
+  toggleLiveVendorMenuItemStock,
+} from "@/lib/supabase/vendor_menu";
+import { getLiveVendorCategories } from "@/lib/supabase/vendor_categories";
+import {
+  getLiveVendorAnalytics,
+  type LiveVendorAnalyticsData,
+} from "@/lib/supabase/vendor_analytics";
 import {
   getLiveVendorCanteenId,
   getLiveVendorShopName,
@@ -38,23 +68,25 @@ export default function VendorActiveOrdersPage() {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isMoreFeaturesOpen, setIsMoreFeaturesOpen] = useState(false);
+  const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [scannerInitialMode, setScannerInitialMode] = useState<"qr" | "otp">("qr");
-  const canteenIdRef = useRef<string | null>(null);
 
-  // Order-alert ringing: alertedOrderIds tracks every "placed" order id
-  // we've already reacted to (rung for or seen on initial load), so
-  // duplicate realtime events / re-renders never start a second ring for
-  // the same order. hasLoadedOnceRef distinguishes "orders that were
-  // already pending when the dashboard opened" (shown, never rung) from
-  // "orders that arrived after" (shown AND rung) — see req #10.
+  // Dashboard specific state
+  const [timeframe, setTimeframe] = useState<"today" | "7d" | "30d">("today");
+  const [analyticsData, setAnalyticsData] = useState<LiveVendorAnalyticsData | null>(null);
+  const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(true);
+  const [isAnalyticsError, setIsAnalyticsError] = useState(false);
+  const [menuItems, setMenuItems] = useState<VendorMenuItem[]>([]);
+  const [isMenuLoading, setIsMenuLoading] = useState(true);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isManualOrderOpen, setIsManualOrderOpen] = useState(false);
+
+  const canteenIdRef = useRef<string | null>(null);
+  const ordersBoardRef = useRef<HTMLDivElement>(null);
+
   const sound = useOrderAlertSound();
-  // The realtime subscription below is set up once (mount-only effect) so
-  // it never has to tear down and reconnect; that means any callback it
-  // captures is frozen at mount time. `soundRef` always points at the
-  // latest sound-hook object so calls made from inside that stale closure
-  // (fetchOrders -> applyOrders -> sound.start) still see the current
-  // isUnlocked/start/stop, not the mount-time snapshot.
   const soundRef = useRef(sound);
   useEffect(() => {
     soundRef.current = sound;
@@ -75,8 +107,6 @@ export default function VendorActiveOrdersPage() {
       .map((o) => o.id);
 
     if (!hasLoadedOnceRef.current) {
-      // First load: these are pre-existing pending orders, not new
-      // arrivals — mark them seen without ringing (req #10).
       currentPlacedIds.forEach((id) => alertedOrderIdsRef.current.add(id));
       hasLoadedOnceRef.current = true;
       return;
@@ -89,7 +119,30 @@ export default function VendorActiveOrdersPage() {
 
     if (genuinelyNewIds.length > 0) {
       soundRef.current.start();
+      document.title = TAB_TITLE_ALERT;
     }
+  }, []);
+
+  const loadMenuAndCategories = useCallback(async (cId?: string | null) => {
+    setIsMenuLoading(true);
+    const liveItems = await getLiveVendorMenuItems(cId ?? null);
+    setMenuItems(liveItems);
+    if (cId && liveItems.length > 0) {
+      cacheVendorMenuLocally(
+        cId,
+        liveItems.map((i) => ({
+          id: i.id,
+          canteenId: cId,
+          name: i.name,
+          price: i.price,
+          category: i.category || "General",
+          available: i.inStock,
+        }))
+      );
+    }
+    setIsMenuLoading(false);
+    const cats = await getLiveVendorCategories();
+    setCategories(cats.map((c) => c.name));
   }, []);
 
   const fetchOrders = useCallback(async () => {
@@ -100,6 +153,18 @@ export default function VendorActiveOrdersPage() {
     applyOrders(liveOrders);
     setIsLoading(false);
   }, [applyOrders]);
+
+  const fetchAnalytics = useCallback(async (tf: "today" | "7d" | "30d" = "today") => {
+    setIsAnalyticsLoading(true);
+    setIsAnalyticsError(false);
+    const res = await getLiveVendorAnalytics(tf);
+    if (res.ok && res.data) {
+      setAnalyticsData(res.data);
+    } else {
+      setIsAnalyticsError(true);
+    }
+    setIsAnalyticsLoading(false);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -116,9 +181,19 @@ export default function VendorActiveOrdersPage() {
       if (isMounted) setPauseStatus(pause);
     });
 
+    fetchAnalytics("today");
+
+    let cleanupSync: (() => void) | null = null;
+
     getLiveVendorCanteenId().then((id) => {
       if (!isMounted) return;
       canteenIdRef.current = id;
+
+      if (id) {
+        cleanupSync = initAutomaticManualOrderSync(id);
+      }
+
+      loadMenuAndCategories(id ?? undefined);
 
       getLiveVendorOrders(id ?? undefined).then((liveOrders) => {
         if (isMounted) {
@@ -129,15 +204,14 @@ export default function VendorActiveOrdersPage() {
 
       if (!id) return;
 
-      // Realtime, scoped strictly to this vendor's own canteen — never
-      // subscribe to platform-wide order events (vendor isolation, req #16).
       channel = supabase
-        .channel(`vendor-orders-realtime-${id}`)
+        .channel(`vendor-dashboard-realtime-${id}`)
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "orders", filter: `canteen_id=eq.${id}` },
           () => {
             fetchOrders();
+            fetchAnalytics(timeframe);
           },
         )
         .subscribe();
@@ -146,19 +220,24 @@ export default function VendorActiveOrdersPage() {
     return () => {
       isMounted = false;
       if (channel) supabase.removeChannel(channel);
+      if (cleanupSync) cleanupSync();
       sound.stop();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const pendingPlacedOrders = useMemo(
-    () => orders.filter((o) => o.status === "placed"),
+    () =>
+      orders.filter(
+        (o) =>
+          o.status === "placed" &&
+          !o.isManual &&
+          o.orderType !== "MANUAL_CASH_ORDER" &&
+          !o.orderNumber.includes("-M-")
+      ),
     [orders],
   );
 
-  // Stop ringing the instant there's nothing left to act on — covers
-  // accept, reject, external cancellation, or the order simply leaving
-  // the "placed" state (req #7).
   useEffect(() => {
     if (pendingPlacedOrders.length === 0) {
       sound.stop();
@@ -166,7 +245,6 @@ export default function VendorActiveOrdersPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingPlacedOrders.length]);
 
-  // Tab title flashes while any order is awaiting vendor action (req #11).
   useEffect(() => {
     document.title = pendingPlacedOrders.length > 0 ? TAB_TITLE_ALERT : TAB_TITLE_DEFAULT;
     return () => {
@@ -190,10 +268,6 @@ export default function VendorActiveOrdersPage() {
     showNotification(`Default prep time updated to ${nextPrepTime} mins`);
   };
 
-  // A 401 means the vendor's server-side session is gone/expired. The
-  // dashboard can still *look* alive (order reads go through the browser
-  // client), so this must be surfaced loudly and the ring stopped —
-  // otherwise the vendor clicks Accept forever with no feedback.
   const handleAuthExpired = useCallback(() => {
     soundRef.current.stop();
     setActionError("Your vendor session expired. Please sign in again to manage orders.");
@@ -214,8 +288,30 @@ export default function VendorActiveOrdersPage() {
     if (nextStatus === targetOrder.status) return;
 
     setActionError(null);
+
+    // Locally-queued manual cash orders (created while offline, or whose
+    // creation hasn't synced yet) use a clientOrderId, not a real database
+    // id — the status API has nothing to PATCH until this order is
+    // persisted server-side. Sync it first; if sync itself can't complete
+    // right now, queue the status change so it's never lost.
+    let targetId = orderId;
+    if (orderId.startsWith("manual_client_")) {
+      const syncResult = await syncSingleManualOrder(orderId, canteenIdRef.current ?? undefined);
+      if (!syncResult.ok) {
+        await setDesiredStatus(orderId, nextStatus);
+        const msg =
+          syncResult.reason === "offline"
+            ? "Still offline — this order will sync and the status change will be applied automatically once it does."
+            : syncResult.error || "Unable to sync this order right now. The status change is queued.";
+        showNotification(msg);
+        fetchOrders();
+        return;
+      }
+      targetId = syncResult.serverOrderId;
+    }
+
     try {
-      const response = await fetch(`/api/vendor/orders/${orderId}`, {
+      const response = await fetch(`/api/vendor/orders/${targetId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: nextStatus }),
@@ -248,6 +344,7 @@ export default function VendorActiveOrdersPage() {
             }`,
       );
       fetchOrders();
+      fetchAnalytics(timeframe);
     } catch {
       const msg = "Network error updating order status.";
       setActionError(msg);
@@ -288,6 +385,7 @@ export default function VendorActiveOrdersPage() {
           : `Order ${targetOrder.orderNumber} CANCELLED.`,
       );
       fetchOrders();
+      fetchAnalytics(timeframe);
     } catch {
       const msg = "Network error cancelling order.";
       setActionError(msg);
@@ -295,27 +393,46 @@ export default function VendorActiveOrdersPage() {
     }
   };
 
+  const handleToggleStock = async (itemId: string, inStock: boolean) => {
+    const res = await toggleLiveVendorMenuItemStock(itemId, inStock);
+    if (res.ok) {
+      showNotification(`Item marked ${inStock ? "IN STOCK" : "OUT OF STOCK"}`);
+      if (canteenIdRef.current) {
+        loadMenuAndCategories(canteenIdRef.current);
+      }
+    } else {
+      showNotification(res.error ?? "Failed to update item availability.");
+    }
+  };
+
+  const handleSaveItem = async (
+    itemData: Omit<VendorMenuItem, "id"> & { id?: string },
+  ) => {
+    const res = await addLiveVendorMenuItem(itemData);
+    if (res.ok) {
+      showNotification(`"${itemData.name}" added to menu successfully`);
+      if (canteenIdRef.current) {
+        loadMenuAndCategories(canteenIdRef.current);
+      }
+    } else {
+      showNotification(res.error ?? "Failed to add dish.");
+    }
+  };
+
+  const handleScrollToOrders = () => {
+    ordersBoardRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   const activeOrders = useMemo(
     () => orders.filter((o) => o.status !== "cancelled"),
     [orders],
   );
 
-  const computedStats = useMemo(() => {
-    const pendingCount = orders.filter(
-      (o) => o.status === "placed" || o.status === "preparing",
-    ).length;
-    const readyCount = orders.filter((o) => o.status === "ready").length;
+  const liveRevenue = useMemo(() => {
     const completedOrders = orders.filter(
       (o) => o.status === "completed" || o.status === "picked_up",
     );
-    const liveRevenue = completedOrders.reduce((sum) => sum + 140, 4250);
-
-    return {
-      ...MOCK_VENDOR_STATS,
-      pendingOrders: pendingCount,
-      readyOrders: readyCount,
-      dailyRevenue: liveRevenue,
-    };
+    return completedOrders.reduce((sum, o) => sum + o.totalAmount, 0);
   }, [orders]);
 
   return (
@@ -329,8 +446,16 @@ export default function VendorActiveOrdersPage() {
         onChangePrepTime={handleChangePrepTime}
         onOpenNotifications={() => setIsNotificationsOpen(true)}
         onOpenMoreFeatures={() => setIsMoreFeaturesOpen(true)}
+        onOpenNavMenu={() => setIsNavMenuOpen(true)}
         onOpenProfile={() => setIsProfileOpen(true)}
         pendingOrderCount={pendingPlacedOrders.length}
+      />
+
+      <VendorMobileNavMenu
+        isOpen={isNavMenuOpen}
+        onClose={() => setIsNavMenuOpen(false)}
+        items={VENDOR_NAV}
+        onOpenProfile={() => setIsProfileOpen(true)}
       />
 
       <VendorMoreFeaturesSheet
@@ -349,7 +474,7 @@ export default function VendorActiveOrdersPage() {
         store={store}
       />
 
-      <main className="flex-1 p-4 sm:p-6 flex flex-col gap-6 max-w-7xl mx-auto w-full">
+      <main className="flex-1 p-4 sm:p-6 flex flex-col gap-6 max-w-7xl mx-auto w-full pb-24 sm:pb-8">
         {pauseStatus?.isPaused && (
           <div className="flex flex-col gap-1 rounded-xl border border-warning/40 bg-warning/10 p-4">
             <span className="font-display text-body-sm font-extrabold uppercase tracking-wider text-warning">
@@ -402,46 +527,103 @@ export default function VendorActiveOrdersPage() {
           </div>
         )}
 
-        <div className="flex flex-col gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setScannerInitialMode("qr");
-              setIsScannerOpen(true);
-            }}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/10 py-3.5 font-display text-body-sm font-extrabold uppercase tracking-widest text-primary transition-all active:scale-[0.98] hover:bg-primary/20"
-          >
-            <span className="material-symbols-outlined text-[20px]">qr_code_scanner</span>
-            Scan Order QR
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setScannerInitialMode("otp");
-              setIsScannerOpen(true);
-            }}
-            className="text-center font-display text-caption font-bold uppercase tracking-wider text-muted hover:text-primary"
-          >
-            Enter OTP Manually
-          </button>
+        {/* 1. KEY METRICS */}
+        <VendorMetricCards
+          ordersCount={analyticsData?.summary?.totalOrders ?? activeOrders.length}
+          totalRevenue={analyticsData?.summary?.todaysSales ?? liveRevenue}
+          avgPrepMinutes={store.prepTimeMinutes}
+          isLoading={isLoading}
+        />
+
+        {/* 2. QUICK ACTIONS */}
+        <VendorQuickActions
+          onAddNewItem={() => setIsAddModalOpen(true)}
+          onOpenScanner={(mode) => {
+            setScannerInitialMode(mode);
+            setIsScannerOpen(true);
+          }}
+          onScrollToOrders={handleScrollToOrders}
+          onOpenManualOrder={() => setIsManualOrderOpen(true)}
+        />
+
+        {/* 3. LIVE ORDER OVERVIEW */}
+        <VendorLiveOrderOverview
+          orders={orders}
+          onAdvanceStatus={handleAdvanceOrderStatus}
+          onCancelOrder={handleCancelOrder}
+          onViewAllOrders={handleScrollToOrders}
+        />
+
+        {/* 4. SALES OVERVIEW & TOP SELLING ITEMS GRID */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <VendorSalesChart
+              hourlyVolume={analyticsData?.hourlyVolume ?? []}
+              totalRevenue={analyticsData?.summary?.todaysSales ?? liveRevenue}
+              totalOrders={analyticsData?.summary?.totalOrders ?? activeOrders.length}
+              timeframe={timeframe}
+              onTimeframeChange={(tf) => {
+                setTimeframe(tf);
+                fetchAnalytics(tf);
+              }}
+              isLoading={isAnalyticsLoading}
+              isError={isAnalyticsError}
+              onRetry={() => fetchAnalytics(timeframe)}
+            />
+          </div>
+          <div className="lg:col-span-1">
+            <VendorTopSellingItems
+              topItems={analyticsData?.topItems ?? []}
+              isLoading={isAnalyticsLoading}
+            />
+          </div>
         </div>
 
-        <VendorStatsBar stats={computedStats} />
-
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-            <span className="material-symbols-outlined text-[32px] text-primary animate-spin">
-              progress_activity
-            </span>
-            <p className="text-body-sm text-muted">Loading live canteen orders from Supabase...</p>
-          </div>
-        ) : (
-          <VendorOrdersBoard
-            orders={activeOrders}
-            onAdvanceStatus={handleAdvanceOrderStatus}
-            onCancelOrder={handleCancelOrder}
+        {/* 5. LOW STOCK ALERTS & RECENT ACTIVITY GRID */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <VendorLowStockAlerts
+            menuItems={menuItems}
+            onToggleStock={handleToggleStock}
+            isLoading={isMenuLoading}
           />
-        )}
+          <VendorRecentActivity
+            orders={orders}
+            isLoading={isLoading}
+          />
+        </div>
+
+        {/* 6. LIVE ORDERS BOARD */}
+        <div ref={ordersBoardRef} className="pt-2 flex flex-col gap-4">
+          <div className="flex items-center justify-between border-b border-border pb-3">
+            <div>
+              <h2 className="font-display text-title font-bold text-foreground">
+                Active Order Operations Board
+              </h2>
+              <p className="text-caption text-muted">
+                Advance order tickets through live kitchen fulfillment stages
+              </p>
+            </div>
+            <span className="rounded-full bg-primary/10 border border-primary/30 px-3 py-1 font-display text-caption font-bold text-primary">
+              {activeOrders.length} Active Orders
+            </span>
+          </div>
+
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+              <span className="material-symbols-outlined text-[32px] text-primary animate-spin">
+                progress_activity
+              </span>
+              <p className="text-body-sm text-muted">Loading live canteen orders from Supabase...</p>
+            </div>
+          ) : (
+            <VendorOrdersBoard
+              orders={activeOrders}
+              vendorName={store.name}
+              onAdvanceStatus={handleAdvanceOrderStatus}
+              onCancelOrder={handleCancelOrder}
+            />
+          )}
+        </div>
       </main>
 
       <IncomingOrderAlert
@@ -458,6 +640,7 @@ export default function VendorActiveOrdersPage() {
         onCompleted={(orderNumber) => {
           showNotification(`Order ${orderNumber} completed`);
           fetchOrders();
+          fetchAnalytics(timeframe);
         }}
       />
 
@@ -466,6 +649,26 @@ export default function VendorActiveOrdersPage() {
         onClose={() => setIsNotificationsOpen(false)}
         onSelectOrder={() => {
           fetchOrders();
+        }}
+      />
+
+      <VendorMenuItemModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSave={handleSaveItem}
+        editingItem={null}
+        categories={categories}
+      />
+
+      <ManualCashOrderModal
+        isOpen={isManualOrderOpen}
+        onClose={() => setIsManualOrderOpen(false)}
+        canteenId={canteenIdRef.current || ""}
+        menuItems={menuItems}
+        onOrderCreated={(num) => {
+          showNotification(num ? `Manual Cash Order ${num} created` : "Manual Cash Order saved locally (Pending Sync)");
+          fetchOrders();
+          fetchAnalytics(timeframe);
         }}
       />
     </div>

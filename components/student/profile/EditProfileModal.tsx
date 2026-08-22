@@ -31,7 +31,9 @@ export function EditProfileModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Sync local form state when modal is opened with new props
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFullName(currentFullName);
     setPhone(currentPhone);
     setAvatarUrl(currentAvatarUrl);

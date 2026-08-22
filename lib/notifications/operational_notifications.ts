@@ -1,6 +1,6 @@
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { getAuthenticatedVendorContext } from "@/lib/supabase/vendor_auth";
 import { getAuthenticatedSuperAdminContext } from "@/lib/supabase/superadmin";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export type VendorOperationalNotificationType =
   | "NEW_ORDER"
@@ -78,13 +78,6 @@ export interface CreateOperationalNotificationParams {
   relatedMenuItemId?: string | null;
   relatedCanteenId?: string | null;
   dedupeKey?: string | null;
-}
-
-function getSupabaseAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createAdminClient(url, serviceKey);
 }
 
 /**
@@ -286,3 +279,49 @@ export async function resolveOperationalNotification(
   const { error } = await query;
   return !error;
 }
+
+/**
+ * Marks an operational notification back as unread (OPEN).
+ */
+export async function unacknowledgeOperationalNotification(
+  notificationId: string,
+): Promise<boolean> {
+  const supabase = getSupabaseAdminClient();
+  const vendorCtx = await getAuthenticatedVendorContext();
+  if (!vendorCtx) return false;
+
+  const { error } = await supabase
+    .from("operational_notifications")
+    .update({
+      status: "OPEN",
+      acknowledged_at: null,
+      acknowledged_by: null,
+    })
+    .eq("id", notificationId)
+    .eq("canteen_id", vendorCtx.canteenId);
+
+  return !error;
+}
+
+/**
+ * Marks all OPEN operational notifications as ACKNOWLEDGED for the current vendor canteen.
+ */
+export async function markAllVendorNotificationsAsRead(): Promise<boolean> {
+  const supabase = getSupabaseAdminClient();
+  const vendorCtx = await getAuthenticatedVendorContext();
+  if (!vendorCtx) return false;
+
+  const { error } = await supabase
+    .from("operational_notifications")
+    .update({
+      status: "ACKNOWLEDGED",
+      acknowledged_at: new Date().toISOString(),
+      acknowledged_by: vendorCtx.userId,
+    })
+    .eq("recipient_type", "vendor")
+    .eq("canteen_id", vendorCtx.canteenId)
+    .eq("status", "OPEN");
+
+  return !error;
+}
+

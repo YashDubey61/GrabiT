@@ -1,16 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { recordOrderStatusHistory } from "@/lib/supabase/order_status_history";
 import { validateOrderStatusTransition } from "@/lib/orders/status_transitions";
 import type { VendorOrderStatus } from "@/lib/mock/vendor";
-
-function getSupabaseAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createAdminClient(url, key);
-}
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(
   _request: Request,

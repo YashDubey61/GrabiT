@@ -1,6 +1,6 @@
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { getAuthenticatedSuperAdminContext } from "@/lib/supabase/superadmin";
 import { createOperationalNotification } from "@/lib/notifications/operational_notifications";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export type IncidentSeverity = "LOW" | "MEDIUM" | "HIGH" | "WARNING" | "CRITICAL";
 export type IncidentStatus = "OPEN" | "ACKNOWLEDGED" | "IN_PROGRESS" | "ESCALATED" | "RESOLVED" | "CLOSED";
@@ -71,13 +71,6 @@ export interface CreateIncidentParams {
   category: IncidentCategory;
   dedupeKey?: string | null;
   metadata?: Record<string, unknown>;
-}
-
-function getSupabaseAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createAdminClient(url, serviceKey);
 }
 
 function calculateDueAt(severity: IncidentSeverity): string {

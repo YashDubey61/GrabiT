@@ -1,7 +1,23 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { RoleShellRail, type NavItem } from "@/components/shared/RoleShellNav";
+import { GlobalSearchModal } from "@/components/superadmin/search/GlobalSearchModal";
 
 const SUPERADMIN_NAV: NavItem[] = [
   { label: "Global Dashboard", href: "/superadmin", icon: "dashboard" },
+  { label: "Global Search & Finder", href: "/superadmin/search", icon: "search" },
+  { label: "User & Role Management", href: "/superadmin/users", icon: "manage_accounts" },
+  { label: "Vendor Approval & KYC", href: "/superadmin/vendors/applications", icon: "verified" },
+  { label: "Fraud & Risk Center", href: "/superadmin/risk", icon: "security" },
+  { label: "Disputes & Refunds", href: "/superadmin/disputes", icon: "support_agent" },
+  { label: "Customer Support Center", href: "/superadmin/support", icon: "headset_mic" },
+  { label: "Financial Command Center", href: "/superadmin/finance", icon: "account_balance" },
+  { label: "Platform Intelligence", href: "/superadmin/intelligence", icon: "insights" },
+  { label: "Audit Logs & Activity", href: "/superadmin/audit-logs", icon: "receipt_long" },
+  { label: "Platform Configuration", href: "/superadmin/configuration", icon: "settings" },
+  { label: "Feature Flags & Rollouts", href: "/superadmin/feature-flags", icon: "flag" },
   { label: "Campus Management", href: "/superadmin/campuses", icon: "school" },
   { label: "Vendor Oversight", href: "/superadmin/vendors", icon: "storefront" },
   { label: "Vendor Performance", href: "/superadmin/vendor-performance", icon: "monitoring" },
@@ -13,21 +29,64 @@ const SUPERADMIN_NAV: NavItem[] = [
   { label: "Disaster Recovery", href: "/superadmin/disaster-recovery", icon: "shield_with_heart" },
   { label: "Product Analytics", href: "/superadmin/analytics", icon: "analytics" },
   { label: "Notifications", href: "/superadmin/notifications", icon: "notifications" },
+  { label: "Cashfree Payments", href: "/superadmin/cashfree-payments", icon: "credit_card" },
+  { label: "Vendor Settlements", href: "/superadmin/settlements", icon: "payments" },
+  { label: "GRABIT Financial Ledger", href: "/superadmin/wallet", icon: "account_balance" },
+  { label: "Cashfree Payouts", href: "/superadmin/cashfree-payouts", icon: "account_balance_wallet" },
   { label: "Reconciliation", href: "/superadmin/reconciliation", icon: "balance" },
+  { label: "Rewards Analytics", href: "/superadmin/rewards-analytics", icon: "redeem" },
+  { label: "Promo Codes", href: "/superadmin/promo-codes", icon: "local_offer" },
 ];
 
-// Structural shell for the Super Admin role — the Platform Operator persona
-// (PRD §3.3), desktop-first by nature of the job (running the business, not
-// grabbing lunch between classes).
 export default function SuperAdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const isAuthPage = pathname === "/superadmin/auth";
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        window.location.reload();
+      }
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
+
+  // Global Command-K / Ctrl+K / '/' keyboard shortcut listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setIsSearchOpen((prev) => !prev);
+      } else if (
+        e.key === "/" &&
+        document.activeElement?.tagName !== "INPUT" &&
+        document.activeElement?.tagName !== "TEXTAREA"
+      ) {
+        if (pathname === "/superadmin/search") return;
+        e.preventDefault();
+        setIsSearchOpen(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [pathname]);
+
+  if (isAuthPage) {
+    return <main className="min-h-dvh w-full bg-background">{children}</main>;
+  }
+
   return (
     <div className="flex min-h-dvh bg-background">
       <RoleShellRail items={SUPERADMIN_NAV} title="GrabIt Super Admin" />
       <div className="flex-1 overflow-x-auto">{children}</div>
+      <GlobalSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </div>
   );
 }

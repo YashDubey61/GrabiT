@@ -1,4 +1,4 @@
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export type OperationsTimeframe = "today" | "7d" | "30d";
 
@@ -95,13 +95,6 @@ export interface SuperAdminOperationsMetrics {
   vendors: VendorOperationsMetrics;
   campuses: CampusOperationsMetrics;
   alerts: OperationalAlert[];
-}
-
-function getSupabaseAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createAdminClient(url, serviceKey);
 }
 
 /**

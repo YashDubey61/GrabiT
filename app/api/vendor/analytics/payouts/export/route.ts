@@ -1,12 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { getAuthenticatedVendorContext } from "@/lib/supabase/vendor_auth";
-
-function getSupabaseAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createAdminClient(url, key);
-}
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 /**
  * Returns the vendor's full report as structured JSON — orders (with

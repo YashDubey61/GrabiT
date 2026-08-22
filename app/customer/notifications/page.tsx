@@ -146,11 +146,11 @@ export default function StudentNotificationsPage() {
   return (
     <div className="min-h-dvh bg-background text-foreground flex flex-col">
       {/* Header Bar */}
-      <header className="sticky top-0 z-40 flex h-16 items-center justify-between bg-background border-b border-[#262626] px-5 md:px-16">
+      <header className="sticky top-0 z-40 flex h-16 items-center justify-between bg-background border-b border-border px-5 md:px-16">
         <div className="flex items-center gap-3">
           <Link
             href="/customer"
-            className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1 rounded-lg text-muted hover:text-white hover:bg-white/10 transition-colors"
           >
             <span className="material-symbols-outlined">arrow_back</span>
           </Link>
@@ -162,7 +162,7 @@ export default function StudentNotificationsPage() {
 
         <button
           onClick={() => setShowPreferencesModal(true)}
-          className="p-2 rounded-xl bg-[#1E1F26] border border-[#262626] text-gray-300 hover:text-white transition-all text-xs font-semibold flex items-center gap-1.5"
+          className="p-2 rounded-xl bg-surface-elevated border border-border text-muted hover:text-white transition-all text-xs font-semibold flex items-center gap-1.5"
         >
           <span className="material-symbols-outlined text-base">settings</span>
           <span className="hidden sm:inline">Preferences</span>
@@ -177,14 +177,14 @@ export default function StudentNotificationsPage() {
         )}
 
         {/* Unread Bar & Mark Read All */}
-        <div className="p-4 rounded-2xl bg-[#1E1F26] border border-[#262626] flex items-center justify-between">
+        <div className="p-4 rounded-2xl bg-surface-elevated border border-border flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-primary text-xl">notifications</span>
             <div>
               <span className="text-body font-bold text-white">
                 {unreadCount > 0 ? `${unreadCount} Unread Notification${unreadCount > 1 ? "s" : ""}` : "All Caught Up!"}
               </span>
-              <p className="text-[11px] text-gray-400">Real-time status alerts and campus updates</p>
+              <p className="text-[11px] text-muted">Real-time status alerts and campus updates</p>
             </div>
           </div>
 
@@ -207,7 +207,7 @@ export default function StudentNotificationsPage() {
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase font-mono tracking-wider transition-all whitespace-nowrap ${
                 activeCategory === cat
                   ? "bg-primary text-white shadow-md"
-                  : "bg-[#1E1F26] text-gray-400 border border-[#262626] hover:text-white"
+                  : "bg-surface-elevated text-muted border border-border hover:text-white"
               }`}
             >
               {cat}
@@ -217,15 +217,15 @@ export default function StudentNotificationsPage() {
 
         {/* Notifications List */}
         {isLoading ? (
-          <div className="py-16 text-center text-gray-400 space-y-2">
+          <div className="py-16 text-center text-muted space-y-2">
             <span className="material-symbols-outlined text-3xl animate-spin text-primary">progress_activity</span>
             <p className="text-xs">Loading notifications...</p>
           </div>
         ) : filteredNotifications.length === 0 ? (
-          <div className="py-16 text-center space-y-2 rounded-2xl bg-[#1E1F26] border border-[#262626] p-8">
-            <span className="material-symbols-outlined text-4xl text-gray-600">notifications_off</span>
+          <div className="py-16 text-center space-y-2 rounded-2xl bg-surface-elevated border border-border p-8">
+            <span className="material-symbols-outlined text-4xl text-faint">notifications_off</span>
             <h3 className="text-body font-bold text-white">No notifications found</h3>
-            <p className="text-xs text-gray-400">You do not have any notifications in this category yet.</p>
+            <p className="text-xs text-muted">You do not have any notifications in this category yet.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -235,21 +235,21 @@ export default function StudentNotificationsPage() {
                 onClick={() => handleMarkRead(notif.id, notif.readAt)}
                 className={`p-4 rounded-2xl border transition-all flex items-start gap-3.5 cursor-pointer ${
                   !notif.readAt
-                    ? "bg-[#1E1F26] border-primary/40 shadow-lg"
-                    : "bg-black/40 border-[#262626] opacity-80"
+                    ? "bg-surface-elevated border-primary/40 shadow-lg"
+                    : "bg-black/40 border-border opacity-80"
                 }`}
               >
                 {/* Category Icon */}
                 <div className={`p-2.5 rounded-xl shrink-0 ${
                   notif.category === "ORDERS"
-                    ? "bg-amber-950/60 text-amber-400 border border-amber-800/40"
+                    ? "bg-warning-soft text-warning border border-warning/30"
                     : notif.category === "PAYMENTS"
                     ? "bg-emerald-950/60 text-emerald-400 border border-emerald-800/40"
                     : notif.category === "WALLET"
                     ? "bg-sky-950/60 text-sky-400 border border-sky-800/40"
                     : notif.category === "GOLD"
-                    ? "bg-amber-950/60 text-[#FF6D00] border border-[#FF6D00]/40"
-                    : "bg-purple-950/60 text-purple-400 border border-purple-800/40"
+                    ? "bg-accent-soft text-primary border border-primary/40"
+                    : "bg-info/10 text-info border border-info/30"
                 }`}>
                   <span className="material-symbols-outlined text-xl">
                     {notif.category === "ORDERS"
@@ -267,16 +267,16 @@ export default function StudentNotificationsPage() {
                 {/* Content */}
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[9px] font-mono font-semibold text-gray-300">
+                    <span className="px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[9px] font-mono font-semibold text-muted">
                       {notif.category}
                     </span>
-                    <span className="text-[10px] text-gray-400 font-mono">
+                    <span className="text-[10px] text-muted font-mono">
                       {new Date(notif.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </span>
                   </div>
 
                   <h3 className="text-body-sm font-bold text-white">{notif.title}</h3>
-                  <p className="text-xs text-gray-300">{notif.message}</p>
+                  <p className="text-xs text-muted">{notif.message}</p>
 
                   {notif.actionUrl && (
                     <div className="pt-2">
@@ -303,15 +303,15 @@ export default function StudentNotificationsPage() {
       {/* Preferences Modal */}
       {showPreferencesModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#1E1F26] border border-[#262626] rounded-2xl w-full max-w-md p-6 space-y-5 text-foreground">
-            <div className="flex items-center justify-between border-b border-[#262626] pb-3">
+          <div className="bg-surface-elevated border border-border rounded-2xl w-full max-w-md p-6 space-y-5 text-foreground">
+            <div className="flex items-center justify-between border-b border-border pb-3">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary">settings</span>
                 Notification Preferences
               </h3>
               <button
                 onClick={() => setShowPreferencesModal(false)}
-                className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-white/10"
+                className="p-1 rounded-lg text-muted hover:text-white hover:bg-white/10"
               >
                 <span className="material-symbols-outlined">close</span>
               </button>
@@ -321,7 +321,7 @@ export default function StudentNotificationsPage() {
               <label className="flex items-center justify-between py-1 border-b border-white/5 cursor-pointer">
                 <div>
                   <span className="font-semibold text-white">Order Status Updates</span>
-                  <p className="text-[11px] text-gray-400">Order placed, preparing, ready for pickup</p>
+                  <p className="text-[11px] text-muted">Order placed, preparing, ready for pickup</p>
                 </div>
                 <input
                   type="checkbox"
@@ -334,7 +334,7 @@ export default function StudentNotificationsPage() {
               <label className="flex items-center justify-between py-1 border-b border-white/5 cursor-pointer">
                 <div>
                   <span className="font-semibold text-white">Payment &amp; Refund Alerts</span>
-                  <p className="text-[11px] text-gray-400">Razorpay receipts, refund processing</p>
+                  <p className="text-[11px] text-muted">Razorpay receipts, refund processing</p>
                 </div>
                 <input
                   type="checkbox"
@@ -347,7 +347,7 @@ export default function StudentNotificationsPage() {
               <label className="flex items-center justify-between py-1 border-b border-white/5 cursor-pointer">
                 <div>
                   <span className="font-semibold text-white">Wallet Activity Updates</span>
-                  <p className="text-[11px] text-gray-400">Wallet top-ups and low balance alerts</p>
+                  <p className="text-[11px] text-muted">Wallet top-ups and low balance alerts</p>
                 </div>
                 <input
                   type="checkbox"
@@ -360,7 +360,7 @@ export default function StudentNotificationsPage() {
               <label className="flex items-center justify-between py-1 border-b border-white/5 cursor-pointer">
                 <div>
                   <span className="font-semibold text-white">GrabIt Gold Subscription</span>
-                  <p className="text-[11px] text-gray-400">Gold activation and expiration reminders</p>
+                  <p className="text-[11px] text-muted">Gold activation and expiration reminders</p>
                 </div>
                 <input
                   type="checkbox"
@@ -373,7 +373,7 @@ export default function StudentNotificationsPage() {
               <label className="flex items-center justify-between py-1 border-b border-white/5 cursor-pointer">
                 <div>
                   <span className="font-semibold text-white">Dish Recommendations</span>
-                  <p className="text-[11px] text-gray-400">Trending dishes &amp; meal time picks (Max 1/day)</p>
+                  <p className="text-[11px] text-muted">Trending dishes &amp; meal time picks (Max 1/day)</p>
                 </div>
                 <input
                   type="checkbox"
@@ -387,7 +387,7 @@ export default function StudentNotificationsPage() {
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 onClick={() => setShowPreferencesModal(false)}
-                className="px-3 py-2 rounded-xl bg-black/40 border border-[#262626] text-gray-300 font-semibold text-xs hover:text-white"
+                className="px-3 py-2 rounded-xl bg-black/40 border border-border text-muted font-semibold text-xs hover:text-white"
               >
                 Cancel
               </button>

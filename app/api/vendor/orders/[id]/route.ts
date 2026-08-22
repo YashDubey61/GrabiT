@@ -1,21 +1,14 @@
 import { NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { getAuthenticatedVendorContext } from "@/lib/supabase/vendor_auth";
 import { trackProductEvent } from "@/lib/analytics/events";
 import { recordOrderStatusHistory } from "@/lib/supabase/order_status_history";
 import { validateOrderStatusTransition } from "@/lib/orders/status_transitions";
 import type { VendorOrderStatus } from "@/lib/mock/vendor";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 interface UpdateOrderStatusPayload {
   status: VendorOrderStatus;
   reason?: string;
-}
-
-function getSupabaseAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createAdminClient(url, key);
 }
 
 export async function PATCH(
@@ -132,6 +125,30 @@ export async function PATCH(
       reason: payload.reason,
     });
 
+    // 5b. Inventory Restock on Order Cancellation
+    if (targetStatus === "cancelled") {
+      try {
+        const { data: orderItems } = await supabase
+          .from("order_items")
+          .select("menu_item_id, quantity")
+          .eq("order_id", currentOrder.id);
+
+        if (orderItems && orderItems.length > 0) {
+          for (const item of orderItems) {
+            await supabase.rpc("adjust_inventory_stock", {
+              p_menu_item_id: item.menu_item_id,
+              p_quantity_delta: item.quantity,
+              p_adjustment_type: "cancellation_restock",
+              p_reason: `Restock cancelled order ${currentOrder.order_number}`,
+              p_user_id: vendorCtx.userId,
+            });
+          }
+        }
+      } catch (restockErr) {
+        console.warn("Non-critical order cancellation restock error:", restockErr);
+      }
+    }
+
     // 6. Auto-resolve corresponding vendor new order notification
     if (targetStatus === "preparing" || targetStatus === "cancelled") {
       try {
@@ -213,6 +230,39 @@ export async function PATCH(
       }
     } catch (notifErr) {
       console.warn("Non-critical notification side-effect error:", notifErr);
+    }
+
+    // 9. Award GRABIT Points — only for genuinely paid, completed
+    // orders. Gift-food orders (gifted_by_id set) were already funded
+    // by the sender's points, so the recipient does not also earn
+    // fresh points for them — that would mint points out of thin air.
+    // award_order_points() is idempotent (unique per order), so a
+    // retry/race here can never double-award.
+    if (targetStatus === "completed" && !updatedOrder.gifted_by_id) {
+      try {
+        const { data: pointsResult } = await supabase.rpc("award_order_points", {
+          p_order_id: updatedOrder.id,
+        });
+        const awarded = (pointsResult as { awarded?: number } | null)?.awarded ?? 0;
+        if (awarded > 0 && updatedOrder.student_id) {
+          const { createStudentNotification } = await import(
+            "@/lib/notifications/student_notifications"
+          );
+          await createStudentNotification({
+            userId: updatedOrder.student_id,
+            type: "POINTS_EARNED",
+            title: "GRABIT Points earned!",
+            message: `You earned ${awarded} GRABIT Points from your order.`,
+            severity: "SUCCESS",
+            category: "REWARDS",
+            relatedOrderId: updatedOrder.id,
+            actionUrl: "/customer/rewards",
+            dedupeKey: `order-points:${updatedOrder.id}`,
+          });
+        }
+      } catch (pointsErr) {
+        console.warn("Non-critical points-award error:", pointsErr);
+      }
     }
 
     return NextResponse.json({

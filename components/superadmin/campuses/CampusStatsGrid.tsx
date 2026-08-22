@@ -16,7 +16,7 @@ export function CampusStatsGrid({
   return (
     <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {/* Card 1: Total Campuses */}
-      <div className="flex flex-col justify-between rounded-2xl border border-border bg-[#1e1f26]/80 p-4 backdrop-blur-md">
+      <div className="flex flex-col justify-between rounded-2xl border border-border bg-surface-elevated/80 p-4 backdrop-blur-md">
         <span className="font-display text-caption font-bold uppercase tracking-widest text-faint">
           Total Campuses
         </span>
@@ -31,7 +31,7 @@ export function CampusStatsGrid({
       </div>
 
       {/* Card 2: Active Vendors */}
-      <div className="flex flex-col justify-between rounded-2xl border border-border bg-[#1e1f26]/80 p-4 backdrop-blur-md">
+      <div className="flex flex-col justify-between rounded-2xl border border-border bg-surface-elevated/80 p-4 backdrop-blur-md">
         <span className="font-display text-caption font-bold uppercase tracking-widest text-faint">
           Active Storefronts
         </span>
@@ -46,7 +46,7 @@ export function CampusStatsGrid({
       </div>
 
       {/* Card 3: Daily Volume */}
-      <div className="flex flex-col justify-between rounded-2xl border border-border bg-[#1e1f26]/80 p-4 backdrop-blur-md">
+      <div className="flex flex-col justify-between rounded-2xl border border-border bg-surface-elevated/80 p-4 backdrop-blur-md">
         <span className="font-display text-caption font-bold uppercase tracking-widest text-faint">
           Daily Volume
         </span>
@@ -58,7 +58,7 @@ export function CampusStatsGrid({
       </div>
 
       {/* Card 4: Network Health */}
-      <div className="flex flex-col justify-between rounded-2xl border border-border bg-[#1e1f26]/80 p-4 backdrop-blur-md">
+      <div className="flex flex-col justify-between rounded-2xl border border-border bg-surface-elevated/80 p-4 backdrop-blur-md">
         <span className="font-display text-caption font-bold uppercase tracking-widest text-faint">
           Network Health
         </span>

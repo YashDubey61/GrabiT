@@ -19,7 +19,7 @@ export function VendorOversightHeader({
       </div>
 
       <div className="flex gap-3 shrink-0">
-        <div className="flex flex-col rounded-xl border border-border bg-[#1e1f26] p-3 min-w-[130px]">
+        <div className="flex flex-col rounded-xl border border-border bg-surface-elevated p-3 min-w-[130px]">
           <span className="font-display text-[10px] uppercase tracking-widest text-faint">
             Platform Fee Avg
           </span>
@@ -28,7 +28,7 @@ export function VendorOversightHeader({
           </span>
         </div>
 
-        <div className="flex flex-col rounded-xl border border-border bg-[#1e1f26] p-3 min-w-[130px]">
+        <div className="flex flex-col rounded-xl border border-border bg-surface-elevated p-3 min-w-[130px]">
           <span className="font-display text-[10px] uppercase tracking-widest text-faint">
             Pending Reviews
           </span>

@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { hardNavigate } from "@/lib/auth/redirect";
+import { ROLE_AUTH_PATH } from "@/lib/auth/roles";
 
 export type NavItem = {
   label: string;
@@ -16,6 +19,22 @@ export type NavItem = {
 // root item highlighted no matter which page is actually open.
 const ROLE_ROOT_PATHS = new Set(["/vendor", "/customer", "/superadmin"]);
 
+// Static lookup, not a template-string class name — Tailwind can only
+// see (and keep in the production build) classes that appear literally
+// in source. A computed `grid-cols-${n}` string would be invisible to
+// the JIT scanner and could resolve to a different (or zero) style on
+// the client than whatever the server happened to inline, which is
+// exactly the kind of "non-deterministic className" that produces a
+// hydration attribute mismatch on this <ul>.
+const GRID_COLS_CLASS: Record<number, string> = {
+  1: "grid-cols-1",
+  2: "grid-cols-2",
+  3: "grid-cols-3",
+  4: "grid-cols-4",
+  5: "grid-cols-5",
+  6: "grid-cols-6",
+};
+
 function isNavItemActive(href: string, pathname: string): boolean {
   return ROLE_ROOT_PATHS.has(href) ? pathname === href : pathname.startsWith(href);
 }
@@ -27,9 +46,13 @@ function isNavItemActive(href: string, pathname: string): boolean {
 export function RoleShellTabBar({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
 
+  if (pathname === "/customer/checkout") {
+    return null;
+  }
+
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 rounded-t-2xl border-t border-white/10 bg-background/90 shadow-2xl backdrop-blur-md pb-[env(safe-area-inset-bottom)]">
-      <ul className="grid grid-cols-4 items-stretch gap-1 px-1 py-2">
+    <nav className="glass-bottom-nav fixed inset-x-4 z-40 mx-auto max-w-md [bottom:calc(env(safe-area-inset-bottom)+1rem)] sm:inset-x-0 sm:w-full sm:max-w-lg">
+      <ul className={`grid items-stretch gap-1 px-2 py-2 ${GRID_COLS_CLASS[items.length] ?? "grid-cols-4"}`}>
         {items.map((item) => {
           const isActive = isNavItemActive(item.href, pathname);
 
@@ -38,7 +61,7 @@ export function RoleShellTabBar({ items }: { items: NavItem[] }) {
               <Link
                 href={item.href}
                 aria-current={isActive ? "page" : undefined}
-                className={`flex h-full flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-center text-[10px] font-700 leading-tight transition-all duration-150 ${
+                className={`flex h-full flex-col items-center justify-center gap-0.5 rounded-full px-1 py-1.5 text-center text-[10px] font-700 leading-tight transition-all duration-150 ${
                   isActive
                     ? "bg-primary/10 text-primary"
                     : "text-muted hover:text-foreground"
@@ -74,7 +97,25 @@ export function RoleShellRail({
   title: string;
 }) {
   const pathname = usePathname();
-  const { signOut } = useAuth();
+  const { signOut, role } = useAuth();
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  const handleSignOut = async () => {
+    // Capture before signOut() clears the auth context's role — this rail
+    // is shared by both Vendor and Super Admin, so the redirect must go
+    // back to whichever role's own login page, never a hardcoded one.
+    const authPath = role ? ROLE_AUTH_PATH[role] : "/auth";
+    setIsSigningOut(true);
+    try {
+      await signOut();
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("grabit_vendor_cache");
+      }
+    } finally {
+      setIsSigningOut(false);
+      hardNavigate(authPath);
+    }
+  };
 
   return (
     <nav className="flex h-dvh w-16 flex-col justify-between border-r border-border bg-surface-elevated px-2 py-4 md:w-56 md:px-3">
@@ -115,12 +156,21 @@ export function RoleShellRail({
       <div className="pt-2 border-t border-border">
         <button
           type="button"
-          onClick={() => signOut()}
-          className="flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-body font-semibold text-danger/80 hover:bg-danger-soft hover:text-danger transition-colors duration-150"
+          disabled={isSigningOut}
+          onClick={handleSignOut}
+          className="flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-body font-semibold text-danger/80 hover:bg-danger-soft hover:text-danger transition-colors duration-150 disabled:opacity-50"
           title="Sign Out"
         >
-          <span className="material-symbols-outlined text-[20px]">logout</span>
-          <span className="hidden md:inline">Sign Out</span>
+          <span
+            className={`material-symbols-outlined text-[20px] ${
+              isSigningOut ? "animate-spin text-danger" : ""
+            }`}
+          >
+            {isSigningOut ? "progress_activity" : "logout"}
+          </span>
+          <span className="hidden md:inline">
+            {isSigningOut ? "Signing Out..." : "Sign Out"}
+          </span>
         </button>
       </div>
     </nav>

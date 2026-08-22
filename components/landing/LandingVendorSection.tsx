@@ -7,11 +7,11 @@ export function LandingVendorSection() {
   const { metrics } = MOCK_LANDING_DATA;
 
   return (
-    <section className="py-20 bg-[#070708] px-6 md:px-12 border-t border-border/40">
+    <section className="py-20 bg-background px-6 md:px-12 border-t border-border/40">
       <div className="mx-auto max-w-7xl grid lg:grid-cols-2 gap-12 items-center">
         {/* Vendor Dashboard Mockup */}
         <div className="order-2 lg:order-1">
-          <div className="rounded-3xl border border-white/10 bg-[#12131a] p-6 shadow-2xl backdrop-blur-xl sm:p-8">
+          <div className="rounded-3xl border border-white/10 bg-surface-elevated p-6 shadow-2xl backdrop-blur-xl sm:p-8">
             <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/20 text-primary">

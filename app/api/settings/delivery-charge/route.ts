@@ -1,12 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { DEFAULT_DELIVERY_CHARGE } from "@/lib/orders/delivery_charge";
-
-function getSupabaseAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createAdminClient(url, key);
-}
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 /** Public read — cart/checkout need this to *display* the current
  * charge and reason. The number shown here is never trusted for

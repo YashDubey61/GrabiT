@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import type { ProductEventName } from "@/lib/analytics/events";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const ALLOWED_EVENTS = new Set<ProductEventName>([
   "student_home_viewed",
@@ -41,13 +41,6 @@ function isRateLimited(clientIp: string): boolean {
 
   entry.count++;
   return false;
-}
-
-function getSupabaseAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createAdminClient(url, serviceKey);
 }
 
 export async function POST(request: NextRequest) {

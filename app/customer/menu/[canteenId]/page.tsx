@@ -1,10 +1,6 @@
-import { MenuTopBar } from "@/components/student/MenuTopBar";
-import { MenuInfoCard } from "@/components/student/MenuInfoCard";
-import { MenuBrowser } from "@/components/student/MenuBrowser";
-import { StudentRecommendationsSection } from "@/components/student/StudentRecommendationsSection";
 import { TrackEventOnMount } from "@/components/shared/TrackEventOnMount";
-import { mockMenuCategories } from "@/lib/mock/menu";
-import { getLiveCanteenMenuItems } from "@/lib/supabase/data";
+import { VendorMenuScreen } from "@/components/student/VendorMenuScreen";
+import { getLiveCanteenMenuItems, getLiveCanteenActiveOffers } from "@/lib/supabase/data";
 
 // Server Component — live per-canteen shop detail page. Menu items and
 // canteen metadata are fetched from Supabase (menu_items/canteens),
@@ -31,35 +27,12 @@ export default async function StudentCanteenMenuPage({
     );
   }
 
+  const offers = await getLiveCanteenActiveOffers(canteenInfo.id);
+
   return (
     <>
       <TrackEventOnMount payload={{ eventName: "menu_viewed", canteenId: canteenInfo.id }} />
-      <MenuTopBar title={canteenInfo.name} />
-
-      <main className="mx-auto max-w-4xl px-5 pt-20 pb-32 md:px-16 md:pt-24">
-        <MenuInfoCard
-          avgPrepMinutes={canteenInfo.avgPrepMinutes}
-          rating={canteenInfo.rating}
-          ratingCount={canteenInfo.ratingCount}
-          isOpen={canteenInfo.isOpen}
-          description={canteenInfo.description}
-        />
-
-        <StudentRecommendationsSection />
-
-        {items.length === 0 ? (
-          <div className="mt-8 rounded-xl border border-border-subtle bg-surface-elevated p-6 text-center text-body-sm text-muted">
-            No food items are currently available at this canteen.
-          </div>
-        ) : (
-          <MenuBrowser
-            canteenId={canteenInfo.id}
-            canteenName={canteenInfo.name}
-            items={items}
-            categories={mockMenuCategories}
-          />
-        )}
-      </main>
+      <VendorMenuScreen canteenInfo={canteenInfo} items={items} offers={offers} />
     </>
   );
 }

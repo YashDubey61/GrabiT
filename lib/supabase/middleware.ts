@@ -118,5 +118,15 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
+  // Protected pages must never be served from the browser's back/forward
+  // cache after sign-out — bfcache restores the DOM without a network
+  // request, which would bypass this middleware entirely. Marking every
+  // protected response no-store forces a real revalidation on back/forward
+  // navigation, so a signed-out visitor lands back here instead of seeing
+  // a stale authenticated page.
+  if (isProtectedPath) {
+    supabaseResponse.headers.set("Cache-Control", "no-store, must-revalidate");
+  }
+
   return supabaseResponse;
 }

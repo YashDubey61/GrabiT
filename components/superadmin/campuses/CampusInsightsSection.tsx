@@ -14,7 +14,7 @@ export function CampusInsightsSection({
   return (
     <section className="grid grid-cols-1 gap-6 lg:grid-cols-3 mt-6">
       {/* Geospatial Reach Map Card */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-[#1e1f26]/80 p-6 backdrop-blur-md lg:col-span-2 min-h-[300px]">
+      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-surface-elevated/80 p-6 backdrop-blur-md lg:col-span-2 min-h-[300px]">
         <div className="flex items-center justify-between">
           <h3 className="font-display text-title font-bold text-foreground">
             Geospatial Reach
@@ -24,7 +24,7 @@ export function CampusInsightsSection({
           </span>
         </div>
 
-        <div className="relative flex flex-1 flex-col items-center justify-center rounded-xl border border-border/40 bg-[#0c0e14] p-8 text-center overflow-hidden min-h-[200px]">
+        <div className="relative flex flex-1 flex-col items-center justify-center rounded-xl border border-border/40 bg-background p-8 text-center overflow-hidden min-h-[200px]">
           <span className="material-symbols-outlined text-[48px] text-primary animate-bounce">
             location_on
           </span>
@@ -38,7 +38,7 @@ export function CampusInsightsSection({
       </div>
 
       {/* Recent Activity Feed */}
-      <div className="flex flex-col justify-between rounded-2xl border border-border bg-[#1e1f26]/80 p-6 backdrop-blur-md">
+      <div className="flex flex-col justify-between rounded-2xl border border-border bg-surface-elevated/80 p-6 backdrop-blur-md">
         <div>
           <h3 className="mb-4 font-display text-title font-bold text-foreground">
             Recent Activity

@@ -10,8 +10,8 @@ if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "mock_anon_key";
 }
 
-import { getLiveStudentProfile, updateLiveStudentProfile } from "../lib/supabase/student_profile";
-import { getLiveStudentAddresses, createStudentAddress, deleteStudentAddress } from "../lib/supabase/student_addresses";
+import { getLiveStudentProfile } from "../lib/supabase/student_profile";
+import { getLiveStudentAddresses, createStudentAddress } from "../lib/supabase/student_addresses";
 
 async function runStudentProfileAndGrabitIdTests() {
   console.log("==================================================");

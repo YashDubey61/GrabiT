@@ -6,14 +6,18 @@ import { VendorOrderCard } from "@/components/vendor/orders/VendorOrderCard";
 
 interface VendorOrdersBoardProps {
   orders: VendorOrder[];
+  vendorName: string;
   onAdvanceStatus: (orderId: string) => Promise<void> | void;
   onCancelOrder?: (orderId: string, reason: string) => Promise<void>;
+  onSelectOrder?: (order: VendorOrder) => void;
 }
 
 export function VendorOrdersBoard({
   orders,
+  vendorName,
   onAdvanceStatus,
   onCancelOrder,
+  onSelectOrder,
 }: VendorOrdersBoardProps) {
   const [mobileTab, setMobileTab] = useState<VendorOrderStatus>("placed");
 
@@ -104,8 +108,10 @@ export function VendorOrdersBoard({
                 <VendorOrderCard
                   key={order.id}
                   order={order}
+                  vendorName={vendorName}
                   onAdvanceStatus={onAdvanceStatus}
                   onCancelOrder={onCancelOrder}
+                  onSelectOrder={onSelectOrder}
                 />
               ))
             )}
@@ -140,8 +146,10 @@ export function VendorOrdersBoard({
                 <VendorOrderCard
                   key={order.id}
                   order={order}
+                  vendorName={vendorName}
                   onAdvanceStatus={onAdvanceStatus}
                   onCancelOrder={onCancelOrder}
+                  onSelectOrder={onSelectOrder}
                 />
               ))
             )}
@@ -176,8 +184,10 @@ export function VendorOrdersBoard({
                 <VendorOrderCard
                   key={order.id}
                   order={order}
+                  vendorName={vendorName}
                   onAdvanceStatus={onAdvanceStatus}
                   onCancelOrder={onCancelOrder}
+                  onSelectOrder={onSelectOrder}
                 />
               ))
             )}
@@ -214,8 +224,10 @@ export function VendorOrdersBoard({
                 <VendorOrderCard
                   key={order.id}
                   order={order}
+                  vendorName={vendorName}
                   onAdvanceStatus={onAdvanceStatus}
                   onCancelOrder={onCancelOrder}
+                  onSelectOrder={onSelectOrder}
                 />
               ))
             )}

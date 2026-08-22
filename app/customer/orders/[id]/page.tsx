@@ -13,6 +13,8 @@ import { useOrders } from "@/lib/orders/OrderContext";
 import { getLiveOrderById } from "@/lib/supabase/orders";
 import { createClient } from "@/lib/supabase/client";
 import type { Order } from "@/lib/orders/types";
+import { ReceiptPrinter } from "@/components/shared/receipt-printer/ReceiptPrinter";
+import { studentOrderToReceipt } from "@/components/shared/receipt-printer/adapters";
 
 export default function StudentTrackOrderPage({
   params,
@@ -24,6 +26,7 @@ export default function StudentTrackOrderPage({
   const [liveOrder, setLiveOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isConfirmingPickup, setIsConfirmingPickup] = useState(false);
+  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
 
   const localOrder = getOrder(id);
 
@@ -141,6 +144,19 @@ export default function StudentTrackOrderPage({
 
         <OrderLiveStatus status={order.status} estimatedReadyAt={order.estimatedReadyAt} />
 
+        {!isCancelled && (
+          <button
+            type="button"
+            onClick={() => setIsReceiptOpen(true)}
+            className="flex h-12 items-center justify-center gap-2 rounded-xl border border-border bg-surface-elevated text-body-sm font-semibold text-foreground transition-colors hover:bg-surface"
+          >
+            <span className="material-symbols-outlined text-[18px] text-primary" aria-hidden="true">
+              receipt_long
+            </span>
+            Print Receipt
+          </button>
+        )}
+
         {/* Student Pickup Action Button when Order is Ready */}
         {order.status === "ready" && (
           <button
@@ -180,7 +196,11 @@ export default function StudentTrackOrderPage({
           totalAmount={order.totalAmount}
         />
 
-        <OrderContactActions />
+        <OrderContactActions
+          vendorName={order.canteenName}
+          vendorPhone={order.vendorPhone}
+          orderNumber={order.orderNumber}
+        />
 
         <DevOrderStatusControls
           status={order.status}
@@ -190,6 +210,15 @@ export default function StudentTrackOrderPage({
           }}
         />
       </main>
+
+      <ReceiptPrinter
+        mode="student"
+        order={studentOrderToReceipt(order)}
+        open={isReceiptOpen}
+        onClose={() => setIsReceiptOpen(false)}
+        onViewOrder={() => setIsReceiptOpen(false)}
+        onDone={() => setIsReceiptOpen(false)}
+      />
     </>
   );
 }

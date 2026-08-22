@@ -21,7 +21,7 @@ export function WalletBalanceCard({
   return (
     <section
       className="relative mb-6 overflow-hidden rounded-3xl p-6 shadow-2xl"
-      style={{ background: "linear-gradient(135deg, #FF6D00 0%, #FF9100 100%)" }}
+      style={{ background: "linear-gradient(135deg, #FF7A00 0%, #E96800 100%)" }}
     >
       {/* Decorative Blur Circles */}
       <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />

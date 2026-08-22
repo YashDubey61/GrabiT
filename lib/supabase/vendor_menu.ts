@@ -48,6 +48,7 @@ export async function addLiveVendorMenuItem(itemData: {
   category?: VendorMenuCategory;
   description?: string;
   inStock?: boolean;
+  imageUrl?: string;
 }): Promise<{ ok: boolean; error?: string }> {
   try {
     const res = await fetch("/api/vendor/menu", {
@@ -58,6 +59,7 @@ export async function addLiveVendorMenuItem(itemData: {
         price: itemData.price,
         category: itemData.category,
         description: itemData.description,
+        imageUrl: itemData.imageUrl,
         availability: itemData.inStock === false ? "unavailable" : "available",
       }),
     });
@@ -84,6 +86,7 @@ export async function updateLiveVendorMenuItem(
     category?: VendorMenuCategory;
     description?: string;
     inStock?: boolean;
+    imageUrl?: string;
   },
 ): Promise<{ ok: boolean; error?: string }> {
   try {
@@ -93,6 +96,9 @@ export async function updateLiveVendorMenuItem(
       body: JSON.stringify({
         name: itemData.name,
         price: itemData.price,
+        category: itemData.category,
+        description: itemData.description,
+        imageUrl: itemData.imageUrl,
         availability: itemData.inStock !== undefined ? (itemData.inStock ? "available" : "unavailable") : undefined,
       }),
     });
@@ -118,11 +124,31 @@ export async function toggleLiveVendorMenuItemStock(
   return updateLiveVendorMenuItem(id, { inStock });
 }
 
+/**
+ * Delete a live menu item via server API.
+ */
+export async function deleteLiveVendorMenuItem(
+  id: string,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const res = await fetch(`/api/vendor/menu/${id}`, {
+      method: "DELETE",
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      return { ok: false, error: data.error ?? "Failed to delete menu item." };
+    }
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Network error deleting menu item." };
+  }
+}
+
 const DEFAULT_ITEM_IMAGE =
   "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80";
 
 function toVendorCategory(category: string | null | undefined): VendorMenuCategory {
-  return category?.trim() || "Lunch";
+  return category?.trim() || "General";
 }
 
 function mapSupabaseMenuItemToUI(row: SupabaseMenuItemRow): VendorMenuItem {

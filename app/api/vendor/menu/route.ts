@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { getAuthenticatedVendorContext } from "@/lib/supabase/vendor_auth";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 interface CreateMenuItemPayload {
   name: string;
@@ -8,12 +8,8 @@ interface CreateMenuItemPayload {
   availability?: "available" | "unavailable";
   category?: string;
   description?: string;
-}
-
-function getSupabaseAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createAdminClient(url, key);
+  imageUrl?: string;
+  image_url?: string;
 }
 
 export async function GET() {
@@ -79,6 +75,10 @@ export async function POST(request: Request) {
 
     const supabase = getSupabaseAdminClient();
 
+    const imageUrl = payload.imageUrl?.trim() || payload.image_url?.trim() || null;
+    const category = payload.category?.trim() || null;
+    const description = payload.description?.trim() || null;
+
     const { data: newItem, error: insertErr } = await supabase
       .from("menu_items")
       .insert({
@@ -87,6 +87,9 @@ export async function POST(request: Request) {
         price: price,
         availability: payload.availability ?? "available",
         is_sponsored: false,
+        category: category,
+        description: description,
+        image_url: imageUrl,
       })
       .select()
       .single();

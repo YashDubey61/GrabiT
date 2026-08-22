@@ -1,11 +1,10 @@
 "use client";
 
-// PRD §8 Monetization lists UPI and GrabIt Wallet as the two real payment
-// paths. The approved Checkout Stitch export also renders a third "Card"
-// option — kept here for visual fidelity to the locked design (removing
-// it would be redesigning an approved screen), flagged as a product/design
-// mismatch worth resolving before real payment integration lands.
-export type PaymentMethod = "wallet" | "upi" | "card";
+// GRABIT checkout has exactly two payment options: pay from the
+// GrabIt Wallet, or "Pay Online" via Cashfree — which itself offers
+// UPI, cards, netbanking, etc. inside the Cashfree checkout. UPI is
+// deliberately NOT a separate selectable GRABIT payment method.
+export type PaymentMethod = "wallet" | "card";
 
 const PAYMENT_OPTIONS: {
   id: PaymentMethod;
@@ -14,8 +13,7 @@ const PAYMENT_OPTIONS: {
   detail?: string;
 }[] = [
   { id: "wallet", label: "GrabIt Wallet", icon: "account_balance_wallet", detail: "Balance: ₹450" },
-  { id: "upi", label: "UPI", icon: "account_balance" },
-  { id: "card", label: "Card", icon: "credit_card" },
+  { id: "card", label: "Pay Online", icon: "credit_card", detail: "Cards, UPI & more via Cashfree" },
 ];
 
 export function PaymentMethodSelector({

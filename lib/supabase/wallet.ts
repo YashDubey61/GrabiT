@@ -86,22 +86,6 @@ export async function getLiveWalletTransactions(): Promise<WalletTransaction[]> 
   }
 }
 
-/**
- * Handle top-up action attempt.
- * Direct client-side wallet balance increments are strictly disabled for security.
- */
-export async function topUpLiveWallet(
-  amount?: number,
-): Promise<{ ok: boolean; newBalance?: number; error?: string }> {
-  if (amount && amount <= 0) {
-    return { ok: false, error: "Invalid top-up amount." };
-  }
-  return {
-    ok: false,
-    error: "Online wallet top-ups will be available after payment gateway (Razorpay) integration.",
-  };
-}
-
 function mapSupabaseWalletToUI(row: SupabaseWalletRow): Wallet {
   const balance = Number(row.balance);
   return {
@@ -136,10 +120,10 @@ function mapSupabaseTxToUI(row: SupabaseWalletTransactionRow): WalletTransaction
   };
 
   const titleMap: Record<string, string> = {
-    topup: "Wallet Top-up (UPI)",
+    topup: "Wallet Top-up",
     spend: "Canteen Food Order",
     refund: "Order Refund — Cancelled Item",
-    bonus: "GrabIt Gold Cashback Bonus",
+    bonus: "Wallet Top-up Bonus",
   };
 
   const timeLabel = new Date(row.created_at).toLocaleDateString("en-US", {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { GrabItLogo } from "@/components/shared/GrabItLogo";
 import { TrackEventOnMount } from "@/components/shared/TrackEventOnMount";
 import { ProfileHeader } from "@/components/student/profile/ProfileHeader";
 import { EditProfileModal } from "@/components/student/profile/EditProfileModal";
@@ -16,6 +17,7 @@ import {
   type StudentSubscriptionDetails,
 } from "@/lib/supabase/student_profile";
 import { createClient } from "@/lib/supabase/client";
+import type { GoldPlanId } from "@/lib/payments/gold_plans";
 
 export default function StudentProfilePage() {
   const router = useRouter();
@@ -25,6 +27,8 @@ export default function StudentProfilePage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [activeToast, setActiveToast] = useState<string | null>(null);
+  const [isGoldProcessing, setIsGoldProcessing] = useState(false);
+  const [goldError, setGoldError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -94,6 +98,65 @@ export default function StudentProfilePage() {
     }
   };
 
+  const handlePurchaseGoldPlan = async (planId: GoldPlanId) => {
+    if (isGoldProcessing) return; // guard against double-clicks
+    setGoldError(null);
+    setIsGoldProcessing(true);
+    try {
+      const createRes = await fetch("/api/payments/cashfree/gold-pass/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planId }),
+      });
+      const createData = await createRes.json();
+      if (!createRes.ok || !createData.ok) {
+        setGoldError(createData.error || "Couldn't start your Gold Pass purchase.");
+        return;
+      }
+
+      const { openCashfreeCheckout } = await import("@/lib/payments/cashfree_client");
+      const mode = createData.paymentMode === "PRODUCTION" ? "production" : "sandbox";
+      await openCashfreeCheckout(createData.paymentSessionId, mode);
+
+      // Cashfree's modal resolves on close regardless of outcome — the
+      // real result only ever comes from the server (webhook already may
+      // have landed, or this poll's own reconciliation fallback resolves
+      // it). Never trust the checkout promise's resolution as success.
+      const finalStatus = await pollGoldPassStatus(createData.cashfreeOrderId);
+
+      if (finalStatus === "PAID") {
+        const liveSub = await getLiveStudentSubscription();
+        setSubscription(liveSub);
+        showToast("GrabIt Gold activated!");
+      } else if (finalStatus === "FAILED" || finalStatus === "CANCELLED") {
+        setGoldError("Payment didn't go through.");
+      } else {
+        setGoldError("Still confirming your payment — check back shortly.");
+      }
+    } catch {
+      setGoldError("Couldn't complete checkout. Please try again.");
+    } finally {
+      setIsGoldProcessing(false);
+    }
+  };
+
+  const pollGoldPassStatus = async (cashfreeOrderId: string): Promise<string> => {
+    const delays = [1500, 2000, 3000, 4000, 5000];
+    for (const delay of delays) {
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      try {
+        const res = await fetch(`/api/payments/cashfree/gold-pass/status?cashfreeOrderId=${encodeURIComponent(cashfreeOrderId)}`);
+        const data = await res.json();
+        if (data.ok && (data.status === "PAID" || data.status === "FAILED" || data.status === "CANCELLED" || data.status === "EXPIRED")) {
+          return data.status;
+        }
+      } catch {
+        // keep polling
+      }
+    }
+    return "PENDING";
+  };
+
   const handleLogout = async () => {
     try {
       const supabase = createClient();
@@ -124,14 +187,7 @@ export default function StudentProfilePage() {
 
       {/* Top Bar Header */}
       <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-border-subtle bg-background/80 px-4 backdrop-blur-md">
-        <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-[24px] text-primary" aria-hidden="true">
-            location_on
-          </span>
-          <span className="font-display text-title font-extrabold tracking-tight text-primary">
-            GrabIt
-          </span>
-        </div>
+        <GrabItLogo heightClassName="h-10" priority />
         <button
           type="button"
           onClick={() => showToast("Scan QR Code coming soon")}
@@ -165,7 +221,9 @@ export default function StudentProfilePage() {
             {/* GrabIt Gold Subscription Card */}
             <GrabItGoldCard
               subscription={currentGoldSub}
-              onPurchasePlan={() => showToast("Redirecting to Gold Pass Razorpay checkout...")}
+              isProcessing={isGoldProcessing}
+              error={goldError}
+              onPurchasePlan={(planId: GoldPlanId) => handlePurchaseGoldPlan(planId)}
               onManage={() => showToast("Subscription management panel active.")}
             />
 
@@ -187,7 +245,7 @@ export default function StudentProfilePage() {
                 icon="support_agent"
                 title="Help & Support"
                 subtitle="FAQs, Chat & Contact Support"
-                onClick={() => showToast("Support Desk: help@grabit.in | Helpline: 1800-GRABIT")}
+                href="/customer/support"
               />
               <ProfileMenuItem
                 icon="logout"
@@ -230,7 +288,7 @@ export default function StudentProfilePage() {
 
       {/* Toast Notification */}
       {activeToast && (
-        <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full border border-primary/30 bg-[#1e1f26] px-5 py-2.5 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-2">
+        <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full border border-primary/30 bg-surface-elevated px-5 py-2.5 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-2">
           <p className="font-display text-caption font-bold text-primary">{activeToast}</p>
         </div>
       )}

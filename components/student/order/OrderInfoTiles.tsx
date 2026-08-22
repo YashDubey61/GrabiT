@@ -1,9 +1,12 @@
-import type { PaymentMethod } from "@/components/student/PaymentMethodSelector";
-
-const PAYMENT_LABELS: Record<PaymentMethod, string> = {
+// Keyed loosely (not by the current PaymentMethod type) because
+// historical orders may still carry "upi" from before standalone UPI
+// was removed as a selectable GRABIT payment option — this is a
+// display label lookup for past data, not a re-introduction of UPI as
+// a choice.
+const PAYMENT_LABELS: Record<string, string> = {
   wallet: "GrabIt Wallet",
   upi: "UPI",
-  card: "Card",
+  card: "Pay Online",
 };
 
 // Converted from the two remaining Order Detail Bento tiles — Stall and
@@ -17,7 +20,7 @@ export function OrderInfoTiles({
   totalAmount,
 }: {
   canteenName: string;
-  paymentMethod: PaymentMethod;
+  paymentMethod: string;
   totalAmount: number;
 }) {
   return (

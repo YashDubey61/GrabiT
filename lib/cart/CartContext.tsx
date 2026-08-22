@@ -11,6 +11,7 @@ import {
 } from "react";
 import { calculateItemCount, calculateSubtotal } from "@/lib/cart/calculations";
 import { EMPTY_CART, type CartItem, type CartState } from "@/lib/cart/types";
+import { CanteenConflictModal } from "@/components/student/CanteenConflictModal";
 
 const STORAGE_KEY = "grabit_student_cart_v1";
 
@@ -43,13 +44,17 @@ interface CartContextValue extends CartState {
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-function loadFromSession(): CartState {
+function loadFromStorage(): CartState {
   if (typeof window === "undefined") return EMPTY_CART;
   try {
-    const raw = window.sessionStorage.getItem(STORAGE_KEY);
+    const raw =
+      window.localStorage.getItem(STORAGE_KEY) ||
+      window.sessionStorage.getItem(STORAGE_KEY);
     if (!raw) return EMPTY_CART;
     const parsed = JSON.parse(raw) as CartState;
-    if (!parsed || !Array.isArray(parsed.items)) return EMPTY_CART;
+    if (!parsed || !Array.isArray(parsed.items) || parsed.items.length === 0) {
+      return EMPTY_CART;
+    }
     return parsed;
   } catch {
     return EMPTY_CART;
@@ -61,41 +66,39 @@ function loadFromSession(): CartState {
  * (mounted once in app/customer/layout.tsx) so Menu and Checkout read the
  * same state instead of each keeping their own copy.
  *
- * Persistence: sessionStorage only — survives client-side navigation and a
- * tab refresh, cleared when the tab closes. No Supabase, no server sync;
- * this is explicitly session-local per the Day 3 brief.
+ * Persistence: localStorage + sessionStorage — survives client-side navigation,
+ * tab refresh, window re-open, and session restoration.
  *
- * Canteen consistency: a cart holds items from exactly one canteen. Adding
- * from a second canteen doesn't silently merge — it surfaces `conflict`,
- * which the calling screen renders as a message with a way to start over.
+ * Canteen consistency: a cart holds items from exactly ONE vendor. Adding
+ * from a second vendor doesn't silently merge or wipe — it surfaces `conflict`,
+ * which renders the global vendor-conflict modal for explicit user choice.
  */
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartState>(EMPTY_CART);
   const [conflict, setConflict] = useState<CanteenConflict | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
-  // Load once on mount (client-only — sessionStorage doesn't exist during
-  // SSR, so this can't be a lazy useState initializer without a
-  // server/client hydration mismatch). This is exactly the "subscribe to
-  // an external system" case the set-state-in-effect rule's own docs
-  // describe as correct; suppressed with that justification rather than
-  // restructured around it.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setCart(loadFromSession());
+    setCart(loadFromStorage());
     setHydrated(true);
   }, []);
 
-  // Persist on every change, once the initial load has happened (otherwise
-  // the empty initial state would overwrite a real saved cart on mount).
   useEffect(() => {
     if (!hydrated || typeof window === "undefined") return;
-    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
+    const json = JSON.stringify(cart);
+    try {
+      window.localStorage.setItem(STORAGE_KEY, json);
+      window.sessionStorage.setItem(STORAGE_KEY, json);
+    } catch {
+      // Storage quota or restriction protection
+    }
   }, [cart, hydrated]);
 
   const addItem = useCallback((input: AddItemInput) => {
     setCart((prev) => {
-      if (prev.canteenId && prev.canteenId !== input.canteenId) {
+      // Strict one-vendor-per-order check
+      if (prev.canteenId && prev.items.length > 0 && prev.canteenId !== input.canteenId) {
         setConflict({
           attemptedCanteenName: input.canteenName,
           pendingItem: input,
@@ -146,7 +149,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const clearCart = useCallback(() => setCart(EMPTY_CART), []);
+  const clearCart = useCallback(() => {
+    setCart(EMPTY_CART);
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.removeItem(STORAGE_KEY);
+        window.sessionStorage.removeItem(STORAGE_KEY);
+      } catch {
+        // Ignore
+      }
+    }
+  }, []);
+
   const dismissConflict = useCallback(() => setConflict(null), []);
 
   const resolveConflictByStartingOver = useCallback(() => {
@@ -186,7 +200,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
     resolveConflictByStartingOver,
   };
 
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+  return (
+    <CartContext.Provider value={value}>
+      {children}
+      {conflict && (
+        <CanteenConflictModal
+          currentCanteenName={cart.canteenName ?? "Current Vendor"}
+          attemptedCanteenName={conflict.attemptedCanteenName}
+          onKeepCurrentCart={dismissConflict}
+          onStartOver={resolveConflictByStartingOver}
+        />
+      )}
+    </CartContext.Provider>
+  );
 }
 
 export function useCart(): CartContextValue {

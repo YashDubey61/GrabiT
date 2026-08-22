@@ -22,7 +22,7 @@ export function VendorHourlyVolumeChart({
   };
 
   return (
-    <div className="flex flex-col rounded-2xl border border-border bg-[#1e1f26]/80 p-6 backdrop-blur-md">
+    <div className="flex flex-col rounded-2xl border border-border bg-surface-elevated p-6 backdrop-blur-md">
       {/* Header & Filter Switch */}
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>

@@ -17,17 +17,29 @@ alter table public.menu_items
   add column if not exists category text;
 
 -- 2. The one real college.
-insert into public.campuses (id, name, city, status)
+insert into public.campuses (id, name, city, status, latitude, longitude, radius_meters, short_name, address, state)
 values (
   'a1000000-0000-0000-0000-000000000001',
   'Axis Institute of Technology and Management',
   'Kanpur, UP',
-  'ACTIVE'
+  'ACTIVE',
+  26.3768,
+  80.4475,
+  2000,
+  'Axis',
+  'Hathipur, Rooma, NH-19',
+  'Uttar Pradesh'
 )
 on conflict (id) do update set
   name = excluded.name,
   city = excluded.city,
-  status = excluded.status;
+  status = excluded.status,
+  latitude = excluded.latitude,
+  longitude = excluded.longitude,
+  radius_meters = excluded.radius_meters,
+  short_name = excluded.short_name,
+  address = excluded.address,
+  state = excluded.state;
 
 -- 3. The one real vendor, linked to that college.
 insert into public.canteens (

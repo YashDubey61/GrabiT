@@ -113,7 +113,7 @@ export function VendorCategoryManagerModal({
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl border border-border bg-[#121212] p-6 shadow-2xl">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-surface-elevated p-6 shadow-2xl">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="font-display text-title font-bold text-foreground">Manage Categories</h3>
           <button
@@ -140,7 +140,7 @@ export function VendorCategoryManagerModal({
                 <select
                   value={moveTo}
                   onChange={(e) => setMoveTo(e.target.value)}
-                  className="w-full rounded-xl border border-border bg-[#1e1f26] p-2.5 text-body-sm text-foreground focus:border-primary focus:outline-none"
+                  className="w-full rounded-xl border border-border bg-surface-elevated p-2.5 text-body-sm text-foreground focus:border-primary focus:outline-none"
                 >
                   {categories
                     .filter((c) => c.id !== deleteTarget.id)
@@ -184,7 +184,7 @@ export function VendorCategoryManagerModal({
               {categories.map((cat) => (
                 <div
                   key={cat.id}
-                  className="flex items-center justify-between gap-2 rounded-xl border border-border bg-[#1e1f26] p-2.5"
+                  className="flex items-center justify-between gap-2 rounded-xl border border-border bg-surface-elevated p-2.5"
                 >
                   {editingId === cat.id ? (
                     <input
@@ -242,7 +242,7 @@ export function VendorCategoryManagerModal({
                 onChange={(e) => setNewName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAdd()}
                 placeholder="e.g. Chinese Specials"
-                className="min-w-0 flex-1 rounded-xl border border-border bg-[#1e1f26] p-2.5 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none"
+                className="min-w-0 flex-1 rounded-xl border border-border bg-surface-elevated p-2.5 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none"
               />
               <button
                 type="button"

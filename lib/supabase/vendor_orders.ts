@@ -1,12 +1,13 @@
 import { createClient } from "./client";
 import type { VendorOrder, VendorOrderStatus } from "@/lib/mock/vendor";
+import { getPendingOfflineManualOrders, MAX_SYNC_ATTEMPTS } from "@/lib/offline/manual_order_db";
 
 export interface SupabaseVendorOrderRow {
   id: string;
   order_number: string;
-  student_id: string;
+  student_id?: string | null;
   canteen_id: string;
-  slot: "short_break" | "lunch";
+  slot?: "short_break" | "lunch" | null;
   status: VendorOrderStatus;
   total_amount: number;
   created_at: string;
@@ -16,7 +17,14 @@ export interface SupabaseVendorOrderRow {
   cancelled_at?: string | null;
   cancellation_reason?: string | null;
   pickup_otp_code?: string | null;
+  order_type?: string | null;
+  is_manual?: boolean | null;
+  payment_method?: string | null;
+  customer_name?: string | null;
+  customer_phone?: string | null;
+  student_identifier?: string | null;
   canteens?: { name: string };
+  users?: { full_name?: string | null } | null;
   order_items?: {
     id: string;
     menu_item_id: string;
@@ -28,9 +36,8 @@ export interface SupabaseVendorOrderRow {
 
 /**
  * Fetch live vendor active orders from Supabase database, strictly
- * scoped to the given canteen. Fails closed (returns []) when no
- * canteenId is provided — a vendor must never see another vendor's
- * orders, so there is no "fetch everything" fallback.
+ * scoped to the given canteen. Merges local offline manual cash orders
+ * from IndexedDB if server is offline or sync is pending.
  */
 export async function getLiveVendorOrders(
   canteenId?: string,
@@ -39,6 +46,8 @@ export async function getLiveVendorOrders(
     return [];
   }
 
+  let dbOrders: VendorOrder[] = [];
+
   try {
     const supabase = createClient();
     const { data: orders, error } = await supabase
@@ -46,6 +55,7 @@ export async function getLiveVendorOrders(
       .select(`
         *,
         canteens ( name ),
+        users:student_id ( full_name ),
         order_items (
           id,
           menu_item_id,
@@ -57,13 +67,40 @@ export async function getLiveVendorOrders(
       .eq("canteen_id", canteenId)
       .order("created_at", { ascending: false });
 
-    if (error || !orders) {
-      return [];
+    if (!error && orders) {
+      dbOrders = orders.map((o) => mapSupabaseVendorOrderToUI(o as SupabaseVendorOrderRow));
     }
-
-    return orders.map((o) => mapSupabaseVendorOrderToUI(o as SupabaseVendorOrderRow));
   } catch {
-    return [];
+    // Database connection fallback
+  }
+
+  // Merge local pending manual cash orders from IndexedDB
+  try {
+    const localPending = await getPendingOfflineManualOrders(canteenId);
+    const localMapped: VendorOrder[] = localPending.map((loc) => {
+      const isStuck = loc.syncStatus === "FAILED" && (loc.syncAttempts ?? 0) >= MAX_SYNC_ATTEMPTS;
+      return {
+        id: loc.clientOrderId,
+        orderNumber: loc.serverOrderNumber || `#GRABIT-M-${loc.clientOrderId.slice(-4).toUpperCase()}`,
+        studentName: loc.customerName || "Walk-in Customer",
+        elapsedTimeText: isStuck ? "Sync Failed — Needs Attention" : "Pending Sync (Offline)",
+        paymentType: "CASH",
+        status: "preparing",
+        totalAmount: loc.totalAmount,
+        items: loc.items.map((i) => ({ name: i.name, quantity: i.quantity })),
+        createdAtIso: loc.createdAt,
+        orderType: "MANUAL_CASH_ORDER",
+        isManual: true,
+      };
+    });
+
+    // Deduplicate if order already exists in dbOrders by serverOrderNumber or ID
+    const dbOrderNumbers = new Set(dbOrders.map((o) => o.orderNumber));
+    const uniqueLocal = localMapped.filter((loc) => !dbOrderNumbers.has(loc.orderNumber));
+
+    return [...uniqueLocal, ...dbOrders];
+  } catch {
+    return dbOrders;
   }
 }
 
@@ -89,18 +126,28 @@ export function mapSupabaseVendorOrderToUI(row: SupabaseVendorOrderRow): VendorO
     elapsedTimeText = `Cancelled`;
   }
 
+  const isManualOrder = Boolean(
+    row.is_manual ||
+    row.order_type === "MANUAL_CASH_ORDER" ||
+    (row.order_number && row.order_number.includes("-M-"))
+  );
+
+  const rawStudentName = row.customer_name || row.users?.full_name;
+  const studentName = rawStudentName && rawStudentName.trim()
+    ? rawStudentName.trim()
+    : isManualOrder
+      ? "Walk-in Customer"
+      : "Customer";
+
   return {
     id: row.id,
     orderNumber: row.order_number.startsWith("#") ? row.order_number : `#${row.order_number}`,
-    studentName: "Campus Student",
+    studentName,
     elapsedTimeText,
-    paymentType: "PREPAID",
+    paymentType: row.payment_method === "cash" || isManualOrder ? "CASH" : "PREPAID",
     status: row.status,
     totalAmount: Number(row.total_amount) || 0,
     items,
-    // Real per-order secret the *customer* reads aloud for manual OTP
-    // verification — this used to be derived from the (guessable, public)
-    // order number, which defeated the purpose of a fallback credential.
     otpCode: row.status === "ready" ? row.pickup_otp_code ?? undefined : undefined,
     prepProgressPercent: row.status === "preparing" ? Math.min(85, 30 + elapsedMinutes * 10) : undefined,
     createdAtIso: row.created_at,
@@ -109,5 +156,7 @@ export function mapSupabaseVendorOrderToUI(row: SupabaseVendorOrderRow): VendorO
     completedAtIso: row.completed_at ?? undefined,
     cancelledAtIso: row.cancelled_at ?? undefined,
     cancellationReason: row.cancellation_reason ?? undefined,
+    orderType: row.order_type || (isManualOrder ? "MANUAL_CASH_ORDER" : "ONLINE_ORDER"),
+    isManual: isManualOrder,
   };
 }

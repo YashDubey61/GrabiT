@@ -1,13 +1,7 @@
 import { NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { getAuthenticatedSuperAdminContext } from "@/lib/supabase/superadmin";
 import { recordSuperAdminAction } from "@/lib/supabase/superadmin_audit";
-
-function getSupabaseAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createAdminClient(url, key);
-}
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const adminCtx = await getAuthenticatedSuperAdminContext();
@@ -20,7 +14,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const { data, error } = await supabase
     .from("canteens")
     .select(
-      "id, name, owner_name, email, phone, address, pickup_location, operating_hours, prep_time_minutes, status, is_paused, pause_reason, vendor_code, created_at, campus_id, campuses ( id, name )",
+      "id, name, owner_name, email, phone, address, pickup_location, operating_hours, prep_time_minutes, status, is_paused, pause_reason, vendor_code, created_at, campus_id, photo_urls, campuses ( id, name )",
     )
     .eq("id", id)
     .maybeSingle();
@@ -57,6 +51,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     isPaused?: boolean;
     pauseReason?: string | null;
     status?: "active" | "inactive";
+    photoUrls?: string[];
   };
 
   const supabase = getSupabaseAdminClient();
@@ -79,6 +74,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (body.pickupLocation !== undefined) updates.pickup_location = body.pickupLocation.trim() || null;
   if (body.operatingHours !== undefined) updates.operating_hours = body.operatingHours.trim() || null;
   if (body.prepTimeMinutes !== undefined) updates.prep_time_minutes = body.prepTimeMinutes;
+
+  if (body.photoUrls !== undefined) {
+    if (!Array.isArray(body.photoUrls) || body.photoUrls.length > 5) {
+      return NextResponse.json({ ok: false, error: "A vendor can have at most 5 cafeteria photos." }, { status: 400 });
+    }
+    const photoUrls = body.photoUrls.filter((u) => typeof u === "string" && u.trim());
+    updates.photo_urls = photoUrls;
+    // Keep the single image_url column (used everywhere a plain cover
+    // thumbnail is still read) in sync with the first/primary photo.
+    updates.image_url = photoUrls[0] ?? null;
+  }
 
   let campusChanged = false;
   if (body.campusId !== undefined && body.campusId !== existing.campus_id) {

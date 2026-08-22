@@ -1,13 +1,8 @@
 import { NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { getAuthenticatedSuperAdminContext } from "@/lib/supabase/superadmin";
 import { recordSuperAdminAction } from "@/lib/supabase/superadmin_audit";
-
-function getSupabaseAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createAdminClient(url, key);
-}
+import { resolveImageUrl } from "@/lib/utils/image";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 /** Lists every vendor (canteen) with its owning campus and account
  * contact, for the Super Admin Vendor Management table. Admin-only. */
@@ -21,7 +16,7 @@ export async function GET() {
   const { data, error } = await supabase
     .from("canteens")
     .select(
-      "id, name, owner_name, email, phone, status, is_paused, pause_reason, vendor_code, created_at, campuses ( id, name )",
+      "id, name, owner_name, email, phone, status, is_paused, pause_reason, vendor_code, created_at, photo_urls, image_url, campuses ( id, name )",
     )
     .order("created_at", { ascending: false });
 
@@ -29,7 +24,22 @@ export async function GET() {
     return NextResponse.json({ ok: false, error: "Unable to load vendors." }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true, vendors: data ?? [] });
+  const vendors = (data ?? []).map((v) => {
+    const rawPhotos: (string | null | undefined)[] = Array.isArray(v.photo_urls) && v.photo_urls.length > 0 ? v.photo_urls : [v.image_url];
+    return {
+      ...v,
+      photo_urls: rawPhotos.map((url: string | null | undefined) => resolveImageUrl(url, "canteen")).filter(Boolean),
+      image_url: resolveImageUrl(v.image_url, "canteen"),
+    };
+  });
+
+  return NextResponse.json({
+    ok: true,
+    vendors,
+    data: {
+      vendors,
+    },
+  });
 }
 
 /**
@@ -56,6 +66,7 @@ export async function POST(request: Request) {
     operatingHours?: string;
     prepTimeMinutes?: number;
     password?: string;
+    photoUrls?: string[];
   };
 
   const ownerName = body.ownerName?.trim();
@@ -69,6 +80,13 @@ export async function POST(request: Request) {
       { ok: false, error: "Owner name, shop name, email, and campus are required." },
       { status: 400 },
     );
+  }
+
+  // Never trust the frontend's "max 5" alone — re-enforce it here (the
+  // DB check constraint is the final backstop).
+  const photoUrls = Array.isArray(body.photoUrls) ? body.photoUrls.filter((u) => typeof u === "string" && u.trim()).slice(0, 5) : [];
+  if (Array.isArray(body.photoUrls) && body.photoUrls.length > 5) {
+    return NextResponse.json({ ok: false, error: "A vendor can have at most 5 cafeteria photos." }, { status: 400 });
   }
   if (password.length < 8) {
     return NextResponse.json(
@@ -121,6 +139,10 @@ export async function POST(request: Request) {
         status: "active",
         qr_code_id: qrCodeId,
         vendor_code: vendorCode,
+        photo_urls: photoUrls,
+        // Keep the single image_url column (used everywhere a plain
+        // cover thumbnail is still read) in sync with the first/primary photo.
+        image_url: photoUrls[0] ?? null,
       })
       .select("id, vendor_code")
       .single();

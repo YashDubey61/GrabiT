@@ -5,7 +5,7 @@ export type OrderActorRole = "student" | "vendor" | "admin" | "system";
 export const ORDER_STATUS_TRANSITIONS: Record<VendorOrderStatus, VendorOrderStatus[]> = {
   placed: ["preparing", "cancelled"],
   preparing: ["ready", "cancelled"],
-  ready: ["picked_up"],
+  ready: ["picked_up", "completed"],
   picked_up: ["completed"],
   completed: [],
   cancelled: [],
@@ -14,14 +14,16 @@ export const ORDER_STATUS_TRANSITIONS: Record<VendorOrderStatus, VendorOrderStat
 // Per-role allowlist of transitions that role is permitted to trigger.
 // (Actual actor-role transitions in production: the vendor dashboard
 // drives placed->preparing/cancelled, preparing->ready/cancelled, and
-// picked_up->completed ("Complete Handover"); the student app
-// self-confirms ready->picked_up. Extend here if new actors are added.)
+// ready->picked_up / ready->completed / picked_up->completed; the student
+// app self-confirms ready->picked_up. Extend here if new actors are added.)
 const ROLE_ALLOWED_TRANSITIONS: Record<OrderActorRole, Set<string>> = {
   vendor: new Set([
     "placed->preparing",
     "placed->cancelled",
     "preparing->ready",
     "preparing->cancelled",
+    "ready->picked_up",
+    "ready->completed",
     "picked_up->completed",
   ]),
   student: new Set(["ready->picked_up"]),

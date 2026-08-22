@@ -1,9 +1,4 @@
-/**
- * Geolocation & Haversine Geofencing Utility — GrabIt Campus Canteen OS.
- * Used for client-side campus detection and distance calculations integrated with Google Maps APIs.
- */
-
-import { reverseGeocodeGoogle } from "./google_maps";
+import { reverseGeocodeGoogle, getGoogleDistanceMatrix } from "@/lib/utils/google_maps";
 
 export interface CampusLocationItem {
   id: string;
@@ -18,27 +13,11 @@ export interface CampusLocationItem {
   status?: string;
 }
 
-export interface GeolocationResult {
-  latitude: number;
-  longitude: number;
-  accuracy: number;
-}
-
-export type GeolocationStatus =
-  | "IDLE"
-  | "DETECTING"
-  | "GRANTED"
-  | "DENIED"
-  | "UNAVAILABLE"
-  | "TIMEOUT"
-  | "UNSUPPORTED";
-
 export type DetectionConfidence = "HIGH" | "MEDIUM" | "LOW";
 
 export interface CampusDetectionResult {
   detectedCampus: CampusLocationItem | null;
   distanceMeters: number | null;
-  formattedAddress: string;
   confidence: DetectionConfidence;
   requiresConfirmation: boolean;
   allNearby: { campus: CampusLocationItem; distanceMeters: number }[];
@@ -132,105 +111,141 @@ export function findNearbyCampus(
   };
 }
 
+/** ≤1km: confident enough to auto-select. 1–5km: plausible, but ask the
+ * student to confirm. >5km: too far to guess — fall back to manual
+ * campus selection. Pure distance bands per product spec, independent
+ * of each campus's own geofence radiusMeters (that still gates
+ * `findNearbyCampus` above). */
+const AUTO_SELECT_METERS = 1000;
+const CONFIRM_MAX_METERS = 5000;
+
+/** GPS accuracy worse than this many meters can't be trusted to
+ * distinguish "auto-select" from "confirm" — treated as if further
+ * away than it measured. */
+const POOR_ACCURACY_METERS = 500;
+
 /**
- * Full automatic campus detection pipeline combining Geolocation, Google Reverse Geocoding, and Geofencing.
+ * Finds the nearest campus to the student's GPS coordinates via pure
+ * Haversine distance and classifies confidence purely by distance
+ * bands — no external geocoding, no API key.
  */
-export async function detectCampusWithGoogle(
+export function detectNearestCampus(
   studentLat: number,
   studentLon: number,
   accuracyMeters: number,
   campuses: CampusLocationItem[],
-): Promise<CampusDetectionResult> {
-  const [googleGeo, geofence] = await Promise.all([
-    reverseGeocodeGoogle(studentLat, studentLon),
-    Promise.resolve(findNearbyCampus(studentLat, studentLon, campuses)),
-  ]);
+): CampusDetectionResult {
+  let nearest: CampusLocationItem | null = null;
+  let minDistance: number | null = null;
+  const allNearby: { campus: CampusLocationItem; distanceMeters: number }[] = [];
 
-  const campus = geofence.detectedCampus;
-  const distance = geofence.distanceMeters;
+  console.log(
+    `[GPS Detection] User Location: lat=${studentLat}, lon=${studentLon}, accuracy=${accuracyMeters}m`,
+  );
+
+  for (const cmp of campuses) {
+    if (cmp.latitude == null || cmp.longitude == null) continue;
+    const dist = calculateDistanceMeters(studentLat, studentLon, cmp.latitude, cmp.longitude);
+    console.log(
+      `[GPS Detection] Campus '${cmp.name}' DB Location: lat=${cmp.latitude}, lon=${cmp.longitude} -> Haversine Distance: ${dist}m (${(dist / 1000).toFixed(2)} km)`,
+    );
+    allNearby.push({ campus: cmp, distanceMeters: dist });
+    if (minDistance === null || dist < minDistance) {
+      minDistance = dist;
+      nearest = cmp;
+    }
+  }
+  allNearby.sort((a, b) => a.distanceMeters - b.distanceMeters);
 
   let confidence: DetectionConfidence = "LOW";
-  let requiresConfirmation = false;
+  let requiresConfirmation = true;
 
-  if (campus && distance != null) {
-    const radius = campus.radiusMeters ?? 2000;
-    const isWellInside = distance <= radius * 0.75;
-    const isAccurateGPS = accuracyMeters <= 100;
+  if (nearest && minDistance != null) {
+    // Poor GPS accuracy can't be trusted for an auto-select decision —
+    // treat it as at least "confirm" distance even if the raw fix
+    // looked close.
+    const effectiveDistance =
+      accuracyMeters > POOR_ACCURACY_METERS
+        ? Math.max(minDistance, AUTO_SELECT_METERS + 1)
+        : minDistance;
 
-    if (isWellInside && isAccurateGPS) {
+    if (effectiveDistance <= AUTO_SELECT_METERS) {
       confidence = "HIGH";
       requiresConfirmation = false;
-    } else if (distance <= radius) {
+    } else if (effectiveDistance <= CONFIRM_MAX_METERS) {
       confidence = "MEDIUM";
-      requiresConfirmation = geofence.allNearby.length > 1 || accuracyMeters > 200;
+      requiresConfirmation = true;
     } else {
       confidence = "LOW";
       requiresConfirmation = true;
+      nearest = null; // beyond confirm range -> manual selection only
     }
-  } else {
-    requiresConfirmation = true;
   }
 
   return {
-    detectedCampus: campus,
-    distanceMeters: distance,
-    formattedAddress: googleGeo.formattedAddress,
+    detectedCampus: confidence === "LOW" ? null : nearest,
+    distanceMeters: minDistance,
     confidence,
     requiresConfirmation,
-    allNearby: geofence.allNearby,
+    allNearby,
   };
 }
 
 /**
- * Safely request browser Geolocation coordinates with timeout handling.
+ * Detects the nearest registered GrabIt campus using device GPS + Google Maps Platform APIs.
+ * Reverse-geocodes current coordinates for human-readable location verification and computes
+ * Distance Matrix travel metrics when configured, falling back smoothly to Haversine distance when offline.
  */
-export function getCurrentBrowserLocation(
-  timeoutMs = 6000,
-): Promise<{ result?: GeolocationResult; errorStatus?: GeolocationStatus }> {
-  return new Promise((resolve) => {
-    if (typeof window === "undefined" || !("geolocation" in navigator)) {
-      resolve({ errorStatus: "UNSUPPORTED" });
-      return;
+export async function detectNearestCampusWithGoogle(
+  studentLat: number,
+  studentLon: number,
+  accuracyMeters: number,
+  campuses: CampusLocationItem[],
+): Promise<CampusDetectionResult & { locationContext?: string }> {
+  // Base distance & geofence detection
+  const baseResult = detectNearestCampus(studentLat, studentLon, accuracyMeters, campuses);
+
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  if (!apiKey || apiKey.trim() === "") {
+    return baseResult;
+  }
+
+  try {
+    // 1. Google Reverse Geocoding API: validate location context
+    const geo = await reverseGeocodeGoogle(studentLat, studentLon);
+    if (geo.ok) {
+      console.log(
+        `[Google Maps Platform] Reverse Geocoded Location: ${geo.formattedAddress} (${geo.city}, ${geo.state})`,
+      );
     }
 
-    let isHandled = false;
-    const timer = setTimeout(() => {
-      if (!isHandled) {
-        isHandled = true;
-        resolve({ errorStatus: "TIMEOUT" });
-      }
-    }, timeoutMs);
+    // 2. Google Distance Matrix API: validate distance & travel duration if candidate campus exists
+    if (
+      baseResult.detectedCampus &&
+      baseResult.detectedCampus.latitude != null &&
+      baseResult.detectedCampus.longitude != null
+    ) {
+      const matrix = await getGoogleDistanceMatrix(
+        studentLat,
+        studentLon,
+        baseResult.detectedCampus.latitude,
+        baseResult.detectedCampus.longitude,
+      );
 
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        if (!isHandled) {
-          isHandled = true;
-          clearTimeout(timer);
-          resolve({
-            result: {
-              latitude: pos.coords.latitude,
-              longitude: pos.coords.longitude,
-              accuracy: pos.coords.accuracy,
-            },
-          });
-        }
-      },
-      (err) => {
-        if (!isHandled) {
-          isHandled = true;
-          clearTimeout(timer);
-          if (err.code === err.PERMISSION_DENIED) {
-            resolve({ errorStatus: "DENIED" });
-          } else {
-            resolve({ errorStatus: "UNAVAILABLE" });
-          }
-        }
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: timeoutMs,
-        maximumAge: 60000,
-      },
-    );
-  });
+      if (matrix.ok && matrix.distanceMeters != null) {
+        console.log(
+          `[Google Maps Platform] Distance Matrix to '${baseResult.detectedCampus.name}': ${matrix.distanceMeters}m (${(matrix.distanceMeters / 1000).toFixed(2)} km), Duration: ${matrix.durationText || "N/A"}`,
+        );
+      }
+    }
+
+    return {
+      ...baseResult,
+      locationContext: geo.ok ? geo.formattedAddress : undefined,
+    };
+  } catch (err) {
+    console.warn("[Google Maps Platform] Verification error, falling back to Haversine:", err);
+    return baseResult;
+  }
 }
+

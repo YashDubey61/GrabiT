@@ -1,7 +1,8 @@
 /**
  * Google Maps Platform Integration Library — GrabIt Campus Canteen OS.
- * Handles Reverse Geocoding, Google Places Autocomplete, and Address Geocoding
- * with graceful offline fallbacks and error handling.
+ * Handles Reverse Geocoding, Google Places Autocomplete, Address Geocoding,
+ * and Distance Matrix API web-service requests securely on the backend server
+ * using GOOGLE_MAPS_SERVER_API_KEY.
  */
 
 export interface GoogleReverseGeocodeResult {
@@ -28,6 +29,25 @@ export interface GoogleGeocodeAddressResult {
   error?: string;
 }
 
+export interface GoogleDistanceMatrixResult {
+  ok: boolean;
+  distanceMeters?: number;
+  durationText?: string;
+  error?: string;
+}
+
+/**
+ * Returns the secure server-side API key for Google Maps Platform web services.
+ * Prioritizes GOOGLE_MAPS_SERVER_API_KEY, with fallback to NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+ * during migration environments.
+ */
+function getGoogleServerApiKey(): string | undefined {
+  return (
+    process.env.GOOGLE_MAPS_SERVER_API_KEY ||
+    process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+  );
+}
+
 /**
  * Reverse geocode latitude/longitude coordinates into human-readable location context via Google Maps API.
  */
@@ -35,7 +55,7 @@ export async function reverseGeocodeGoogle(
   latitude: number,
   longitude: number,
 ): Promise<GoogleReverseGeocodeResult> {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const apiKey = getGoogleServerApiKey();
 
   if (!apiKey || apiKey.trim() === "") {
     // Offline/Default fallback when Google API key is unconfigured
@@ -102,12 +122,12 @@ export async function reverseGeocodeGoogle(
 export async function geocodeAddressGoogle(
   address: string,
 ): Promise<GoogleGeocodeAddressResult> {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const apiKey = getGoogleServerApiKey();
 
   if (!apiKey || apiKey.trim() === "") {
     return {
       ok: false,
-      error: "Google Maps API Key is not configured in environment (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY).",
+      error: "Google Maps Server API Key is not configured in environment (GOOGLE_MAPS_SERVER_API_KEY).",
     };
   }
 
@@ -145,7 +165,7 @@ export async function geocodeAddressGoogle(
 export async function searchGooglePlaces(
   query: string,
 ): Promise<GooglePlaceSuggestion[]> {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const apiKey = getGoogleServerApiKey();
 
   if (!apiKey || !query.trim() || query.length < 2) {
     return [];
@@ -170,5 +190,57 @@ export async function searchGooglePlaces(
     return [];
   } catch {
     return [];
+  }
+}
+
+/**
+ * Fetch travel distance and duration between student GPS origin and campus destination via Google Maps Distance Matrix API.
+ */
+export async function getGoogleDistanceMatrix(
+  originLat: number,
+  originLon: number,
+  destLat: number,
+  destLon: number,
+): Promise<GoogleDistanceMatrixResult> {
+  const apiKey = getGoogleServerApiKey();
+
+  if (!apiKey || apiKey.trim() === "") {
+    return {
+      ok: false,
+      error: "Google Maps Server API Key is not configured in environment (GOOGLE_MAPS_SERVER_API_KEY).",
+    };
+  }
+
+  try {
+    const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${originLat},${originLon}&destinations=${destLat},${destLon}&key=${apiKey}`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (
+      data.status === "OK" &&
+      data.rows &&
+      data.rows.length > 0 &&
+      data.rows[0].elements &&
+      data.rows[0].elements.length > 0
+    ) {
+      const element = data.rows[0].elements[0];
+      if (element.status === "OK") {
+        return {
+          ok: true,
+          distanceMeters: element.distance?.value,
+          durationText: element.duration?.text,
+        };
+      }
+    }
+
+    return {
+      ok: false,
+      error: data.error_message || data.status || "Distance Matrix query failed",
+    };
+  } catch {
+    return {
+      ok: false,
+      error: "Network error querying Google Distance Matrix API",
+    };
   }
 }

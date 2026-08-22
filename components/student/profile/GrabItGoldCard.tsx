@@ -2,11 +2,14 @@
 
 import { useState } from "react";
 import type { GoldSubscription } from "@/lib/mock/student";
-import type { GoldPlanId } from "@/lib/payments/razorpay";
+import { GOLD_PASS_PLANS, type GoldPlanId } from "@/lib/payments/gold_plans";
 
 interface GrabItGoldCardProps {
   subscription: GoldSubscription;
   isProcessing?: boolean;
+  /** Set after a failed/cancelled/timed-out payment attempt — renders a
+   * "Try Again" state instead of a silent failure. Cleared on next attempt. */
+  error?: string | null;
   onPurchasePlan?: (planId: GoldPlanId) => void;
   onManage?: () => void;
 }
@@ -14,10 +17,11 @@ interface GrabItGoldCardProps {
 export function GrabItGoldCard({
   subscription,
   isProcessing = false,
+  error = null,
   onPurchasePlan,
   onManage,
 }: GrabItGoldCardProps) {
-  const [selectedPlan, setSelectedPlan] = useState<GoldPlanId>("gold_monthly");
+  const [selectedPlan, setSelectedPlan] = useState<GoldPlanId>("MONTHLY");
   const [showPlanPicker, setShowPlanPicker] = useState(false);
 
   const handlePurchase = (planId: GoldPlanId) => {
@@ -29,7 +33,7 @@ export function GrabItGoldCard({
   return (
     <section
       className="relative mb-6 overflow-hidden rounded-2xl p-5 shadow-lg transition-all"
-      style={{ background: "linear-gradient(135deg, #FF6D00 0%, #FFB692 100%)" }}
+      style={{ background: "linear-gradient(135deg, #FF7A00 0%, #FF922B 100%)" }}
     >
       {/* Decorative background star */}
       <div className="pointer-events-none absolute -right-5 -top-5 rotate-12 opacity-20">
@@ -70,38 +74,59 @@ export function GrabItGoldCard({
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={() => setSelectedPlan("gold_monthly")}
+                onClick={() => setSelectedPlan("MONTHLY")}
                 className={`rounded-xl border p-2.5 text-left transition-all ${
-                  selectedPlan === "gold_monthly"
+                  selectedPlan === "MONTHLY"
                     ? "border-white bg-black/40 shadow-inner"
                     : "border-white/20 bg-white/10 hover:bg-white/20"
                 }`}
               >
                 <span className="block font-display text-caption font-bold text-white">
-                  Monthly Pass
+                  {GOLD_PASS_PLANS.MONTHLY.label}
                 </span>
                 <span className="block text-body-sm font-extrabold text-white">
-                  ₹49 <span className="text-[11px] font-normal opacity-80">/ 30 days</span>
+                  ₹{GOLD_PASS_PLANS.MONTHLY.amount}{" "}
+                  <span className="text-[11px] font-normal opacity-80">
+                    / {GOLD_PASS_PLANS.MONTHLY.durationDays} days
+                  </span>
                 </span>
               </button>
 
               <button
                 type="button"
-                onClick={() => setSelectedPlan("gold_semester")}
+                onClick={() => setSelectedPlan("SEMESTER")}
                 className={`rounded-xl border p-2.5 text-left transition-all ${
-                  selectedPlan === "gold_semester"
+                  selectedPlan === "SEMESTER"
                     ? "border-white bg-black/40 shadow-inner"
                     : "border-white/20 bg-white/10 hover:bg-white/20"
                 }`}
               >
                 <span className="block font-display text-caption font-bold text-white">
-                  Semester Pass
+                  {GOLD_PASS_PLANS.SEMESTER.label}
                 </span>
                 <span className="block text-body-sm font-extrabold text-white">
-                  ₹199 <span className="text-[11px] font-normal opacity-80">/ 120 days</span>
+                  ₹{GOLD_PASS_PLANS.SEMESTER.amount}{" "}
+                  <span className="text-[11px] font-normal opacity-80">
+                    / {GOLD_PASS_PLANS.SEMESTER.durationDays} days
+                  </span>
                 </span>
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Payment failure state — shown instead of a silent failure */}
+        {error && (
+          <div className="mb-3 flex items-center justify-between gap-2 rounded-xl border border-white bg-black/40 px-3 py-2">
+            <span className="text-caption font-semibold text-white">{error}</span>
+            <button
+              type="button"
+              onClick={() => handlePurchase(selectedPlan)}
+              disabled={isProcessing}
+              className="shrink-0 rounded-lg bg-white px-3 py-1.5 font-display text-caption font-bold text-black transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
+            >
+              Try Again
+            </button>
           </div>
         )}
 
@@ -132,7 +157,7 @@ export function GrabItGoldCard({
                   type="button"
                   className="rounded-lg bg-black px-4 py-1.5 font-display text-caption font-bold text-white transition-transform hover:scale-105 active:scale-95 shadow-md disabled:opacity-50"
                 >
-                  {isProcessing ? "Processing..." : "Pay with Razorpay"}
+                  {isProcessing ? "Processing..." : "Extend Now"}
                 </button>
               ) : (
                 <button
@@ -151,7 +176,7 @@ export function GrabItGoldCard({
               type="button"
               className="rounded-lg bg-black px-4 py-1.5 font-display text-caption font-bold text-white transition-transform hover:scale-105 active:scale-95 shadow-md disabled:opacity-50"
             >
-              {isProcessing ? "Opening Razorpay..." : "Get GrabIt Gold"}
+              {isProcessing ? "Opening checkout..." : "Get GrabIt Gold"}
             </button>
           )}
         </div>

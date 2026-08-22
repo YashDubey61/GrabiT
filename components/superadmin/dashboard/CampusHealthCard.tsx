@@ -16,7 +16,7 @@ export function CampusHealthCard({
   southVol = "12.1k vol",
 }: CampusHealthCardProps) {
   return (
-    <div className="relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border bg-[#1e1f26]/90 p-6 backdrop-blur-md min-h-[320px]">
+    <div className="relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border bg-surface-elevated/90 p-6 backdrop-blur-md min-h-[320px]">
       {/* Top Indicators */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="rounded-lg border border-border bg-surface-sunken/80 px-3 py-1 font-display text-caption font-bold text-foreground backdrop-blur-md uppercase tracking-wider">
@@ -32,7 +32,7 @@ export function CampusHealthCard({
       </div>
 
       {/* Cyberpunk Dark Map Canvas Background */}
-      <div className="my-6 flex flex-1 items-center justify-center rounded-xl border border-border/40 bg-[#0d0d12] p-8 text-center">
+      <div className="my-6 flex flex-1 items-center justify-center rounded-xl border border-border/40 bg-background p-8 text-center">
         <div className="flex flex-col items-center gap-2">
           <span className="material-symbols-outlined text-[48px] text-primary/60">
             hub

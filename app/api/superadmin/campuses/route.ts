@@ -1,65 +1,64 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedSuperAdminContext } from "@/lib/supabase/superadmin";
 import {
-  getSuperAdminCampuses,
+  fetchSuperAdminCampusesDirectory,
   createLiveCampus,
 } from "@/lib/supabase/superadmin_campuses";
 
+/**
+ * GET /api/superadmin/campuses
+ * Returns Overview KPI stats and Campus directory list.
+ * Server-authoritative Super Admin role guard.
+ */
 export async function GET(request: Request) {
+  const adminCtx = await getAuthenticatedSuperAdminContext();
+  if (!adminCtx || adminCtx.role !== "admin") {
+    return NextResponse.json({ ok: false, error: "Access denied." }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const q = searchParams.get("q") || searchParams.get("search") || "";
+  const status = searchParams.get("status") || "ALL";
+
   try {
-    const authContext = await getAuthenticatedSuperAdminContext();
-
-    if (!authContext) {
-      return NextResponse.json(
-        { ok: false, error: "Access denied. Only Super Admin accounts can access campus registry." },
-        { status: 403 },
-      );
-    }
-
-    const { searchParams } = new URL(request.url);
-    const q = searchParams.get("q") || "";
-    const status = searchParams.get("status") || "ALL";
-
-    const data = await getSuperAdminCampuses(q, status);
+    const { stats, campuses } = await fetchSuperAdminCampusesDirectory(q, status);
 
     return NextResponse.json({
       ok: true,
-      data,
+      stats,
+      campuses,
+      data: {
+        campuses,
+      },
     });
-  } catch {
+  } catch (error: any) {
     return NextResponse.json(
-      { ok: false, error: "Unable to load campus registry." },
-      { status: 500 },
+      { ok: false, error: error?.message || "Failed to load campus directory." },
+      { status: 500 }
     );
   }
 }
 
+/**
+ * POST /api/superadmin/campuses
+ * Onboards a new campus with Super Admin authentication.
+ */
 export async function POST(request: Request) {
+  const adminCtx = await getAuthenticatedSuperAdminContext();
+  if (!adminCtx || adminCtx.role !== "admin") {
+    return NextResponse.json({ ok: false, error: "Access denied." }, { status: 401 });
+  }
+
   try {
-    const authContext = await getAuthenticatedSuperAdminContext();
-
-    if (!authContext) {
-      return NextResponse.json(
-        { ok: false, error: "Access denied. Only Super Admin accounts can create new campuses." },
-        { status: 403 },
-      );
-    }
-
     const body = await request.json().catch(() => ({}));
     const { name, location, status, logisticsLeadName } = body;
 
     if (!name || typeof name !== "string" || !name.trim()) {
-      return NextResponse.json(
-        { ok: false, error: "Campus name is required." },
-        { status: 400 },
-      );
+      return NextResponse.json({ ok: false, error: "Campus name is required." }, { status: 400 });
     }
 
     if (!location || typeof location !== "string" || !location.trim()) {
-      return NextResponse.json(
-        { ok: false, error: "Location / City is required." },
-        { status: 400 },
-      );
+      return NextResponse.json({ ok: false, error: "Location / City is required." }, { status: 400 });
     }
 
     const createdCampus = await createLiveCampus({
@@ -73,11 +72,10 @@ export async function POST(request: Request) {
       ok: true,
       campus: createdCampus,
     });
-  } catch (err: unknown) {
-    const errMsg = err instanceof Error ? err.message : "Failed to create campus.";
+  } catch (err: any) {
     return NextResponse.json(
-      { ok: false, error: errMsg },
-      { status: 500 },
+      { ok: false, error: err?.message || "Failed to create campus." },
+      { status: 500 }
     );
   }
 }

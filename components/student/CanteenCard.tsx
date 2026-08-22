@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import type { MockCanteen } from "@/lib/mock/campus";
+import { CanteenImageCarousel } from "@/components/student/CanteenImageCarousel";
 
 /**
  * A client component only because of the quick-add button, which must
@@ -19,14 +19,8 @@ export function CanteenCard({ canteen }: { canteen: MockCanteen }) {
       className="group relative block overflow-hidden rounded-2xl border border-border-subtle bg-surface-elevated transition-colors duration-300 hover:border-primary/50"
     >
       <div className="relative h-48 overflow-hidden">
-        <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/90 to-transparent" />
-        <Image
-          src={canteen.image}
-          alt={canteen.imageAlt}
-          fill
-          sizes="(min-width: 768px) 640px, 100vw"
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-        />
+        <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-black/90 to-transparent" />
+        <CanteenImageCarousel images={canteen.images} alt={canteen.imageAlt} />
         {canteen.trending && (
           <span className="absolute left-4 top-4 z-20 rounded-md bg-primary/90 px-3 py-1 text-label font-700 uppercase tracking-[0.04em] text-on-primary backdrop-blur-md">
             Trending

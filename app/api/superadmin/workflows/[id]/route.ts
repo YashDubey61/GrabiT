@@ -4,14 +4,7 @@ import {
   getWorkflowRules,
   executeWorkflowRule,
 } from "@/lib/workflows/workflow_engine";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
-
-function getSupabaseAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createAdminClient(url, serviceKey);
-}
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function PATCH(
   request: NextRequest,

@@ -10,7 +10,7 @@ import {
   sendPasswordResetEmail,
 } from "@/lib/supabase/auth";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { getSafeRedirectUrl, hardNavigate, authLog, authError } from "@/lib/auth/redirect";
+import { getSafeRedirectUrl, hardNavigate, authLog, authError, authReject } from "@/lib/auth/redirect";
 
 type ViewMode = "signin" | "forgot";
 
@@ -112,7 +112,7 @@ function SuperAdminAuthFormContent() {
 
       if (userRole !== "admin") {
         // Explicit Fail-Closed: Log out non-admin account attempting superadmin access
-        authError("Account is not an admin (role:", userRole, ") — rejecting superadmin portal access");
+        authReject("Account is not an admin (role:", userRole, ") — rejecting superadmin portal access");
         await signStudentOut();
         setIsSubmitting(false);
         setErrorMessage("This account does not have Super Admin access.");
@@ -169,7 +169,7 @@ function SuperAdminAuthFormContent() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-4 py-12 text-foreground">
       {/* Brand Header */}
-      <div className="mb-8 text-center">
+      <div className="mb-6 text-center">
         <Link href="/" className="inline-flex items-center gap-2 group">
           <span
             className="material-symbols-outlined text-[36px] text-primary transition-transform group-hover:scale-110"
@@ -182,7 +182,7 @@ function SuperAdminAuthFormContent() {
           </span>
         </Link>
         <p className="mt-2 font-body text-body-sm text-muted">
-          Campus Canteen OS — Platform Operations Portal
+          Platform Operations Portal
         </p>
       </div>
 

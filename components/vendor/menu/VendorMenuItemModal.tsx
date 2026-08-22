@@ -137,7 +137,7 @@ function VendorMenuItemForm({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. Masala Dosa"
-          className="w-full rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
+          className="w-full rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
         />
       </div>
 
@@ -150,7 +150,7 @@ function VendorMenuItemForm({
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value as VendorMenuCategory)}
-            className="w-full rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
+            className="w-full rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
           >
             {categories.map((cat) => (
               <option key={cat} value={cat}>
@@ -171,7 +171,7 @@ function VendorMenuItemForm({
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             placeholder="150"
-            className="w-full rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
+            className="w-full rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
           />
         </div>
       </div>
@@ -186,7 +186,7 @@ function VendorMenuItemForm({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Short description of ingredients..."
-          className="w-full rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none resize-none"
+          className="w-full rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground focus:border-primary focus:outline-none resize-none"
         />
       </div>
 
@@ -195,7 +195,7 @@ function VendorMenuItemForm({
         <label className="mb-1 block font-display text-caption font-bold text-muted">
           Food Image
         </label>
-        <div className="flex flex-col gap-3 rounded-xl border border-border bg-[#1e1f26] p-3">
+        <div className="flex flex-col gap-3 rounded-xl border border-border bg-surface-elevated p-3">
           {imageUrl && (
             <div className="relative h-32 w-full overflow-hidden rounded-lg bg-black/30">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -254,7 +254,7 @@ function VendorMenuItemForm({
       </div>
 
       {/* In Stock Toggle */}
-      <div className="flex items-center justify-between rounded-xl border border-border bg-[#1e1f26] p-3">
+      <div className="flex items-center justify-between rounded-xl border border-border bg-surface-elevated p-3">
         <span className="font-display text-caption font-bold text-foreground">
           Availability Status
         </span>
@@ -309,7 +309,7 @@ export function VendorMenuItemModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-2xl border border-border bg-[#121212] p-6 shadow-2xl animate-in fade-in">
+      <div className="w-full max-w-lg rounded-2xl border border-border bg-surface-elevated p-6 shadow-2xl animate-in fade-in">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="font-display text-title font-bold text-foreground">
             {editingItem ? "Edit Dish" : "Add New Dish"}

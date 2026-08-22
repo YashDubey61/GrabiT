@@ -21,16 +21,19 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const action = body.action as "ACKNOWLEDGE" | "RESOLVE";
+    const action = body.action as "ACKNOWLEDGE" | "RESOLVE" | "UNACKNOWLEDGE";
 
     let success = false;
     if (action === "ACKNOWLEDGE") {
       success = await acknowledgeOperationalNotification(notificationId);
     } else if (action === "RESOLVE") {
       success = await resolveOperationalNotification(notificationId);
+    } else if (action === "UNACKNOWLEDGE") {
+      const { unacknowledgeOperationalNotification } = await import("@/lib/notifications/operational_notifications");
+      success = await unacknowledgeOperationalNotification(notificationId);
     } else {
       return NextResponse.json(
-        { error: "Invalid action. Supported: ACKNOWLEDGE, RESOLVE." },
+        { error: "Invalid action. Supported: ACKNOWLEDGE, RESOLVE, UNACKNOWLEDGE." },
         { status: 400 },
       );
     }

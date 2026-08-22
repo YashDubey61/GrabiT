@@ -25,10 +25,15 @@ export function IncomingOrderAlert({
   const [reason, setReason] = useState(REJECT_REASONS[0]);
   const [customReason, setCustomReason] = useState("");
 
-  if (pendingOrders.length === 0) return null;
+  // Exclude manual cash orders completely from incoming approval/reject alert dialog
+  const onlinePendingOrders = pendingOrders.filter(
+    (o) => !o.isManual && o.orderType !== "MANUAL_CASH_ORDER" && !o.orderNumber.includes("-M-")
+  );
 
-  const order = pendingOrders[0];
-  const total = pendingOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+  if (onlinePendingOrders.length === 0) return null;
+
+  const order = onlinePendingOrders[0];
+  const total = onlinePendingOrders.reduce((sum, o) => sum + o.totalAmount, 0);
 
   const handleAccept = async () => {
     setIsProcessing(true);

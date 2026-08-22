@@ -45,7 +45,7 @@ export function WalletTransactionList({
 
       {/* Transaction Items */}
       {filteredTransactions.length === 0 ? (
-        <div className="rounded-2xl border border-border bg-[#1e1f26]/50 p-6 text-center backdrop-blur-md">
+        <div className="rounded-2xl border border-border bg-surface-elevated/70 p-6 text-center backdrop-blur-md">
           <p className="text-body-sm text-muted">No transactions found in this category.</p>
         </div>
       ) : (

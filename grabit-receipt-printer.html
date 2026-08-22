@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GRABIT — Receipt Printer</title>
+<style>
+  :root {
+    --bg: #1d1c19;
+    --device: #252421;
+    --device-dark: #151513;
+    --screen: #0b0b0a;
+    --paper: #f6f1e4;
+    --paper-text: #191817;
+    --muted: #8d8a82;
+    --border: rgba(255,255,255,.08);
+    --accent: #f2b84b;
+    --success: #54c878;
+    --danger: #d96b5f;
+    --mono: "JetBrains Mono", "IBM Plex Mono", "Space Mono", ui-monospace, monospace;
+    --sans: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
+  }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    background:
+      radial-gradient(ellipse 900px 600px at 50% -10%, rgba(242,184,75,.06), transparent 60%),
+      radial-gradient(ellipse 1200px 900px at 50% 110%, rgba(255,255,255,.03), transparent 60%),
+      var(--bg);
+    color: #eae7e0;
+    font-family: var(--sans);
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 48px;
+    padding: 48px 16px 96px;
+    box-sizing: border-box;
+  }
+
+  h1 {
+    font-size: 15px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .demo-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 40px;
+    width: 100%;
+  }
+
+  /* ---------- Printer device ---------- */
+  .printer-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 320px;
+    max-width: 92vw;
+  }
+
+  .printer {
+    position: relative;
+    width: 100%;
+    background: linear-gradient(180deg, var(--device) 0%, var(--device-dark) 100%);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: 18px 18px 26px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.04) inset,
+      0 30px 60px -20px rgba(0,0,0,.65),
+      0 8px 20px -6px rgba(0,0,0,.5);
+    box-sizing: border-box;
+  }
+
+  .printer-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .brand {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: .08em;
+    color: #f3f1ea;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .brand .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px 1px rgba(242,184,75,.6);
+  }
+
+  .home-pill {
+    font-size: 10px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-family: var(--sans);
+  }
+  .home-pill:hover { color: #eae7e0; border-color: rgba(255,255,255,.18); }
+  .home-pill:focus-visible, button:focus-visible, .tray-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* OLED-style screen */
+  .screen {
+    background: var(--screen);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,.05);
+    padding: 14px 14px 12px;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.02);
+    font-family: var(--mono);
+    min-height: 92px;
+  }
+
+  .screen-row1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 11px;
+    letter-spacing: .12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .screen-order {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    color: #f3f1ea;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .screen-sub {
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: .04em;
+  }
+  .screen-status {
+    margin-top: 10px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .screen-status .led {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 6px 1px rgba(84,200,120,.7);
+    flex-shrink: 0;
+  }
+  .screen-status.is-busy .led {
+    background: var(--accent);
+    box-shadow: 0 0 6px 1px rgba(242,184,75,.7);
+    animation: blink 1s ease-in-out infinite;
+  }
+  @keyframes blink { 50% { opacity: .35; } }
+
+  .printer-actions {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  button.btn {
+    font-family: var(--sans);
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: .03em;
+    border-radius: 10px;
+    padding: 11px 14px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: transform .12s ease, background .15s ease, opacity .15s ease;
+    min-height: 44px;
+  }
+  button.btn:active { transform: scale(.98); }
+  button.btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+  .btn-primary {
+    background: linear-gradient(180deg, #ffc65c, #e8a92e);
+    color: #201705;
+    border: none;
+    box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 8px 18px -8px rgba(242,184,75,.55);
+  }
+  .btn-secondary {
+    background: rgba(255,255,255,.04);
+    color: #eae7e0;
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,.08); }
+  .btn-row { display: flex; gap: 8px; }
+  .btn-row .btn { flex: 1; }
+
+  /* slot */
+  .slot-wrap {
+    position: relative;
+    height: 14px;
+    margin-top: 16px;
+  }
+  .slot {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    width: 62%;
+    height: 8px;
+    background: var(--device-dark);
+    border-radius: 6px;
+    box-shadow: inset 0 3px 6px rgba(0,0,0,.7), 0 1px 0 rgba(255,255,255,.03);
+  }
+  .slot::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 6px;
+    background: radial-gradient(ellipse at center, rgba(242,184,75,0) 0%, rgba(242,184,75,0) 100%);
+    transition: background .2s ease;
+  }
+  .printer.is-printing .slot::before {
+    background: radial-gradient(ellipse at center, rgba(242,184,75,.35) 0%, rgba(242,184,75,0) 75%);
+  }
+
+  /* ---------- Paper ---------- */
+  .paper-stage {
+    width: 84%;
+    margin: 0 auto;
+    overflow: hidden;
+    height: 10px;
+    transition: height 1.6s cubic-bezier(.22, 1, .36, 1);
+    filter: drop-shadow(0 10px 14px rgba(0,0,0,.45));
+  }
+  .paper-stage.tearing {
+    transition: transform .5s cubic-bezier(.22, 1, .36, 1), opacity .45s ease .18s;
+    transform-origin: top center;
+  }
+
+  .paper {
+    background:
+      repeating-linear-gradient(0deg, rgba(0,0,0,.015) 0 2px, transparent 2px 4px),
+      var(--paper);
+    color: var(--paper-text);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.55;
+    padding: 16px 14px 26px;
+    box-sizing: border-box;
+    position: relative;
+  }
+  .paper::after {
+    /* torn zigzag bottom edge */
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 10px;
+    background: var(--bg);
+    clip-path: polygon(
+      0% 0%, 4% 100%, 8% 0%, 12% 100%, 16% 0%, 20% 100%, 24% 0%, 28% 100%,
+      32% 0%, 36% 100%, 40% 0%, 44% 100%, 48% 0%, 52% 100%, 56% 0%, 60% 100%,
+      64% 0%, 68% 100%, 72% 0%, 76% 100%, 80% 0%, 84% 100%, 88% 0%, 92% 100%,
+      96% 0%, 100% 100%, 100% 0%
+    );
+  }
+
+  .rline {
+    opacity: 0;
+    transform: translateY(6px);
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .rline.show {
+    animation: printIn .28s ease forwards;
+  }
+  @keyframes printIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .r-center { text-align: center; }
+  .r-brand { font-weight: 700; letter-spacing: .22em; font-size: 13px; }
+  .r-h2 { font-weight: 700; letter-spacing: .14em; font-size: 11px; margin-top: 2px; }
+  .r-id { font-weight: 600; }
+  .r-vendor { color: #3c3a35; }
+  .r-div { color: #b9b3a2; }
+  .r-item-row { display: flex; justify-content: space-between; gap: 8px; }
+  .r-item-name { font-weight: 700; }
+  .r-item-name.kitchen { font-size: 13px; }
+  .r-mod { color: #57534b; padding-left: 14px; }
+  .r-mod.kitchen { font-weight: 600; color: #2c2a26; }
+  .r-note-head { font-weight: 700; letter-spacing: .08em; margin-top: 2px; }
+  .r-note-body { font-weight: 700; }
+  .r-total-row { display: flex; justify-content: space-between; font-weight: 700; }
+  .r-meta-row { display: flex; justify-content: space-between; }
+  .r-meta-label { color: #57534b; }
+  .r-thanks { text-align: center; color: #57534b; margin-top: 4px; }
+  .r-special {
+    background: rgba(217,107,95,.14);
+    border: 1px dashed rgba(217,107,95,.55);
+    border-radius: 4px;
+    padding: 6px 8px;
+    font-weight: 700;
+  }
+  .r-kitchen-flag { text-align: center; font-weight: 700; letter-spacing: .12em; }
+
+  .r-barcode { display: flex; flex-direction: column; align-items: center; gap: 2px; margin: 2px 0; }
+  .r-barcode svg { display: block; }
+  .r-barcode-num { letter-spacing: .18em; font-size: 10px; color: #57534b; }
+
+  /* status line under paper */
+  .print-status {
+    margin-top: 12px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: .04em;
+    min-height: 14px;
+  }
+
+  /* Tray (vendor) */
+  .tray {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .tray-box {
+    width: 110px;
+    height: 30px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(255,255,255,.03);
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .tray-sheet {
+    width: 70%;
+    height: 4px;
+    background: linear-gradient(180deg, #efe9d8, #ded6c0);
+    border-radius: 2px;
+    margin-bottom: 3px;
+    box-shadow: 0 1px 0 rgba(0,0,0,.15);
+  }
+  .tray-stack { display: flex; flex-direction: column-reverse; gap: 3px; padding-bottom: 4px; }
+  .tray-count { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  @media (max-width: 420px) {
+    .printer-wrap { width: 100%; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .paper-stage, .paper-stage.tearing { transition: none !important; }
+    .rline { animation: none !important; opacity: 1 !important; transform: none !important; }
+    .screen-status.is-busy .led { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+  <h1>GRABIT — Receipt Printer Prototype</h1>
+
+  <div class="demo-row">
+    <div id="student-mount" class="printer-wrap"></div>
+    <div id="vendor-mount" class="printer-wrap"></div>
+  </div>
+
+<script>
+/* =========================================================================
+   DEMO DATA — replace this block with real GRABIT order data in production.
+   In the real app, `order` comes from the authoritative order record
+   (Supabase order + order_items), never re-derived or edited here.
+   ========================================================================= */
+const demoStudentOrder = {
+  id: "GRB-48291",
+  vendorName: "ABC Canteen",
+  orderType: "PICKUP",
+  status: "PAID",
+  createdAt: new Date(),
+  paymentMethod: "UPI",
+  items: [
+    { name: "Paneer Burger", quantity: 2, price: 90, variants: ["Extra Cheese", "Spicy Sauce"], specialInstructions: "" },
+    { name: "Cold Coffee", quantity: 1, price: 65, variants: ["Less Sugar"], specialInstructions: "" },
+  ],
+  specialInstructions: "No onion",
+  subtotal: 245,
+  taxRate: 0,
+};
+
+const demoVendorOrder = {
+  id: "GRB-58210",
+  vendorName: "ABC Canteen",
+  orderType: "PICKUP",
+  status: "PAID",
+  createdAt: new Date(),
+  paymentMethod: "UPI",
+  customerName: "Aisha",
+  items: [
+    { name: "Masala Dosa", quantity: 2, price: 70, variants: ["Extra Cheese", "Green Chutney"], specialInstructions: "" },
+    { name: "Cold Coffee", quantity: 1, price: 65, variants: ["Less Sugar"], specialInstructions: "No onion in dosa" },
+  ],
+  specialInstructions: "Extra spicy",
+  subtotal: 205,
+  taxRate: 0,
+};
+
+/* =========================================================================
+   UTILITIES
+   ========================================================================= */
+function money(n) {
+  return "₹" + Math.round(n).toString();
+}
+
+function formatDateTime(date) {
+  const d = date instanceof Date ? date : new Date(date);
+  const day = d.getDate().toString().padStart(2, "0");
+  const month = d.toLocaleString("en-US", { month: "short" }).toUpperCase();
+  const year = d.getFullYear();
+  let hours = d.getHours();
+  const mins = d.getMinutes().toString().padStart(2, "0");
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12;
+  return {
+    date: `${day} ${month} ${year}`,
+    time: `${hours.toString().padStart(2, "0")}:${mins} ${ampm}`,
+  };
+}
+
+function padRow(label, value, width) {
+  width = width || 32;
+  const gap = Math.max(1, width - label.length - value.length);
+  return label + " ".repeat(gap) + value;
+}
+
+function divider(width) {
+  return "-".repeat(width || 32);
+}
+
+/* deterministic hash -> seeded PRNG (mulberry32) */
+function hashString(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+function mulberry32(seed) {
+  let a = seed;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/* Deterministic pseudo-numeric string derived from the order id, used
+   under the barcode — not a real product code, purely decorative/derived. */
+function idToDigits(orderId, len) {
+  len = len || 10;
+  const seed = hashString(orderId);
+  const rand = mulberry32(seed);
+  let digits = orderId.replace(/\D/g, "");
+  while (digits.length < len) digits += Math.floor(rand() * 10);
+  return digits.slice(0, len);
+}
+
+/* SVG barcode generated purely from the order id: no external library,
+   no static image. Bar widths are deterministic per order id via a seeded
+   PRNG, so every order renders a distinct-but-reproducible pattern. */
+function renderBarcodeSVG(orderId, opts) {
+  opts = opts || {};
+  const height = opts.height || 30;
+  const barCount = opts.barCount || 46;
+  const seed = hashString(orderId + "::barcode");
+  const rand = mulberry32(seed);
+
+  const widths = [];
+  // start guard
+  widths.push(3);
+  for (let i = 0; i < barCount; i++) {
+    widths.push(rand() > 0.62 ? 3 : 1.4);
+  }
+  // end guard
+  widths.push(3);
+
+  const gap = 1.6;
+  let x = 0;
+  let bars = "";
+  widths.forEach((w, i) => {
+    if (i % 2 === 0) {
+      bars += `<rect x="${x.toFixed(2)}" y="0" width="${w.toFixed(2)}" height="${height}" fill="#191817" />`;
+    }
+    x += w + gap;
+  });
+  const totalWidth = x;
+
+  return `<svg viewBox="0 0 ${totalWidth.toFixed(2)} ${height}" width="100%" height="${height}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Barcode for order ${orderId}">${bars}</svg>`;
+}
+
+/* =========================================================================
+   RECEIPT LINE BUILDERS — return an array of { html, cls } describing each
+   printable line. Rendering is driven entirely by these arrays, never by
+   hardcoded markup, so the receipt reflects the real order object.
+   ========================================================================= */
+function computeTotals(order) {
+  const subtotal = typeof order.subtotal === "number"
+    ? order.subtotal
+    : order.items.reduce((sum, it) => sum + it.price * it.quantity, 0);
+  const taxRate = order.taxRate || 0;
+  // Demo-only client-side tax calc. In the real app, use the server-
+  // authoritative order total — never recompute/override it here.
+  const tax = order.tax != null ? order.tax : Math.round(subtotal * taxRate);
+  const total = order.total != null ? order.total : subtotal + tax;
+  return { subtotal, tax, total };
+}
+
+function buildStudentLines(order) {
+  const { subtotal, tax, total } = computeTotals(order);
+  const { date, time } = formatDateTime(order.createdAt);
+  const lines = [];
+
+  lines.push({ text: "GRABIT", cls: "r-center r-brand" });
+  lines.push({ text: "ORDER RECEIPT", cls: "r-center r-h2" });
+  lines.push({ text: "#" + order.id, cls: "r-center r-id" });
+  lines.push({ text: "", cls: "" });
+  lines.push({ text: order.vendorName, cls: "r-center r-vendor" });
+  lines.push({ text: divider(), cls: "r-div" });
+
+  order.items.forEach((item) => {
+    lines.push({
+      row: [`${item.quantity} × ${item.name}`, money(item.price * item.quantity)],
+      cls: "r-item-name",
+    });
+    (item.variants || []).forEach((v) => {
+      lines.push({ text: "+ " + v, cls: "r-mod" });
+    });
+  });
+
+  lines.push({ text: divider(), cls: "r-div" });
+  lines.push({ row: ["Subtotal", money(subtotal)], cls: "r-meta-label" });
+  lines.push({ row: ["Tax", money(tax)], cls: "r-meta-label" });
+  lines.push({ text: divider(), cls: "r-div" });
+  lines.push({ row: ["TOTAL", money(total)], cls: "r-total-row" });
+  lines.push({ text: divider(), cls: "r-div" });
+
+  lines.push({ row: ["ORDER #", order.id], cls: "r-meta-row" });
+  lines.push({ row: ["PAYMENT", order.paymentMethod], cls: "r-meta-row" });
+  lines.push({ row: ["STATUS", order.status], cls: "r-meta-row" });
+  lines.push({ row: ["DATE", date], cls: "r-meta-row" });
+  lines.push({ row: ["TIME", time], cls: "r-meta-row" });
+  lines.push({ text: "", cls: "" });
+  lines.push({ barcode: order.id, cls: "" });
+  lines.push({ text: divider(), cls: "r-div" });
+  lines.push({ text: "Thank you for using GRABIT", cls: "r-thanks" });
+
+  return lines;
+}
+
+function buildVendorLines(order) {
+  const { date, time } = formatDateTime(order.createdAt);
+  const totalItems = order.items.length;
+  const totalQty = order.items.reduce((s, it) => s + it.quantity, 0);
+
+  const specialInstructions = [];
+  if (order.specialInstructions) specialInstructions.push(order.specialInstructions);
+  order.items.forEach((it) => {
+    if (it.specialInstructions) specialInstructions.push(it.specialInstructions);
+  });
+
+  const lines = [];
+  lines.push({ text: "GRABIT", cls: "r-center r-brand" });
+  lines.push({ text: "KITCHEN ORDER", cls: "r-center r-h2" });
+  lines.push({ text: "#" + order.id, cls: "r-center r-id" });
+  lines.push({ text: "", cls: "" });
+  lines.push({ text: order.vendorName, cls: "r-center r-vendor" });
+  lines.push({ text: divider(), cls: "r-div" });
+
+  lines.push({ row: ["ORDER TYPE", order.orderType], cls: "r-meta-row" });
+  lines.push({ row: ["ORDER TIME", time], cls: "r-meta-row" });
+  if (order.customerName) {
+    lines.push({ row: ["CUSTOMER", order.customerName], cls: "r-meta-row" });
+  }
+  lines.push({ text: divider(), cls: "r-div" });
+
+  order.items.forEach((item, idx) => {
+    lines.push({
+      text: `${item.quantity} × ${item.name.toUpperCase()}`,
+      cls: "r-item-name kitchen",
+    });
+    (item.variants || []).forEach((v) => {
+      lines.push({ text: "+ " + v.toUpperCase(), cls: "r-mod kitchen" });
+    });
+    if (idx < order.items.length - 1) lines.push({ text: "", cls: "" });
+  });
+
+  if (specialInstructions.length) {
+    lines.push({ text: divider(), cls: "r-div" });
+    lines.push({ text: "SPECIAL INSTRUCTIONS", cls: "r-note-head" });
+    specialInstructions.forEach((note) => {
+      lines.push({ text: note.toUpperCase(), cls: "r-special" });
+    });
+  }
+
+  lines.push({ text: divider(), cls: "r-div" });
+  lines.push({ row: ["TOTAL ITEMS", String(totalItems)], cls: "r-meta-row" });
+  lines.push({ row: ["TOTAL QUANTITY", String(totalQty)], cls: "r-meta-row" });
+  lines.push({ text: divider(), cls: "r-div" });
+
+  lines.push({ text: "ORDER # " + order.id, cls: "r-center r-id" });
+  lines.push({ barcode: order.id, cls: "" });
+  lines.push({ text: divider(), cls: "r-div" });
+  lines.push({ text: "PREPARE ORDER", cls: "r-kitchen-flag" });
+  lines.push({ text: "GRABIT", cls: "r-center" });
+
+  return lines;
+}
+
+/* Render a line descriptor into an element (not yet visible — visibility
+   is toggled by the printing sequencer). */
+function renderLineEl(line) {
+  const el = document.createElement("div");
+  el.className = "rline " + (line.cls || "");
+  if (line.row) {
+    el.classList.add("r-item-row");
+    const width = 32;
+    const [label, value] = line.row;
+    // still a flex row visually, but keep plain-text fallback for copy/paste
+    el.innerHTML = `<span>${escapeHtml(label)}</span><span>${escapeHtml(value)}</span>`;
+  } else if (line.barcode) {
+    el.classList.add("r-barcode");
+    el.innerHTML = renderBarcodeSVG(line.barcode) +
+      `<span class="r-barcode-num">${idToDigits(line.barcode)}</span>`;
+  } else {
+    el.textContent = line.text;
+  }
+  return el;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[c]));
+}
+
+/* =========================================================================
+   PRINTER FACTORY — createReceiptPrinter({ mode, order }, mountEl)
+   States: idle -> printing -> printed -> tearing -> idle
+   ========================================================================= */
+function createReceiptPrinter(mountEl, config) {
+  const mode = config.mode; // "student" | "vendor"
+  let order = config.order;
+  let state = "idle";
+  let printedToday = 0;
+  let fallbackTimer = null;
+
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  mountEl.innerHTML = `
+    <div class="printer" role="group" aria-label="${mode === "student" ? "Order receipt printer" : "Kitchen receipt printer"}">
+      <div class="printer-topbar">
+        <span class="brand"><span class="dot"></span>GRABIT</span>
+        ${mode === "student" ? '<button type="button" class="home-pill" data-action="home">Home</button>' : ""}
+      </div>
+      <div class="screen">
+        <div class="screen-row1">
+          <span data-el="screen-title"></span>
+        </div>
+        <div class="screen-order">
+          <span data-el="screen-id"></span>
+          <span data-el="screen-right"></span>
+        </div>
+        <div class="screen-sub" data-el="screen-sub"></div>
+        <div class="screen-status" data-el="screen-status">
+          <span class="led"></span>
+          <span data-el="screen-status-text"></span>
+        </div>
+      </div>
+      <div class="printer-actions" data-el="actions"></div>
+      <div class="slot-wrap"><div class="slot"></div></div>
+      <div class="paper-stage" data-el="paper-stage">
+        <div class="paper" data-el="paper"></div>
+      </div>
+      <div class="print-status" role="status" aria-live="polite" data-el="print-status"></div>
+      ${mode === "vendor" ? `
+      <div class="tray">
+        <div class="tray-box"><div class="tray-stack" data-el="tray-stack"></div></div>
+        <div class="tray-count" data-el="tray-count">Printed today: 0</div>
+      </div>` : ""}
+    </div>
+  `;
+
+  const el = (name) => mountEl.querySelector(`[data-el="${name}"]`);
+
+  function money2(order) { return money(computeTotals(order).total); }
+
+  function renderScreen() {
+    if (mode === "student") {
+      el("screen-title").textContent = state === "idle" || state === "printing" ? "Order Confirmed" : "Order Confirmed";
+      el("screen-id").textContent = "#" + order.id;
+      el("screen-right").textContent = money2(order);
+      el("screen-sub").textContent = order.vendorName;
+      const statusText = el("screen-status-text");
+      statusText.textContent = "Payment successful";
+      el("screen-status").classList.toggle("is-busy", state === "printing");
+      el("screen-status").querySelector(".led").style.background =
+        state === "printing" ? "var(--accent)" : "var(--success)";
+    } else {
+      const totalQty = order.items.reduce((s, it) => s + it.quantity, 0);
+      el("screen-title").textContent = "Kitchen Order";
+      el("screen-id").textContent = "#" + order.id;
+      el("screen-right").textContent = totalQty + " ITEMS";
+      el("screen-sub").textContent =
+        state === "idle" ? "Ready to print" :
+        state === "printing" ? "Printing…" :
+        state === "printed" ? "Receipt ready" : "Ready to print";
+      el("screen-status-text").textContent =
+        state === "printing" ? "Printing kitchen receipt…" : "Ready";
+      el("screen-status").classList.toggle("is-busy", state === "printing");
+    }
+  }
+
+  function renderActions() {
+    const actions = el("actions");
+    actions.innerHTML = "";
+
+    if (mode === "student") {
+      const row = document.createElement("div");
+      row.className = "btn-row";
+      const viewBtn = button("View Order", "btn-secondary", () => {
+        alert("Opening order #" + order.id + " (demo)");
+      });
+      row.appendChild(viewBtn);
+      actions.appendChild(row);
+
+      if (state === "idle") {
+        actions.appendChild(button("Print Receipt", "btn-primary", startPrint, "print"));
+      } else if (state === "printing") {
+        actions.appendChild(button("Printing…", "btn-primary", null, "print", true));
+      } else if (state === "printed") {
+        actions.appendChild(button("Tear Off Receipt", "btn-primary", startTear, "tear"));
+      } else if (state === "tearing") {
+        actions.appendChild(button("Tearing…", "btn-primary", null, "tear", true));
+      }
+      actions.appendChild(button("Done", "btn-secondary", () => {
+        alert("Done (demo) — returning to order tracking.");
+      }));
+    } else {
+      if (state === "idle") {
+        actions.appendChild(button("Print Kitchen Receipt", "btn-primary", startPrint, "print"));
+      } else if (state === "printing") {
+        actions.appendChild(button("Printing…", "btn-primary", null, "print", true));
+      } else if (state === "printed") {
+        actions.appendChild(button("Tear Off Receipt", "btn-primary", startTear, "tear"));
+      } else if (state === "tearing") {
+        actions.appendChild(button("Tearing…", "btn-primary", null, "tear", true));
+      }
+      const row = document.createElement("div");
+      row.className = "btn-row";
+      row.appendChild(button("Return to Order", "btn-secondary", () => {
+        alert("Returning to order #" + order.id + " (demo)");
+      }));
+      row.appendChild(button("Continue Processing", "btn-secondary", () => {
+        alert("Marking order #" + order.id + " as preparing (demo)");
+      }));
+      actions.appendChild(row);
+    }
+  }
+
+  function button(label, cls, onClick, key, disabled) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "btn " + cls;
+    b.textContent = label;
+    if (key) b.dataset.key = key;
+    if (disabled) b.disabled = true;
+    if (onClick) b.addEventListener("click", onClick);
+    return b;
+  }
+
+  function setStatus(text) {
+    el("print-status").textContent = text;
+  }
+
+  function clearFallback() {
+    if (fallbackTimer) { clearTimeout(fallbackTimer); fallbackTimer = null; }
+  }
+
+  /* Re-entrancy guard: only "idle" can start a print, only "printed" can
+     start a tear. Every transition also arms a timeout fallback so the
+     state can never get stuck if a transition/animation event fails to
+     fire (per spec: never rely exclusively on transitionend/animationend). */
+  function startPrint() {
+    if (state !== "idle") return;
+    state = "printing";
+    renderScreen();
+    renderActions();
+    setStatus(mode === "student" ? "Preparing receipt…" : "Printing kitchen receipt…");
+
+    const paperStage = el("paper-stage");
+    const paperEl = el("paper");
+    paperEl.innerHTML = "";
+
+    const lines = mode === "student" ? buildStudentLines(order) : buildVendorLines(order);
+    const lineEls = lines.map((line) => {
+      const lineEl = renderLineEl(line);
+      paperEl.appendChild(lineEl);
+      return lineEl;
+    });
+
+    // Grow the paper stage to fit the full receipt content.
+    paperStage.style.transition = prefersReducedMotion ? "none" : "";
+    // Force layout so the browser picks up the starting height before we change it.
+    // eslint-disable-next-line no-unused-expressions
+    paperStage.offsetHeight;
+    const targetHeight = paperEl.scrollHeight;
+    paperStage.style.height = targetHeight + "px";
+
+    const stagger = prefersReducedMotion ? 0 : 60;
+    const revealDelayBase = prefersReducedMotion ? 0 : 250; // let paper start feeding first
+
+    lineEls.forEach((lineEl, i) => {
+      const delay = revealDelayBase + i * stagger;
+      setTimeout(() => {
+        lineEl.classList.add("show");
+      }, prefersReducedMotion ? 0 : delay);
+    });
+
+    const totalDuration = prefersReducedMotion
+      ? 50
+      : Math.max(1500, revealDelayBase + lineEls.length * stagger + 250);
+
+    setStatus(mode === "student" ? "Printing receipt…" : "Printing kitchen receipt…");
+
+    clearFallback();
+    fallbackTimer = setTimeout(() => {
+      finishPrint();
+    }, totalDuration + 400); // safety buffer beyond expected duration
+  }
+
+  function finishPrint() {
+    if (state !== "printing") return;
+    clearFallback();
+    state = "printed";
+    renderScreen();
+    renderActions();
+    setStatus(mode === "student" ? "Receipt ready" : "Kitchen receipt ready");
+  }
+
+  function startTear() {
+    if (state !== "printed") return;
+    state = "tearing";
+    renderActions();
+    setStatus("Tearing off receipt…");
+
+    const paperStage = el("paper-stage");
+
+    if (prefersReducedMotion) {
+      completeTear();
+      return;
+    }
+
+    paperStage.classList.add("tearing");
+    // slight pull + rotate + drop, then fade
+    paperStage.style.transform = "translateY(10px) rotate(3deg)";
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        paperStage.style.transform = "translateY(60px) rotate(-2deg)";
+        paperStage.style.opacity = "0";
+      }, 60);
+    });
+
+    clearFallback();
+    fallbackTimer = setTimeout(completeTear, 900);
+  }
+
+  function completeTear() {
+    if (state !== "tearing") return;
+    clearFallback();
+
+    const paperStage = el("paper-stage");
+    paperStage.classList.remove("tearing");
+    paperStage.style.transition = "none";
+    paperStage.style.transform = "none";
+    paperStage.style.opacity = "1";
+    paperStage.style.height = "10px";
+    el("paper").innerHTML = "";
+    // restore the animated transition for next print, after this reset paints
+    requestAnimationFrame(() => { paperStage.style.transition = ""; });
+
+    if (mode === "vendor") {
+      printedToday += 1;
+      renderTray();
+    }
+
+    state = "idle";
+    renderScreen();
+    renderActions();
+    setStatus(mode === "student" ? "Ready to print" : "Ready to print");
+  }
+
+  function renderTray() {
+    const stackEl = el("tray-stack");
+    const countEl = el("tray-count");
+    if (!stackEl) return;
+    stackEl.innerHTML = "";
+    const visible = Math.min(printedToday, 7);
+    for (let i = 0; i < visible; i++) {
+      const sheet = document.createElement("div");
+      sheet.className = "tray-sheet";
+      stackEl.appendChild(sheet);
+    }
+    countEl.textContent = "Printed today: " + printedToday;
+  }
+
+  /* Public API surface for this instance. */
+  const instance = {
+    getState: () => state,
+    setOrder: (newOrder) => {
+      if (state !== "idle") return; // never swap data mid-print
+      order = newOrder;
+      renderScreen();
+    },
+    destroy: () => { clearFallback(); mountEl.innerHTML = ""; },
+  };
+
+  renderScreen();
+  renderActions();
+  renderStatusIdle();
+  if (mode === "vendor") renderTray();
+
+  function renderStatusIdle() {
+    setStatus(mode === "student" ? "Ready to print" : "Ready to print");
+  }
+
+  return instance;
+}
+
+/* =========================================================================
+   MOUNT DEMO INSTANCES
+   ========================================================================= */
+createReceiptPrinter(document.getElementById("student-mount"), {
+  mode: "student",
+  order: demoStudentOrder,
+});
+
+createReceiptPrinter(document.getElementById("vendor-mount"), {
+  mode: "vendor",
+  order: demoVendorOrder,
+});
+</script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { GOLD_PLANS, type GoldPlanId } from "@/lib/payments/razorpay";
 
 export async function POST(request: Request) {
@@ -43,10 +43,7 @@ export async function POST(request: Request) {
     }
 
     // Service-role client for administrative data repair
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const serviceKey =
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const supabaseAdmin = createAdminClient(url, serviceKey);
+    const supabaseAdmin = getSupabaseAdminClient();
 
     // 1. Locate internal payment record
     let query = supabaseAdmin.from("payments").select("*");

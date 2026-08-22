@@ -57,7 +57,7 @@ export function CampusHeader({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search campus location or city..."
-            className="w-full rounded-xl border border-border bg-[#1e1f26] py-2.5 pl-10 pr-4 font-body text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none transition-colors"
+            className="w-full rounded-xl border border-border bg-surface-elevated py-2.5 pl-10 pr-4 font-body text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none transition-colors"
           />
         </div>
 
@@ -71,7 +71,7 @@ export function CampusHeader({
               className={`rounded-xl px-3.5 py-2 font-display text-caption font-bold transition-all ${
                 statusFilter === st
                   ? "bg-primary text-on-primary shadow-sm"
-                  : "border border-border bg-[#1e1f26] text-muted hover:text-foreground"
+                  : "border border-border bg-surface-elevated text-muted hover:text-foreground"
               }`}
             >
               {st === "ALL" ? "All Status" : st.replace("_", " ")}

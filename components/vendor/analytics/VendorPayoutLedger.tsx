@@ -22,7 +22,7 @@ export function VendorPayoutLedger({
     .reduce((sum, r) => sum + r.amount, 0);
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-border bg-[#1e1f26]/80 backdrop-blur-md">
+    <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated backdrop-blur-md">
       {/* Header & Balance Summary */}
       <div className="flex flex-col gap-4 border-b border-border p-6 md:flex-row md:items-center md:justify-between">
         <div>

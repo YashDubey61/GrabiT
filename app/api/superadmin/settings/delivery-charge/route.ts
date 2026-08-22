@@ -1,13 +1,7 @@
 import { NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { getAuthenticatedSuperAdminContext } from "@/lib/supabase/superadmin";
 import { DELIVERY_CHARGE_REASONS, DEFAULT_DELIVERY_CHARGE } from "@/lib/orders/delivery_charge";
-
-function getSupabaseAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createAdminClient(url, key);
-}
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function GET() {
   const adminCtx = await getAuthenticatedSuperAdminContext();

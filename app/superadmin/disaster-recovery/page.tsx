@@ -99,8 +99,8 @@ export default function SuperAdminDisasterRecoveryPage() {
           {telemetry && (
             <span className={`px-3 py-1.5 rounded-full text-xs font-mono font-bold border flex items-center gap-1.5 ${
               telemetry.overallStatus === "HEALTHY"
-                ? "bg-emerald-950/80 text-emerald-400 border-emerald-800/60"
-                : "bg-amber-950/80 text-amber-400 border-amber-800/60"
+                ? "bg-success-soft/80 text-success border-success/60"
+                : "bg-warning-soft/80 text-warning border-warning/60"
             }`}>
               <span className="text-sm">●</span>
               {telemetry.readinessBadge}
@@ -121,7 +121,7 @@ export default function SuperAdminDisasterRecoveryPage() {
       </div>
 
       {isLoading || !telemetry ? (
-        <div className="py-16 text-center text-gray-400 space-y-2">
+        <div className="py-16 text-center text-muted space-y-2">
           <span className="material-symbols-outlined text-3xl animate-spin text-primary">progress_activity</span>
           <p className="text-xs">Evaluating disaster recovery readiness posture...</p>
         </div>
@@ -129,59 +129,59 @@ export default function SuperAdminDisasterRecoveryPage() {
         <>
           {/* Executive Recovery Summary Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
-            <div className="p-3.5 rounded-2xl bg-[#1E1F26] border border-[#262626] space-y-1">
-              <div className="text-[11px] font-medium text-gray-400">RTO Readiness</div>
-              <div className="text-xl font-bold text-emerald-400 font-mono">READY</div>
-              <div className="text-[10px] text-emerald-400">Critical services &lt;= 60m</div>
+            <div className="p-3.5 rounded-2xl bg-surface-elevated border border-border space-y-1">
+              <div className="text-[11px] font-medium text-muted">RTO Readiness</div>
+              <div className="text-xl font-bold text-success font-mono">READY</div>
+              <div className="text-[10px] text-success">Critical services &lt;= 60m</div>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-[#1E1F26] border border-[#262626] space-y-1">
-              <div className="text-[11px] font-medium text-gray-400">RPO Readiness</div>
-              <div className="text-xl font-bold text-emerald-400 font-mono">READY</div>
-              <div className="text-[10px] text-emerald-400">Financial records &lt;= 15m</div>
+            <div className="p-3.5 rounded-2xl bg-surface-elevated border border-border space-y-1">
+              <div className="text-[11px] font-medium text-muted">RPO Readiness</div>
+              <div className="text-xl font-bold text-success font-mono">READY</div>
+              <div className="text-[10px] text-success">Financial records &lt;= 15m</div>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-[#1E1F26] border border-[#262626] space-y-1">
-              <div className="text-[11px] font-medium text-gray-400">Backup Status</div>
-              <div className="text-xl font-bold text-amber-300 font-mono">EXT_VERIFIED</div>
-              <div className="text-[10px] text-amber-300">Supabase PITR 7-day</div>
+            <div className="p-3.5 rounded-2xl bg-surface-elevated border border-border space-y-1">
+              <div className="text-[11px] font-medium text-muted">Backup Status</div>
+              <div className="text-xl font-bold text-warning font-mono">EXT_VERIFIED</div>
+              <div className="text-[10px] text-warning">Supabase PITR 7-day</div>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-[#1E1F26] border border-[#262626] space-y-1">
-              <div className="text-[11px] font-medium text-gray-400">Migration Audit</div>
-              <div className="text-xl font-bold text-emerald-400 font-mono">100% SCORE</div>
-              <div className="text-[10px] text-emerald-400">20 / 20 migrations (0 gaps)</div>
+            <div className="p-3.5 rounded-2xl bg-surface-elevated border border-border space-y-1">
+              <div className="text-[11px] font-medium text-muted">Migration Audit</div>
+              <div className="text-xl font-bold text-success font-mono">100% SCORE</div>
+              <div className="text-[10px] text-success">20 / 20 migrations (0 gaps)</div>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-[#1E1F26] border border-[#262626] space-y-1">
-              <div className="text-[11px] font-medium text-gray-400">Financial Integrity</div>
-              <div className="text-xl font-bold text-emerald-400 font-mono">HEALTHY</div>
-              <div className="text-[10px] text-emerald-400">0 negative wallet balances</div>
+            <div className="p-3.5 rounded-2xl bg-surface-elevated border border-border space-y-1">
+              <div className="text-[11px] font-medium text-muted">Financial Integrity</div>
+              <div className="text-xl font-bold text-success font-mono">HEALTHY</div>
+              <div className="text-[10px] text-success">0 negative wallet balances</div>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-[#1E1F26] border border-[#262626] space-y-1">
-              <div className="text-[11px] font-medium text-gray-400">Rollback Posture</div>
+            <div className="p-3.5 rounded-2xl bg-surface-elevated border border-border space-y-1">
+              <div className="text-[11px] font-medium text-muted">Rollback Posture</div>
               <div className="text-xl font-bold text-white font-mono">FORWARD-ONLY</div>
-              <div className="text-[10px] text-sky-400">App != DB rollback</div>
+              <div className="text-[10px] text-info">App != DB rollback</div>
             </div>
           </div>
 
           {/* Backup Readiness Infrastructure Boundary Card */}
-          <div className="p-5 rounded-2xl bg-[#1E1F26] border border-[#262626] space-y-3">
+          <div className="p-5 rounded-2xl bg-surface-elevated border border-border space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-                <span className="material-symbols-outlined text-amber-400 text-base">cloud_download</span>
+                <span className="material-symbols-outlined text-warning text-base">cloud_download</span>
                 Database Backup &amp; PITR Infrastructure Readiness
               </h2>
-              <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-amber-950/80 text-amber-300 border border-amber-800/60">
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-warning-soft/80 text-warning border border-warning/60">
                 {telemetry.backupReadiness.status}
               </span>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-black/40 border border-[#262626] text-xs text-gray-300 space-y-2">
-              <p className="font-semibold text-amber-400">{telemetry.backupReadiness.infrastructureNote}</p>
+            <div className="p-3.5 rounded-xl bg-black/40 border border-border text-xs text-muted space-y-2">
+              <p className="font-semibold text-warning">{telemetry.backupReadiness.infrastructureNote}</p>
               <p>{telemetry.backupReadiness.pitrReadiness}</p>
-              <div className="pt-2 border-t border-[#262626] font-mono text-[11px] space-y-1 text-gray-400">
+              <div className="pt-2 border-t border-border font-mono text-[11px] space-y-1 text-muted">
                 {telemetry.backupReadiness.verificationSteps.map((step) => (
                   <div key={step}>{step}</div>
                 ))}
@@ -192,19 +192,19 @@ export default function SuperAdminDisasterRecoveryPage() {
           {/* RTO & RPO Target Breakdown Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* RTO Targets */}
-            <div className="p-5 rounded-2xl bg-[#1E1F26] border border-[#262626] space-y-3">
+            <div className="p-5 rounded-2xl bg-surface-elevated border border-border space-y-3">
               <h2 className="text-sm font-semibold text-white flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary text-base">schedule</span>
                 Recovery Time Objectives (RTO Targets)
               </h2>
               <div className="space-y-2 text-xs font-mono">
                 {telemetry.rtoTargets.map((rto) => (
-                  <div key={rto.service} className="p-3 rounded-xl bg-black/40 border border-[#262626] flex justify-between items-center">
+                  <div key={rto.service} className="p-3 rounded-xl bg-black/40 border border-border flex justify-between items-center">
                     <div>
                       <div className="font-sans font-semibold text-white">{rto.service}</div>
-                      <div className="text-[10px] text-gray-400">Target RTO: &lt;= {rto.targetMinutes} minutes</div>
+                      <div className="text-[10px] text-muted">Target RTO: &lt;= {rto.targetMinutes} minutes</div>
                     </div>
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-950/80 text-emerald-400 border border-emerald-800/60">
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-success-soft/80 text-success border border-success/60">
                       {rto.currentStatus}
                     </span>
                   </div>
@@ -213,19 +213,19 @@ export default function SuperAdminDisasterRecoveryPage() {
             </div>
 
             {/* RPO Targets */}
-            <div className="p-5 rounded-2xl bg-[#1E1F26] border border-[#262626] space-y-3">
+            <div className="p-5 rounded-2xl bg-surface-elevated border border-border space-y-3">
               <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-                <span className="material-symbols-outlined text-sky-400 text-base">history</span>
+                <span className="material-symbols-outlined text-info text-base">history</span>
                 Recovery Point Objectives (RPO Targets)
               </h2>
               <div className="space-y-2 text-xs font-mono">
                 {telemetry.rpoTargets.map((rpo) => (
-                  <div key={rpo.domain} className="p-3 rounded-xl bg-black/40 border border-[#262626] flex justify-between items-center">
+                  <div key={rpo.domain} className="p-3 rounded-xl bg-black/40 border border-border flex justify-between items-center">
                     <div>
                       <div className="font-sans font-semibold text-white">{rpo.domain}</div>
-                      <div className="text-[10px] text-gray-400">Target RPO: &lt;= {rpo.targetMinutes} minutes</div>
+                      <div className="text-[10px] text-muted">Target RPO: &lt;= {rpo.targetMinutes} minutes</div>
                     </div>
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-950/80 text-emerald-400 border border-emerald-800/60">
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-success-soft/80 text-success border border-success/60">
                       {rpo.currentStatus}
                     </span>
                   </div>
@@ -235,20 +235,20 @@ export default function SuperAdminDisasterRecoveryPage() {
           </div>
 
           {/* Read-Only Financial Recovery Checks Table */}
-          <div className="p-6 rounded-2xl bg-[#1E1F26] border border-[#262626] space-y-4">
+          <div className="p-6 rounded-2xl bg-surface-elevated border border-border space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold text-white flex items-center gap-2">
-                <span className="material-symbols-outlined text-emerald-400">balance</span>
+                <span className="material-symbols-outlined text-success">balance</span>
                 Read-Only Financial Recovery &amp; Integrity Audit
               </h2>
-              <span className="text-xs font-mono text-gray-400">
+              <span className="text-xs font-mono text-muted">
                 {telemetry.financialChecks ? `${telemetry.financialChecks.passedChecks} / ${telemetry.financialChecks.totalChecks} Passed` : "8 Checks"}
               </span>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-gray-300">
-                <thead className="bg-black/40 text-gray-400 uppercase text-[10px] tracking-wider border-b border-[#262626]">
+              <table className="w-full text-left text-xs text-muted">
+                <thead className="bg-black/40 text-muted uppercase text-[10px] tracking-wider border-b border-border">
                   <tr>
                     <th className="py-2.5 px-3">Check Name</th>
                     <th className="py-2.5 px-3 text-center">Domain</th>
@@ -256,17 +256,17 @@ export default function SuperAdminDisasterRecoveryPage() {
                     <th className="py-2.5 px-3 text-right">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#262626]">
+                <tbody className="divide-y divide-border">
                   {(telemetry.financialChecks?.checks || []).map((chk) => (
                     <tr key={chk.id} className="hover:bg-white/5 transition-colors">
                       <td className="py-3 px-3 font-semibold text-white">{chk.name}</td>
-                      <td className="py-3 px-3 text-center font-mono text-[11px] text-gray-400">{chk.domain}</td>
-                      <td className="py-3 px-3 text-gray-300 font-mono text-[11px]">{chk.details}</td>
+                      <td className="py-3 px-3 text-center font-mono text-[11px] text-muted">{chk.domain}</td>
+                      <td className="py-3 px-3 text-muted font-mono text-[11px]">{chk.details}</td>
                       <td className="py-3 px-3 text-right">
                         <span className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold border ${
                           chk.passed
-                            ? "bg-emerald-950/80 text-emerald-400 border-emerald-800/60"
-                            : "bg-red-950/80 text-red-400 border-red-800/60"
+                            ? "bg-success-soft/80 text-success border-success/60"
+                            : "bg-danger-soft/80 text-danger border-danger/60"
                         }`}>
                           {chk.status}
                         </span>
@@ -279,18 +279,18 @@ export default function SuperAdminDisasterRecoveryPage() {
           </div>
 
           {/* Business Continuity Matrix */}
-          <div className="p-6 rounded-2xl bg-[#1E1F26] border border-[#262626] space-y-4">
+          <div className="p-6 rounded-2xl bg-surface-elevated border border-border space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold text-white flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary">account_tree</span>
                 Business Continuity &amp; Degradation Matrix
               </h2>
-              <span className="text-xs font-mono text-gray-400">{telemetry.businessContinuityMatrix.length} Services Classified</span>
+              <span className="text-xs font-mono text-muted">{telemetry.businessContinuityMatrix.length} Services Classified</span>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-gray-300">
-                <thead className="bg-black/40 text-gray-400 uppercase text-[10px] tracking-wider border-b border-[#262626]">
+              <table className="w-full text-left text-xs text-muted">
+                <thead className="bg-black/40 text-muted uppercase text-[10px] tracking-wider border-b border-border">
                   <tr>
                     <th className="py-2.5 px-3">Service Name</th>
                     <th className="py-2.5 px-3 text-center">Criticality</th>
@@ -299,25 +299,25 @@ export default function SuperAdminDisasterRecoveryPage() {
                     <th className="py-2.5 px-3 text-right">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#262626]">
+                <tbody className="divide-y divide-border">
                   {telemetry.businessContinuityMatrix.map((item) => (
                     <tr key={item.service} className="hover:bg-white/5 transition-colors">
                       <td className="py-3 px-3 font-semibold text-white">{item.service}</td>
                       <td className="py-3 px-3 text-center">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase border ${
                           item.criticality === "CRITICAL"
-                            ? "bg-red-950/80 text-red-400 border-red-800/60"
+                            ? "bg-danger-soft/80 text-danger border-danger/60"
                             : item.criticality === "IMPORTANT"
-                            ? "bg-amber-950/80 text-amber-400 border-amber-800/60"
-                            : "bg-blue-950/80 text-blue-400 border-blue-800/60"
+                            ? "bg-warning-soft/80 text-warning border-warning/60"
+                            : "bg-info/20 text-info border-info/60"
                         }`}>
                           {item.criticality}
                         </span>
                       </td>
-                      <td className="py-3 px-3 font-mono text-[11px] text-gray-400">{item.dependency}</td>
-                      <td className="py-3 px-3 text-gray-300 text-[11px]">{item.failureImpact}</td>
+                      <td className="py-3 px-3 font-mono text-[11px] text-muted">{item.dependency}</td>
+                      <td className="py-3 px-3 text-muted text-[11px]">{item.failureImpact}</td>
                       <td className="py-3 px-3 text-right">
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-950/80 text-emerald-400 border border-emerald-800/60">
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-success-soft/80 text-success border border-success/60">
                           {item.status}
                         </span>
                       </td>

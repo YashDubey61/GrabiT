@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export function LandingFooter() {
   return (
-    <footer className="border-t border-border/50 bg-black py-16 text-muted">
+    <footer className="border-t border-border/50 bg-background py-16 text-muted">
       <div className="mx-auto max-w-7xl px-6 md:px-12">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 mb-12">
           {/* Brand Column */}

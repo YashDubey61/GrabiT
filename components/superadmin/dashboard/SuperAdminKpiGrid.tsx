@@ -10,7 +10,7 @@ export function SuperAdminKpiGrid({ kpis }: SuperAdminKpiGridProps) {
   return (
     <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {/* Card 1: Total GMV */}
-      <div className="flex flex-col gap-2 rounded-2xl border border-border bg-[#1e1f26]/80 p-4 backdrop-blur-md transition-all hover:border-primary/40">
+      <div className="flex flex-col gap-2 rounded-2xl border border-border bg-surface-elevated/80 p-4 backdrop-blur-md transition-all hover:border-primary/40">
         <div className="flex items-center justify-between">
           <div className="rounded-lg bg-primary/10 p-2 text-primary">
             <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
@@ -33,7 +33,7 @@ export function SuperAdminKpiGrid({ kpis }: SuperAdminKpiGridProps) {
       </div>
 
       {/* Card 2: Active Campuses */}
-      <div className="flex flex-col gap-2 rounded-2xl border border-border bg-[#1e1f26]/80 p-4 backdrop-blur-md transition-all hover:border-primary/40">
+      <div className="flex flex-col gap-2 rounded-2xl border border-border bg-surface-elevated/80 p-4 backdrop-blur-md transition-all hover:border-primary/40">
         <div className="flex items-center justify-between">
           <div className="rounded-lg bg-surface-sunken p-2 text-muted">
             <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
@@ -53,7 +53,7 @@ export function SuperAdminKpiGrid({ kpis }: SuperAdminKpiGridProps) {
       </div>
 
       {/* Card 3: Active Students */}
-      <div className="flex flex-col gap-2 rounded-2xl border border-border bg-[#1e1f26]/80 p-4 backdrop-blur-md transition-all hover:border-primary/40">
+      <div className="flex flex-col gap-2 rounded-2xl border border-border bg-surface-elevated/80 p-4 backdrop-blur-md transition-all hover:border-primary/40">
         <div className="flex items-center justify-between">
           <div className="rounded-lg bg-primary/10 p-2 text-primary">
             <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
@@ -74,7 +74,7 @@ export function SuperAdminKpiGrid({ kpis }: SuperAdminKpiGridProps) {
       </div>
 
       {/* Card 4: Platform Commission */}
-      <div className="flex flex-col gap-2 rounded-2xl border border-border bg-[#1e1f26]/80 p-4 backdrop-blur-md transition-all hover:border-primary/40">
+      <div className="flex flex-col gap-2 rounded-2xl border border-border bg-surface-elevated/80 p-4 backdrop-blur-md transition-all hover:border-primary/40">
         <div className="flex items-center justify-between">
           <div className="rounded-lg bg-primary/10 p-2 text-primary">
             <span className="material-symbols-outlined text-[20px]" aria-hidden="true">

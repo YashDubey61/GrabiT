@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CafeteriaPhotoUploader } from "@/components/superadmin/vendors/CafeteriaPhotoUploader";
 
 interface Campus {
   id: string;
@@ -18,6 +19,7 @@ interface ManagedVendor {
   pause_reason: string | null;
   vendor_code: string | null;
   created_at: string;
+  photo_urls?: string[];
   campuses: { id: string; name: string } | null;
 }
 
@@ -35,6 +37,7 @@ const emptyForm = {
   prepTimeMinutes: 15,
   password: "",
   confirmPassword: "",
+  photoUrls: [] as string[],
 };
 
 export function VendorManagementSection() {
@@ -139,6 +142,7 @@ export function VendorManagementSection() {
           shopName: editingVendor.name,
           email: editingVendor.email ?? "",
           campusId: editingVendor.campuses?.id,
+          photoUrls: editingVendor.photo_urls ?? [],
         }),
       });
       const data = await res.json();
@@ -200,7 +204,7 @@ export function VendorManagementSection() {
 
   return (
     <>
-    <section className="flex flex-col gap-4 rounded-2xl border border-border bg-[#1e1f26]/60 p-5 backdrop-blur-md">
+    <section className="glass-surface flex flex-col gap-4 p-5">
       {notification && (
         <div className="rounded-xl border border-primary/30 bg-primary/10 p-3 text-center text-body-sm font-semibold text-primary animate-fade-in">
           {notification}
@@ -224,7 +228,7 @@ export function VendorManagementSection() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search vendors..."
-        className="w-full rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none"
+        className="w-full rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none"
       />
 
       <div className="flex gap-2">
@@ -321,7 +325,7 @@ export function VendorManagementSection() {
       {/* Create Vendor Modal */}
       {isCreateOpen && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="flex max-h-[85vh] w-full max-w-lg flex-col overflow-y-auto rounded-2xl border border-border bg-[#121212] p-6">
+          <div className="glass-modal flex max-h-[85vh] w-full max-w-lg flex-col overflow-y-auto p-6">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="font-display text-title font-bold text-foreground">Create Vendor</h3>
               <button type="button" onClick={() => setIsCreateOpen(false)} aria-label="Close">
@@ -347,13 +351,13 @@ export function VendorManagementSection() {
                   value={(form as unknown as Record<string, string>)[key]}
                   onChange={(e) => setForm({ ...form, [key]: e.target.value })}
                   placeholder={label}
-                  className="rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none"
+                  className="rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none"
                 />
               ))}
               <select
                 value={form.campusId}
                 onChange={(e) => setForm({ ...form, campusId: e.target.value })}
-                className="rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
+                className="rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
               >
                 <option value="">Select College/Campus</option>
                 {campuses.map((c) => (
@@ -368,8 +372,15 @@ export function VendorManagementSection() {
                 value={form.prepTimeMinutes}
                 onChange={(e) => setForm({ ...form, prepTimeMinutes: Number(e.target.value) })}
                 placeholder="Prep Time (minutes)"
-                className="rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none"
+                className="rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none"
               />
+
+              <div className="mt-2 border-t border-border pt-3">
+                <CafeteriaPhotoUploader
+                  photoUrls={form.photoUrls}
+                  onChange={(urls) => setForm({ ...form, photoUrls: urls })}
+                />
+              </div>
 
               <p className="mt-2 font-display text-[11px] font-bold uppercase tracking-widest text-faint">
                 Login Credentials
@@ -379,14 +390,14 @@ export function VendorManagementSection() {
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 placeholder="Temporary Password"
-                className="rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none"
+                className="rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none"
               />
               <input
                 type="password"
                 value={form.confirmPassword}
                 onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
                 placeholder="Confirm Password"
-                className="rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none"
+                className="rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none"
               />
 
               {formError && <p className="text-caption font-semibold text-danger">{formError}</p>}
@@ -407,26 +418,26 @@ export function VendorManagementSection() {
       {/* Edit Vendor Modal */}
       {editingVendor && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-border bg-[#121212] p-6">
+          <div className="glass-modal w-full max-w-md p-6">
             <h3 className="mb-4 font-display text-title font-bold text-foreground">Edit Vendor</h3>
             <div className="flex flex-col gap-3">
               <input
                 value={editingVendor.owner_name ?? ""}
                 onChange={(e) => setEditingVendor({ ...editingVendor, owner_name: e.target.value })}
                 placeholder="Vendor/Owner Name"
-                className="rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
+                className="rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
               />
               <input
                 value={editingVendor.name}
                 onChange={(e) => setEditingVendor({ ...editingVendor, name: e.target.value })}
                 placeholder="Shop Name"
-                className="rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
+                className="rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
               />
               <input
                 value={editingVendor.email ?? ""}
                 onChange={(e) => setEditingVendor({ ...editingVendor, email: e.target.value })}
                 placeholder="Email"
-                className="rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
+                className="rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
               />
               <select
                 value={editingVendor.campuses?.id ?? ""}
@@ -436,7 +447,7 @@ export function VendorManagementSection() {
                     campuses: { id: e.target.value, name: campuses.find((c) => c.id === e.target.value)?.name ?? "" },
                   })
                 }
-                className="rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
+                className="rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
               >
                 {campuses.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -444,6 +455,14 @@ export function VendorManagementSection() {
                   </option>
                 ))}
               </select>
+
+              <div className="border-t border-border pt-3">
+                <CafeteriaPhotoUploader
+                  photoUrls={editingVendor.photo_urls ?? []}
+                  onChange={(urls) => setEditingVendor({ ...editingVendor, photo_urls: urls })}
+                />
+              </div>
+
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -469,7 +488,7 @@ export function VendorManagementSection() {
       {/* Pause/Resume Modal */}
       {pauseTarget && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl border border-border bg-[#121212] p-6">
+          <div className="glass-modal w-full max-w-sm p-6">
             <h3 className="mb-2 font-display text-title font-bold text-foreground">
               {pauseTarget.is_paused ? "Resume Store" : "Pause Store"}
             </h3>
@@ -479,7 +498,7 @@ export function VendorManagementSection() {
                 value={pauseReasonInput}
                 onChange={(e) => setPauseReasonInput(e.target.value)}
                 placeholder="Reason (optional)"
-                className="mb-4 w-full rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none"
+                className="mb-4 w-full rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none"
               />
             )}
             <div className="flex gap-2">
@@ -506,7 +525,7 @@ export function VendorManagementSection() {
       {/* Delete Confirmation Modal */}
       {deleteTarget && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl border border-danger/40 bg-[#121212] p-6">
+          <div className="glass-modal w-full max-w-sm p-6 !border-danger/40">
             <h3 className="mb-2 font-display text-title font-bold text-foreground">Delete this vendor shop?</h3>
             <div className="mb-4 rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground">
               <p className="font-bold">{deleteTarget.name}</p>

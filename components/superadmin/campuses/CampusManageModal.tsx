@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import type { SuperAdminCampus } from "@/lib/mock/superadmin";
-import { geocodeAddressGoogle } from "@/lib/utils/google_maps";
 
 export interface CampusManageModalProps {
   isOpen: boolean;
@@ -54,15 +53,25 @@ function CampusManageForm({
     setIsGeocoding(true);
     setGeocodeMsg(null);
 
-    const res = await geocodeAddressGoogle(fullQuery);
-    setIsGeocoding(false);
+    try {
+      const resp = await fetch("/api/location/geocode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address: fullQuery }),
+      });
+      const res = await resp.json();
+      setIsGeocoding(false);
 
-    if (res.ok && res.latitude != null && res.longitude != null) {
-      setLatitude(String(res.latitude));
-      setLongitude(String(res.longitude));
-      setGeocodeMsg("Coordinates updated via Google Maps!");
-    } else {
-      setGeocodeMsg(res.error || "Geocoding failed. Set manually.");
+      if (res.ok && res.latitude != null && res.longitude != null) {
+        setLatitude(String(res.latitude));
+        setLongitude(String(res.longitude));
+        setGeocodeMsg("Coordinates updated via Google Maps!");
+      } else {
+        setGeocodeMsg(res.error || "Geocoding failed. Set manually.");
+      }
+    } catch {
+      setIsGeocoding(false);
+      setGeocodeMsg("Geocoding service unavailable.");
     }
   };
 
@@ -111,7 +120,7 @@ function CampusManageForm({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. Institute of Technology"
-          className="w-full rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
+          className="w-full rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
         />
       </div>
 
@@ -126,7 +135,7 @@ function CampusManageForm({
           value={location}
           onChange={(e) => setLocation(e.target.value)}
           placeholder="e.g. Noida, Uttar Pradesh"
-          className="w-full rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
+          className="w-full rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
         />
       </div>
 
@@ -141,7 +150,7 @@ function CampusManageForm({
             value={logisticsLeadName}
             onChange={(e) => setLogisticsLeadName(e.target.value)}
             placeholder="e.g. Aryan Kapoor"
-            className="w-full rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
+            className="w-full rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
           />
         </div>
 
@@ -154,7 +163,7 @@ function CampusManageForm({
             onChange={(e) =>
               setStatus(e.target.value as SuperAdminCampus["status"])
             }
-            className="w-full rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
+            className="w-full rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
           >
             <option value="ACTIVE">ACTIVE</option>
             <option value="MAINTENANCE">MAINTENANCE</option>
@@ -174,7 +183,7 @@ function CampusManageForm({
             min="1"
             value={vendorCount}
             onChange={(e) => setVendorCount(e.target.value)}
-            className="w-full rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
+            className="w-full rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
           />
         </div>
 
@@ -187,7 +196,7 @@ function CampusManageForm({
             min="1"
             value={dailyOrders}
             onChange={(e) => setDailyOrders(e.target.value)}
-            className="w-full rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
+            className="w-full rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
           />
         </div>
       </div>
@@ -224,7 +233,7 @@ function CampusManageForm({
             value={latitude}
             onChange={(e) => setLatitude(e.target.value)}
             placeholder="e.g. 26.8378"
-            className="w-full rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
+            className="w-full rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
           />
         </div>
 
@@ -238,7 +247,7 @@ function CampusManageForm({
             value={longitude}
             onChange={(e) => setLongitude(e.target.value)}
             placeholder="e.g. 80.3275"
-            className="w-full rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
+            className="w-full rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
           />
         </div>
 
@@ -253,7 +262,7 @@ function CampusManageForm({
             value={radiusMeters}
             onChange={(e) => setRadiusMeters(e.target.value)}
             placeholder="e.g. 2000"
-            className="w-full rounded-xl border border-border bg-[#1e1f26] p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
+            className="w-full rounded-xl border border-border bg-surface-elevated p-3 text-body-sm text-foreground focus:border-primary focus:outline-none"
           />
         </div>
       </div>
@@ -288,7 +297,7 @@ export function CampusManageModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-2xl border border-border bg-[#121212] p-6 shadow-2xl animate-in fade-in">
+      <div className="glass-modal w-full max-w-lg p-6 animate-in fade-in">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="font-display text-title font-bold text-foreground">
             {editingCampus ? "Manage Campus" : "Add New Campus"}

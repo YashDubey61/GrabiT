@@ -74,7 +74,7 @@ export function VendorMoreFeaturesSheet({
 
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
-      <div className="flex max-h-[85dvh] w-full max-w-md flex-col rounded-t-3xl border border-border bg-[#121212] shadow-2xl sm:max-h-[80vh] sm:rounded-3xl">
+      <div className="glass-drawer flex max-h-[85dvh] w-full max-w-md flex-col sm:max-h-[80vh]">
         <div className="flex items-center justify-between border-b border-border p-5">
           <h3 className="font-display text-title font-bold text-foreground">More Features</h3>
           <button

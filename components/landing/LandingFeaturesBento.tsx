@@ -19,7 +19,7 @@ export function LandingFeaturesBento() {
         {/* Bento Grid */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
           {/* Feature 1: Stealth Ordering */}
-          <div className="md:col-span-8 relative overflow-hidden rounded-3xl border border-border bg-[#1e1f26]/80 p-6 sm:p-8 backdrop-blur-md transition-all hover:border-primary/40 group">
+          <div className="md:col-span-8 relative overflow-hidden rounded-3xl border border-border bg-surface-elevated/80 p-6 sm:p-8 backdrop-blur-md transition-all hover:border-primary/40 group">
             <div className="relative z-10 flex flex-col justify-between h-full space-y-6">
               <div>
                 <span className="material-symbols-outlined text-[38px] text-primary mb-4 block">
@@ -57,7 +57,7 @@ export function LandingFeaturesBento() {
           </div>
 
           {/* Feature 2: Zero Wait Time */}
-          <div className="md:col-span-4 flex flex-col items-center justify-center rounded-3xl border border-primary/20 bg-[#1e1f26]/80 p-6 sm:p-8 text-center backdrop-blur-md transition-all hover:border-primary/40 group">
+          <div className="md:col-span-4 flex flex-col items-center justify-center rounded-3xl border border-primary/20 bg-surface-elevated/80 p-6 sm:p-8 text-center backdrop-blur-md transition-all hover:border-primary/40 group">
             <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-primary text-black transition-transform duration-300 group-hover:scale-110 shadow-glow-primary">
               <span className="material-symbols-outlined text-[36px]" style={{ fontVariationSettings: "'wght' 700" }}>
                 timer_off
@@ -72,7 +72,7 @@ export function LandingFeaturesBento() {
           </div>
 
           {/* Feature 3: Digital Wallet */}
-          <div className="md:col-span-4 relative overflow-hidden rounded-3xl border border-border bg-[#1e1f26]/80 p-6 sm:p-8 backdrop-blur-md transition-all hover:border-primary/40">
+          <div className="md:col-span-4 relative overflow-hidden rounded-3xl border border-border bg-surface-elevated/80 p-6 sm:p-8 backdrop-blur-md transition-all hover:border-primary/40">
             <h3 className="font-display text-title font-bold text-foreground mb-2">
               Campus Digital Wallet
             </h3>
@@ -80,7 +80,7 @@ export function LandingFeaturesBento() {
               Instant 1-tap checkout, cashback rewards, and zero payment gateway fees.
             </p>
 
-            <div className="rounded-2xl border border-white/10 p-4 shadow-lg" style={{ background: "linear-gradient(135deg, #FF6D00 0%, #FFB692 100%)" }}>
+            <div className="rounded-2xl border border-white/10 p-4 shadow-lg" style={{ background: "linear-gradient(135deg, #FF7A00 0%, #FF922B 100%)" }}>
               <div className="font-display text-caption font-bold text-white uppercase tracking-wider mb-1">
                 GrabIt Balance
               </div>

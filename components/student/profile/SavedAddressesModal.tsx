@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { type SavedAddress, getLiveStudentAddresses, createStudentAddress, deleteStudentAddress } from "@/lib/supabase/student_addresses";
 
 interface SavedAddressesModalProps {
@@ -17,18 +17,19 @@ export function SavedAddressesModal({ isOpen, onClose }: SavedAddressesModalProp
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      loadAddresses();
-    }
-  }, [isOpen]);
-
-  async function loadAddresses() {
+  const loadAddresses = useCallback(async () => {
     setIsLoading(true);
     const list = await getLiveStudentAddresses();
     setAddresses(list);
     setIsLoading(false);
-  }
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      loadAddresses();
+    }
+  }, [isOpen, loadAddresses]);
 
   if (!isOpen) return null;
 

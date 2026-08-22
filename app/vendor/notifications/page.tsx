@@ -1,258 +1,317 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { MOCK_VENDOR_STORE } from "@/lib/mock/vendor";
+import { VendorHeader } from "@/components/vendor/orders/VendorHeader";
+import { VendorMoreFeaturesSheet } from "@/components/vendor/orders/VendorMoreFeaturesSheet";
+import { VendorMobileNavMenu } from "@/components/vendor/orders/VendorMobileNavMenu";
+import { VendorProfileSheet } from "@/components/vendor/orders/VendorProfileSheet";
+import { VENDOR_NAV } from "@/app/vendor/layout";
+import { VendorNotificationsDrawer } from "@/components/vendor/notifications/VendorNotificationsDrawer";
 import type { OperationalNotificationItem } from "@/lib/notifications/operational_notifications";
-import { trackProductEvent } from "@/lib/analytics/events";
+import {
+  fetchVendorNotificationsApi,
+  markNotificationReadApi,
+  markNotificationUnreadApi,
+  markAllNotificationsReadApi,
+  getCategoryForType,
+  type NotificationCategory,
+  type VendorNotificationPreferences,
+} from "@/lib/supabase/vendor_notifications_center";
+import {
+  getLiveVendorCanteenId,
+  getLiveVendorShopName,
+} from "@/lib/supabase/vendor_context";
+import { createClient } from "@/lib/supabase/client";
+import { useOrderAlertSound } from "@/lib/vendor/useOrderAlertSound";
+
+import { VendorNotificationCenterHeader } from "@/components/vendor/notifications/VendorNotificationCenterHeader";
+import { VendorNotificationFilterBar } from "@/components/vendor/notifications/VendorNotificationFilterBar";
+import { VendorNotificationCard } from "@/components/vendor/notifications/VendorNotificationCard";
+import { VendorNotificationPreferencesModal } from "@/components/vendor/notifications/VendorNotificationPreferencesModal";
 
 export default function VendorNotificationsPage() {
+  const sound = useOrderAlertSound();
+  const [store, setStore] = useState(MOCK_VENDOR_STORE);
+
   const [notifications, setNotifications] = useState<OperationalNotificationItem[]>([]);
-  const [openCount, setOpenCount] = useState<number>(0);
-  const [activeCategory, setActiveCategory] = useState<string>("ALL");
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  // Filters
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<NotificationCategory>("ALL");
+  const [selectedStatus, setSelectedStatus] = useState<"ALL" | "UNREAD" | "READ">("ALL");
+
+  // Modals & Drawers
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isMoreFeaturesOpen, setIsMoreFeaturesOpen] = useState(false);
+  const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isPrefsModalOpen, setIsPrefsModalOpen] = useState(false);
+
+  const canteenIdRef = useRef<string | null>(null);
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 3000);
   };
 
-  const fetchNotifications = async () => {
-    try {
-      const res = await fetch("/api/vendor/notifications");
-      if (res.ok) {
-        const json = await res.json();
-        setNotifications(json.notifications || []);
-        setOpenCount(json.openCount || 0);
-
-        trackProductEvent({
-          eventName: "operational_notification_viewed",
-          metadata: { count: json.notifications?.length || 0, openCount: json.openCount || 0 },
-        });
-      }
-    } catch (err) {
-      console.error("Failed to load vendor operational notifications:", err);
-    } finally {
-      setIsLoading(false);
+  const loadNotifications = useCallback(async () => {
+    setIsError(false);
+    const res = await fetchVendorNotificationsApi();
+    if (res.ok) {
+      setNotifications(res.notifications);
+      setUnreadCount(res.unreadCount);
+    } else {
+      setIsError(true);
     }
-  };
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchNotifications();
+    setIsLoading(false);
   }, []);
 
-  const handleAction = async (id: string, action: "ACKNOWLEDGE" | "RESOLVE") => {
-    try {
-      const res = await fetch(`/api/vendor/notifications/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
-      });
+  useEffect(() => {
+    let isMounted = true;
+    let channel: ReturnType<ReturnType<typeof createClient>["channel"]> | null = null;
+    const supabase = createClient();
 
-      if (res.ok) {
-        setNotifications((prev) =>
-          prev.map((n) =>
-            n.id === id
-              ? {
-                  ...n,
-                  status: action === "ACKNOWLEDGE" ? "ACKNOWLEDGED" : "RESOLVED",
-                  acknowledgedAt: action === "ACKNOWLEDGE" ? new Date().toISOString() : n.acknowledgedAt,
-                  resolvedAt: action === "RESOLVE" ? new Date().toISOString() : n.resolvedAt,
-                }
-              : n,
-          ),
-        );
-
-        if (action === "RESOLVE") {
-          setOpenCount((prev) => Math.max(0, prev - 1));
-        }
-
-        showToast(action === "ACKNOWLEDGE" ? "Notification Acknowledged" : "Notification Resolved");
-
-        trackProductEvent({
-          eventName: action === "ACKNOWLEDGE" ? "operational_notification_acknowledged" : "operational_notification_resolved",
-          metadata: { notificationId: id },
-        });
+    getLiveVendorShopName().then((name) => {
+      if (isMounted && name) {
+        setStore((prev) => ({ ...prev, name }));
       }
-    } catch (err) {
-      console.error("Failed to update notification action:", err);
+    });
+
+    getLiveVendorCanteenId().then((canteenId) => {
+      if (!isMounted) return;
+      canteenIdRef.current = canteenId;
+
+      loadNotifications();
+
+      if (!canteenId) return;
+
+      channel = supabase
+        .channel(`vendor-notifications-center-realtime-${canteenId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "operational_notifications",
+            filter: `canteen_id=eq.${canteenId}`,
+          },
+          () => {
+            loadNotifications();
+          },
+        )
+        .subscribe();
+    });
+
+    return () => {
+      isMounted = false;
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, [loadNotifications]);
+
+  const handleToggleRead = async (id: string, currentStatus: string) => {
+    if (currentStatus === "OPEN") {
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, status: "ACKNOWLEDGED" } : n)),
+      );
+      setUnreadCount((c) => Math.max(0, c - 1));
+      await markNotificationReadApi(id);
+    } else {
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, status: "OPEN" } : n)),
+      );
+      setUnreadCount((c) => c + 1);
+      await markNotificationUnreadApi(id);
     }
   };
 
-  const filteredNotifications = notifications.filter((n) => {
-    if (statusFilter !== "ALL" && n.status !== statusFilter) return false;
-    if (activeCategory === "ALL") return true;
-    if (activeCategory === "ORDERS" && (n.type === "NEW_ORDER" || n.type === "ORDER_READY_PENDING_HANDOVER")) return true;
-    if (activeCategory === "SLA" && (n.type === "ORDER_AGING" || n.type === "ORDER_SLA_BREACH" || n.type === "HIGH_PENDING_BACKLOG")) return true;
-    if (activeCategory === "MENU" && (n.type.includes("MENU") || n.type.includes("OUT_OF_STOCK"))) return true;
-    if (activeCategory === "PAYOUTS" && n.type.includes("PAYOUT")) return true;
-    if (activeCategory === "PERFORMANCE" && (n.type.includes("PERFORMANCE") || n.type.includes("SALES") || n.type.includes("PEAK"))) return true;
-    return false;
-  });
+  const handleMarkAllAsRead = async () => {
+    setNotifications((prev) =>
+      prev.map((n) => ({ ...n, status: "ACKNOWLEDGED" })),
+    );
+    setUnreadCount(0);
+    const ok = await markAllNotificationsReadApi();
+    if (ok) {
+      showToast("All operational notifications marked as read.");
+    } else {
+      loadNotifications();
+    }
+  };
+
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    setSelectedCategory("ALL");
+    setSelectedStatus("ALL");
+  };
+
+  // Filtered Notifications
+  const filteredNotifications = useMemo(() => {
+    return notifications.filter((item) => {
+      // Category filter
+      if (selectedCategory !== "ALL") {
+        const cat = getCategoryForType(item.type);
+        if (cat !== selectedCategory) return false;
+      }
+
+      // Status filter
+      if (selectedStatus === "UNREAD" && item.status !== "OPEN") return false;
+      if (selectedStatus === "READ" && item.status === "OPEN") return false;
+
+      // Search query
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const matchTitle = item.title.toLowerCase().includes(q);
+        const matchMsg = item.message.toLowerCase().includes(q);
+        if (!matchTitle && !matchMsg) return false;
+      }
+
+      return true;
+    });
+  }, [notifications, selectedCategory, selectedStatus, searchQuery]);
 
   return (
-    <div className="min-h-dvh bg-background text-foreground flex flex-col p-4 sm:p-6 max-w-5xl mx-auto w-full space-y-6 pb-24">
-      {toastMsg && (
-        <div className="p-3 rounded-xl border border-primary/30 bg-primary/10 text-center text-body-sm font-semibold text-primary animate-fade-in">
-          {toastMsg}
-        </div>
-      )}
+    <div className="min-h-dvh bg-background text-foreground flex flex-col">
+      <VendorHeader
+        store={store}
+        onToggleStatus={() => {}}
+        onChangePrepTime={() => {}}
+        onOpenNotifications={() => setIsNotificationsOpen(true)}
+        onOpenMoreFeatures={() => setIsMoreFeaturesOpen(true)}
+        onOpenNavMenu={() => setIsNavMenuOpen(true)}
+        onOpenProfile={() => setIsProfileOpen(true)}
+      />
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-semibold tracking-wider text-primary uppercase mb-1">
-            <span className="material-symbols-outlined text-sm">notifications_active</span>
-            Kitchen Operational Dispatch
+      <VendorMobileNavMenu
+        isOpen={isNavMenuOpen}
+        onClose={() => setIsNavMenuOpen(false)}
+        items={VENDOR_NAV}
+        onOpenProfile={() => setIsProfileOpen(true)}
+      />
+
+      <VendorMoreFeaturesSheet
+        isOpen={isMoreFeaturesOpen}
+        onClose={() => setIsMoreFeaturesOpen(false)}
+        store={store}
+        onToggleStatus={() => {}}
+        onChangePrepTime={() => {}}
+        isSoundUnlocked={sound.isUnlocked}
+        onUnlockSound={sound.unlock}
+      />
+
+      <VendorProfileSheet
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        store={store}
+      />
+
+      <main className="flex-1 p-4 sm:p-6 max-w-7xl mx-auto w-full pb-24 sm:pb-8 flex flex-col gap-6">
+        {toastMsg && (
+          <div className="rounded-xl border border-primary/30 bg-primary/10 p-3 text-center text-body-sm font-semibold text-primary animate-fade-in">
+            {toastMsg}
           </div>
-          <h1 className="font-display text-title font-bold text-foreground sm:text-[28px]">
-            Operational Notifications &amp; SLA Alerts
-          </h1>
-          <p className="text-body-sm text-faint">
-            Real-time kitchen order alerts, preparation SLA warnings, and menu availability notifications.
-          </p>
-        </div>
+        )}
 
-        <div className="flex items-center gap-2">
-          <span className="px-3 py-1.5 rounded-full bg-amber-950/60 text-amber-400 border border-amber-800/40 text-xs font-mono font-bold">
-            {openCount} Open Alerts
-          </span>
-        </div>
-      </div>
+        {/* Header */}
+        <VendorNotificationCenterHeader
+          unreadCount={unreadCount}
+          totalCount={notifications.length}
+          onMarkAllAsRead={handleMarkAllAsRead}
+          onOpenPreferences={() => setIsPrefsModalOpen(true)}
+        />
 
-      {/* Status & Category Filters */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-[#262626]">
-        {/* Category Chips */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-          {["ALL", "ORDERS", "SLA", "MENU", "PAYOUTS", "PERFORMANCE"].map((cat) => (
+        {/* Filters */}
+        <VendorNotificationFilterBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+          selectedStatus={selectedStatus}
+          onStatusChange={setSelectedStatus}
+          onResetFilters={handleResetFilters}
+          filteredCount={filteredNotifications.length}
+          totalCount={notifications.length}
+        />
+
+        {/* List Content */}
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
+            <span className="material-symbols-outlined text-[36px] text-primary animate-spin">
+              progress_activity
+            </span>
+            <p className="text-body-sm text-muted">Fetching operational alerts from Supabase...</p>
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-danger/30 bg-danger/5 p-12 text-center">
+            <span className="material-symbols-outlined text-[40px] text-danger">error</span>
+            <h3 className="font-display text-title font-bold text-foreground">
+              Unable to load notifications
+            </h3>
+            <p className="text-caption text-muted">
+              Check your connection and try again.
+            </p>
             <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase font-mono tracking-wider transition-all whitespace-nowrap ${
-                activeCategory === cat
-                  ? "bg-primary text-white shadow-md"
-                  : "bg-[#1E1F26] text-gray-400 border border-[#262626] hover:text-white"
-              }`}
+              type="button"
+              onClick={() => loadNotifications()}
+              className="mt-2 rounded-xl bg-primary px-5 py-2.5 font-display text-caption font-bold text-on-primary"
             >
-              {cat}
+              Retry
             </button>
-          ))}
-        </div>
+          </div>
+        ) : filteredNotifications.length === 0 ? (
+          <div className="rounded-2xl border border-border bg-surface-elevated/70 p-12 text-center backdrop-blur-md flex flex-col items-center gap-3">
+            <span className="material-symbols-outlined text-[48px] text-muted">
+              {notifications.length === 0 ? "notifications_off" : "filter_list_off"}
+            </span>
+            <h3 className="font-display text-title font-bold text-foreground">
+              {notifications.length === 0
+                ? "You're all caught up!"
+                : "No notifications match your filters"}
+            </h3>
+            <p className="text-caption text-muted max-w-sm">
+              {notifications.length === 0
+                ? "When new orders arrive, inventory levels drop, or settlements occur, real-time alerts will appear here."
+                : "Try selecting another category or clearing your search term."}
+            </p>
+            {notifications.length > 0 && (
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="mt-2 rounded-xl bg-primary px-5 py-2.5 font-display text-caption font-bold text-on-primary shadow-glow-primary"
+              >
+                Reset Filters
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredNotifications.map((notification) => (
+              <VendorNotificationCard
+                key={notification.id}
+                notification={notification}
+                onToggleRead={handleToggleRead}
+              />
+            ))}
+          </div>
+        )}
+      </main>
 
-        {/* Status Filter */}
-        <div className="flex items-center gap-1 bg-[#1E1F26] p-1 rounded-xl border border-[#262626] w-fit">
-          {["ALL", "OPEN", "ACKNOWLEDGED", "RESOLVED"].map((st) => (
-            <button
-              key={st}
-              onClick={() => setStatusFilter(st)}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-semibold transition-all ${
-                statusFilter === st ? "bg-primary text-white" : "text-gray-400 hover:text-white"
-              }`}
-            >
-              {st}
-            </button>
-          ))}
-        </div>
-      </div>
+      <VendorNotificationPreferencesModal
+        isOpen={isPrefsModalOpen}
+        onClose={() => setIsPrefsModalOpen(false)}
+        onSavePreferences={() => {
+          showToast("Notification preferences updated.");
+        }}
+      />
 
-      {/* Notifications List */}
-      {isLoading ? (
-        <div className="py-16 text-center text-gray-400 space-y-2">
-          <span className="material-symbols-outlined text-3xl animate-spin text-primary">progress_activity</span>
-          <p className="text-xs">Loading kitchen alerts...</p>
-        </div>
-      ) : filteredNotifications.length === 0 ? (
-        <div className="py-16 text-center space-y-2 rounded-2xl bg-[#1E1F26] border border-[#262626] p-8">
-          <span className="material-symbols-outlined text-4xl text-gray-600">notifications_off</span>
-          <h3 className="text-body font-bold text-white">No operational notifications found</h3>
-          <p className="text-xs text-gray-400">All kitchen SLA and order conditions are running smoothly.</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {filteredNotifications.map((notif) => (
-            <div
-              key={notif.id}
-              className={`p-5 rounded-2xl border transition-all space-y-3 ${
-                notif.status === "OPEN"
-                  ? notif.severity === "CRITICAL"
-                    ? "bg-red-950/20 border-red-800/40 shadow-lg"
-                    : notif.severity === "WARNING"
-                    ? "bg-amber-950/20 border-amber-800/40 shadow-lg"
-                    : "bg-[#1E1F26] border-primary/40 shadow-lg"
-                  : "bg-black/40 border-[#262626] opacity-75"
-              }`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase border ${
-                    notif.severity === "CRITICAL"
-                      ? "bg-red-950/80 text-red-400 border-red-800/60"
-                      : notif.severity === "WARNING"
-                      ? "bg-amber-950/80 text-amber-400 border-amber-800/60"
-                      : "bg-blue-950/80 text-blue-400 border-blue-800/60"
-                  }`}>
-                    {notif.severity}
-                  </span>
-
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold border ${
-                    notif.status === "OPEN"
-                      ? "bg-amber-950/40 text-amber-300 border-amber-800/30"
-                      : notif.status === "ACKNOWLEDGED"
-                      ? "bg-sky-950/40 text-sky-300 border-sky-800/30"
-                      : "bg-emerald-950/40 text-emerald-300 border-emerald-800/30"
-                  }`}>
-                    {notif.status}
-                  </span>
-                </div>
-
-                <span className="text-[11px] text-gray-400 font-mono">
-                  {new Date(notif.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                </span>
-              </div>
-
-              <div>
-                <h3 className="text-body font-bold text-white">{notif.title}</h3>
-                <p className="text-xs text-gray-300 mt-1">{notif.message}</p>
-              </div>
-
-              <div className="flex items-center justify-between pt-2 border-t border-white/5 text-xs">
-                {notif.actionUrl ? (
-                  <Link
-                    href={notif.actionUrl}
-                    className="inline-flex items-center gap-1 text-primary font-semibold hover:underline"
-                  >
-                    Open Page <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                  </Link>
-                ) : (
-                  <span className="text-gray-500 italic">No direct page link</span>
-                )}
-
-                <div className="flex items-center gap-2">
-                  {notif.status === "OPEN" && (
-                    <button
-                      onClick={() => handleAction(notif.id, "ACKNOWLEDGE")}
-                      className="px-3 py-1 rounded-xl bg-[#1E1F26] border border-[#262626] text-gray-300 hover:text-white font-semibold text-xs transition-all"
-                    >
-                      Acknowledge
-                    </button>
-                  )}
-
-                  {notif.status !== "RESOLVED" && (
-                    <button
-                      onClick={() => handleAction(notif.id, "RESOLVE")}
-                      className="px-3 py-1 rounded-xl bg-emerald-600 text-white font-semibold text-xs hover:bg-emerald-500 transition-all"
-                    >
-                      Resolve
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <VendorNotificationsDrawer
+        isOpen={isNotificationsOpen}
+        onClose={() => setIsNotificationsOpen(false)}
+        onSelectOrder={() => {}}
+      />
     </div>
   );
 }

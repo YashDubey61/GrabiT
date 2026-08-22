@@ -58,7 +58,7 @@ export function OrderHistoryCard({ order }: OrderHistoryCardProps) {
   const formattedDate = formatOrderTimestamp(order.createdAt);
 
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-border bg-[#1e1f26]/80 p-4 backdrop-blur-md transition-all hover:border-border/80 sm:p-5">
+    <div className="flex flex-col gap-4 rounded-2xl border border-border bg-surface-elevated p-4 backdrop-blur-md transition-all hover:border-border/80 sm:p-5">
       {/* Top row: Canteen info & Status */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">

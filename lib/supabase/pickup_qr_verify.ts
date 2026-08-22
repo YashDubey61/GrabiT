@@ -1,7 +1,8 @@
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { getAuthenticatedVendorContext } from "@/lib/supabase/vendor_auth";
 import { parsePickupQrPayload } from "@/lib/orders/pickup_qr";
 import { normalizePickupOtp } from "@/lib/orders/pickup_otp";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+export { getSupabaseAdminClient };
 
 export type PickupQrFailureCode =
   | "UNAUTHENTICATED"
@@ -34,13 +35,6 @@ export interface MatchedCredential {
 export type PickupQrResult =
   | { ok: true; vendorCanteenId: string; credential: MatchedCredential; order: VerifiedPickupOrder }
   | { ok: false; code: PickupQrFailureCode; error: string };
-
-export function getSupabaseAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createAdminClient(url, key);
-}
 
 // Lightweight per-vendor attempt limiter for manual OTP entry — the
 // 4-digit space (10,000 combinations) is guessable without one. No

@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import type { VendorStoreConfig } from "@/lib/mock/vendor";
 import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { hardNavigate } from "@/lib/auth/redirect";
 
 interface VendorProfile {
   vendorId: string;
@@ -34,11 +36,16 @@ export function VendorProfileSheet({
   onClose: () => void;
   store: VendorStoreConfig;
 }) {
+  const { signOut } = useAuth();
   const [profile, setProfile] = useState<VendorProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
   const [isEditing, setIsEditing] = useState(false);
   const [shopName, setShopName] = useState("");
   const [description, setDescription] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -48,18 +55,58 @@ export function VendorProfileSheet({
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    fetch("/api/vendor/profile")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.ok) {
-          setProfile(d.profile);
-          setShopName(d.profile.shopName ?? "");
-          setDescription(d.profile.shopDescription ?? "");
-        }
+  const fetchProfile = useCallback(async () => {
+    setIsLoading(true);
+    setFetchError(null);
+    try {
+      const res = await fetch("/api/vendor/profile", {
+        headers: { "Cache-Control": "no-cache" },
       });
-  }, [isOpen]);
+      const d = await res.json();
+      if (!res.ok || !d.ok) {
+        setFetchError(d.error ?? "Unable to load vendor profile.");
+        setProfile(null);
+        return;
+      }
+
+      // Map either d.profile or d.data fallback
+      const profData: VendorProfile | null = d.profile
+        ? d.profile
+        : d.data
+        ? {
+            vendorId: d.data.canteenId,
+            shopName: d.data.name,
+            shopDescription: d.data.description,
+            shopImageUrl: d.data.imageUrl,
+            storeStatus: d.data.status,
+            email: d.data.email || d.data.account?.email || null,
+            phone: d.data.phone || d.data.account?.phone || null,
+            registeredAt: new Date().toISOString(),
+          }
+        : null;
+
+      if (profData) {
+        setProfile(profData);
+        setShopName(profData.shopName ?? "");
+        setDescription(profData.shopDescription ?? "");
+      } else {
+        setFetchError("Vendor profile details not found.");
+        setProfile(null);
+      }
+    } catch (err) {
+      console.error("Fetch profile error:", err);
+      setFetchError("Unable to load profile. Please check your network connection and try again.");
+      setProfile(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchProfile();
+    }
+  }, [isOpen, fetchProfile]);
 
   if (!isOpen) return null;
 
@@ -118,7 +165,7 @@ export function VendorProfileSheet({
 
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
-      <div className="flex max-h-[85dvh] w-full max-w-md flex-col rounded-t-3xl border border-border bg-[#121212] shadow-2xl sm:max-h-[80vh] sm:rounded-3xl">
+      <div className="glass-drawer flex max-h-[85dvh] w-full max-w-md flex-col sm:max-h-[80vh]">
         <div className="flex items-center justify-between border-b border-border p-5">
           <h3 className="font-display text-title font-bold text-foreground">Vendor Profile</h3>
           <button
@@ -131,11 +178,37 @@ export function VendorProfileSheet({
           </button>
         </div>
 
-        {!profile ? (
+        {isLoading ? (
           <div className="flex flex-1 items-center justify-center p-10">
             <span className="material-symbols-outlined animate-spin text-[28px] text-primary">
               progress_activity
             </span>
+          </div>
+        ) : fetchError ? (
+          <div className="flex flex-1 flex-col items-center justify-center p-8 text-center space-y-3">
+            <span className="material-symbols-outlined text-[36px] text-danger">error</span>
+            <h4 className="font-display text-body font-bold text-foreground">Unable to Load Profile</h4>
+            <p className="text-caption text-muted max-w-xs">{fetchError}</p>
+            <button
+              type="button"
+              onClick={() => fetchProfile()}
+              className="mt-2 rounded-lg bg-surface-elevated border border-border px-4 py-2 font-display text-caption font-bold text-foreground hover:bg-surface transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        ) : !profile ? (
+          <div className="flex flex-1 flex-col items-center justify-center p-8 text-center space-y-3">
+            <span className="material-symbols-outlined text-[36px] text-faint">storefront</span>
+            <h4 className="font-display text-body font-bold text-foreground">Vendor Profile Incomplete</h4>
+            <p className="text-caption text-muted max-w-xs">Your vendor store profile has not been completed yet.</p>
+            <button
+              type="button"
+              onClick={() => fetchProfile()}
+              className="mt-2 rounded-lg bg-primary px-4 py-2 font-display text-caption font-bold text-on-primary hover:bg-primary-soft transition-colors"
+            >
+              Retry Load
+            </button>
           </div>
         ) : (
           <div className="flex flex-col gap-6 overflow-y-auto p-5">
@@ -277,6 +350,28 @@ export function VendorProfileSheet({
                   <p className="mt-2 text-caption font-semibold text-success">Password updated successfully.</p>
                 )}
               </div>
+            </section>
+
+            <section>
+              <button
+                type="button"
+                disabled={isSigningOut}
+                onClick={async () => {
+                  setIsSigningOut(true);
+                  try {
+                    await signOut();
+                    if (typeof window !== "undefined") {
+                      localStorage.removeItem("grabit_vendor_cache");
+                    }
+                  } finally {
+                    setIsSigningOut(false);
+                    hardNavigate("/vendor/auth");
+                  }
+                }}
+                className="w-full rounded-xl border border-danger/40 bg-danger/10 py-3 font-display text-body-sm font-bold text-danger hover:bg-danger/20 disabled:opacity-50"
+              >
+                {isSigningOut ? "Signing out..." : "Sign Out"}
+              </button>
             </section>
           </div>
         )}

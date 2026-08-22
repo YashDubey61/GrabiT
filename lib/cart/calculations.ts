@@ -1,4 +1,5 @@
 import type { CartItem } from "@/lib/cart/types";
+import { calculateOrderPricing } from "@/lib/pricing/order_pricing";
 
 /**
  * Single source of truth for cart math. CartContext calls these to derive
@@ -16,15 +17,11 @@ export function calculateSubtotal(items: CartItem[]): number {
 }
 
 /**
- * The approved Checkout export shows a flat "Platform Fee ₹5" line
- * regardless of order size. Display-only mock value — explicitly NOT the
- * PRD §8 platform-fee formula (free ≤₹30, flat ₹3.50 split above that).
- * Moved here on Day 4 (from CheckoutBillDetails) so order creation uses
- * the exact same number Checkout displayed — one fee calculation, not
- * a second copy computed at order-creation time.
+ * Platform fee display helper — thin wrapper around the single
+ * authoritative pricing calculation (lib/pricing/order_pricing.ts) so
+ * Checkout shows the exact same fee the server will charge: ₹2.50 when
+ * subtotal > ₹25, otherwise ₹0. GRABIT does not charge delivery.
  */
-const MOCK_PLATFORM_FEE = 5;
-
-export function getMockPlatformFee(subtotal: number): number {
-  return subtotal > 0 ? MOCK_PLATFORM_FEE : 0;
+export function getPlatformFee(subtotal: number): number {
+  return calculateOrderPricing(subtotal).platformFee;
 }

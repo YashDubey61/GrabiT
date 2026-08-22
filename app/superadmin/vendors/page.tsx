@@ -203,7 +203,7 @@ export default function SuperAdminVendorsPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search vendor name, category, or campus hub..."
-            className="w-full rounded-xl border border-border bg-[#1e1f26] py-3 pl-10 pr-4 font-body text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none transition-colors"
+            className="w-full rounded-xl border border-border bg-surface-elevated py-3 pl-10 pr-4 font-body text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none transition-colors"
           />
         </div>
 
@@ -212,7 +212,7 @@ export default function SuperAdminVendorsPage() {
           {/* Left Column: Vendor Listings by Campus Hub (8 cols) */}
           <div className="flex flex-col gap-6 lg:col-span-8">
             {filteredHubs.length === 0 ? (
-              <div className="rounded-2xl border border-border bg-[#1e1f26]/50 p-8 text-center backdrop-blur-md text-caption text-faint">
+              <div className="rounded-2xl border border-border bg-surface-elevated/50 p-8 text-center backdrop-blur-md text-caption text-faint">
                 No vendors found matching &quot;{searchQuery}&quot;.
               </div>
             ) : (

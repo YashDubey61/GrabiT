@@ -6,11 +6,13 @@ import type {
   StudentRecommendationsPayload,
 } from "@/lib/supabase/student_recommendations";
 import { trackProductEvent } from "@/lib/analytics/events";
+import { useCart } from "@/lib/cart/CartContext";
 
 export function StudentRecommendationsSection() {
   const [data, setData] = useState<StudentRecommendationsPayload | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [addedItem, setAddedItem] = useState<string | null>(null);
+  const cart = useCart();
 
   useEffect(() => {
     let isSubscribed = true;
@@ -47,6 +49,15 @@ export function StudentRecommendationsSection() {
   }, []);
 
   const handleAddToCart = (item: RecommendationItem, index: number) => {
+    cart.addItem({
+      canteenId: item.canteenId,
+      canteenName: item.canteenName,
+      menuItemId: item.itemId,
+      name: item.title,
+      price: item.price,
+      image: item.imageUrl,
+    });
+
     setAddedItem(item.itemId);
     setTimeout(() => setAddedItem(null), 1500);
 

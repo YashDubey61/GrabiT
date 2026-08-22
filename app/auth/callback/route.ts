@@ -13,8 +13,16 @@ export async function GET(request: NextRequest) {
 
   // Handle OAuth error or cancellation
   if (error || errorDescription) {
+    const errText = (errorDescription || error || "").toLowerCase();
     const redirectUrl = new URL("/auth", requestUrl.origin);
-    redirectUrl.searchParams.set("error", errorDescription || error || "OAuth authentication failed");
+    if (
+      errText.includes("access_denied") ||
+      errText.includes("user_canceled") ||
+      errText.includes("user canceled")
+    ) {
+      return NextResponse.redirect(redirectUrl);
+    }
+    redirectUrl.searchParams.set("error", "We couldn’t complete Google Sign-In. Please try again.");
     return NextResponse.redirect(redirectUrl);
   }
 
@@ -47,7 +55,7 @@ export async function GET(request: NextRequest) {
     if (exchangeErr || !authData.user) {
       console.error("OAuth code exchange error:", exchangeErr);
       const redirectUrl = new URL("/auth", requestUrl.origin);
-      redirectUrl.searchParams.set("error", exchangeErr?.message || "Failed to exchange OAuth code.");
+      redirectUrl.searchParams.set("error", "We couldn’t complete Google Sign-In. Please try again.");
       return NextResponse.redirect(redirectUrl);
     }
 

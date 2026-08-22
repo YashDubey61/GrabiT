@@ -16,7 +16,7 @@ export function VendorOversightCard({
   onMoreActions,
 }: VendorOversightCardProps) {
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-border bg-[#1e1f26]/80 p-4 backdrop-blur-md transition-all sm:flex-row sm:items-center sm:justify-between hover:border-primary/40">
+    <div className="flex flex-col gap-4 rounded-xl border border-border bg-surface-elevated/80 p-4 backdrop-blur-md transition-all sm:flex-row sm:items-center sm:justify-between hover:border-primary/40">
       {/* Icon & Details */}
       <div className="flex items-center gap-3">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-surface-sunken text-primary border border-border">
