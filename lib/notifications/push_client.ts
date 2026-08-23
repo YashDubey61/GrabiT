@@ -18,24 +18,25 @@ let listenersRegistered = false;
 let lastKnownToken: string | null = null;
 
 /**
- * There is no `android/app/google-services.json` in this build, so no
- * default FirebaseApp exists in the running process. Calling
- * `PushNotifications.register()` in that state doesn't fail gracefully —
- * it throws `IllegalStateException: Default FirebaseApp is not
- * initialized` from `FirebaseMessaging.getInstance()`, uncaught, on a
- * background Capacitor plugin thread, which kills the entire app
- * (confirmed via `adb logcat`: `FATAL EXCEPTION: CapacitorPlugins`,
- * originating in `PushNotificationsPlugin.register()`). A JS-side
- * try/catch around the call cannot save the process — the crash happens
- * natively before the JS Promise can even reject.
+ * Without `android/app/google-services.json`, no default FirebaseApp
+ * exists in the running process, and `PushNotifications.register()`
+ * doesn't fail gracefully in that state — it throws
+ * `IllegalStateException: Default FirebaseApp is not initialized` from
+ * `FirebaseMessaging.getInstance()`, uncaught, on a background Capacitor
+ * plugin thread, which kills the entire app (confirmed via `adb logcat`:
+ * `FATAL EXCEPTION: CapacitorPlugins`, originating in
+ * `PushNotificationsPlugin.register()`). A JS-side try/catch around the
+ * call cannot save the process — the crash happens natively before the JS
+ * Promise can even reject.
  *
- * Flip this to `true` only once a real `google-services.json` has been
- * added to the Android project (and `FCM_SERVICE_ACCOUNT_JSON` is set
- * server-side — see lib/notifications/fcm_v1.ts) — until then, push must
- * stay fully inert: no permission prompt (there is nothing it would
- * actually enable), no registration attempt.
+ * `android/app/google-services.json` now exists (package_name verified
+ * as app.grabit.student), so native FCM init/registration is safe. Actual
+ * push *delivery* additionally needs `FCM_SERVICE_ACCOUNT_JSON` set
+ * server-side (see lib/notifications/fcm_v1.ts) — independent of this
+ * flag, which only governs whether the client is allowed to call
+ * register() at all.
  */
-const FCM_TRANSPORT_CONFIGURED = false;
+const FCM_TRANSPORT_CONFIGURED = true;
 
 /** True only for an actual native Android/iOS shell with a working FCM
  * transport configured — never in the regular browser, and never while
