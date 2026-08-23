@@ -30,9 +30,10 @@ let lastKnownToken: string | null = null;
  * natively before the JS Promise can even reject.
  *
  * Flip this to `true` only once a real `google-services.json` has been
- * added to the Android project (and `FCM_SERVER_KEY` is set server-side)
- * — until then, push must stay fully inert: no permission prompt (there
- * is nothing it would actually enable), no registration attempt.
+ * added to the Android project (and `FCM_SERVICE_ACCOUNT_JSON` is set
+ * server-side — see lib/notifications/fcm_v1.ts) — until then, push must
+ * stay fully inert: no permission prompt (there is nothing it would
+ * actually enable), no registration attempt.
  */
 const FCM_TRANSPORT_CONFIGURED = false;
 
@@ -60,6 +61,10 @@ export async function initStudentPushNotifications(
   if (!listenersRegistered) {
     listenersRegistered = true;
 
+    // Fires on initial registration AND again whenever FCM rotates the
+    // token (Capacitor doesn't expose a separate "refresh" event — the
+    // native plugin re-invokes this same listener), so token rotation is
+    // already handled: each new token gets its own upsert below.
     PushNotifications.addListener("registration", async (token: Token) => {
       lastKnownToken = token.value;
       try {
