@@ -51,44 +51,6 @@ export function isFcmV1Configured(): boolean {
   return getServiceAccount() !== null;
 }
 
-/** Boolean-only diagnostics — never returns the raw env value or any
- * parsed field content, safe to expose to an authenticated internal
- * caller for debugging a misconfigured service account. */
-export function diagnoseFcmServiceAccountConfig(): {
-  envVarPresent: boolean;
-  envVarLength: number;
-  validJson: boolean;
-  hasClientEmail: boolean;
-  hasPrivateKey: boolean;
-  hasProjectId: boolean;
-  privateKeyLooksLikePem: boolean;
-} {
-  const raw = process.env.FCM_SERVICE_ACCOUNT_JSON;
-  const result = {
-    envVarPresent: Boolean(raw),
-    envVarLength: raw?.length ?? 0,
-    validJson: false,
-    hasClientEmail: false,
-    hasPrivateKey: false,
-    hasProjectId: false,
-    privateKeyLooksLikePem: false,
-  };
-  if (!raw) return result;
-  try {
-    const parsed = JSON.parse(raw) as Partial<ServiceAccount>;
-    result.validJson = true;
-    result.hasClientEmail = Boolean(parsed.client_email);
-    result.hasPrivateKey = Boolean(parsed.private_key);
-    result.hasProjectId = Boolean(parsed.project_id);
-    result.privateKeyLooksLikePem = Boolean(
-      parsed.private_key?.includes("BEGIN PRIVATE KEY"),
-    );
-  } catch {
-    // validJson stays false
-  }
-  return result;
-}
-
 async function mintAccessToken(account: ServiceAccount): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
   const header = base64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
