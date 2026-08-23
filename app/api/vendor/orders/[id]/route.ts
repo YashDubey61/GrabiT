@@ -216,7 +216,7 @@ export async function PATCH(
       }
 
       if (notifType && updatedOrder.student_id) {
-        await createStudentNotification({
+        const notifResult = await createStudentNotification({
           userId: updatedOrder.student_id,
           type: notifType,
           title,
@@ -227,6 +227,25 @@ export async function PATCH(
           actionUrl: `/customer/orders/${updatedOrder.id}`,
           dedupeKey: `order-status:${targetStatus}:${updatedOrder.id}`,
         });
+
+        // Fan out to the student's device(s) via FCM — only for the
+        // notification types that warrant a push, and only when this was
+        // a genuinely new event (not a dedupe hit on the same status
+        // transition), so a retried/duplicate call never double-pushes.
+        const PUSH_NOTIF_TYPES = new Set(["ORDER_PREPARING", "ORDER_READY", "ORDER_PICKED_UP", "ORDER_COMPLETED"]);
+        if (notifResult.success && !notifResult.alreadyExisted && PUSH_NOTIF_TYPES.has(notifType)) {
+          const { sendStudentOrderPushNotification } = await import(
+            "@/lib/notifications/student_push_service"
+          );
+          await sendStudentOrderPushNotification({
+            userId: updatedOrder.student_id,
+            orderId: updatedOrder.id,
+            orderNumber: orderNum,
+            type: notifType as "ORDER_PREPARING" | "ORDER_READY" | "ORDER_PICKED_UP" | "ORDER_COMPLETED",
+            title,
+            body: message,
+          });
+        }
       }
     } catch (notifErr) {
       console.warn("Non-critical notification side-effect error:", notifErr);

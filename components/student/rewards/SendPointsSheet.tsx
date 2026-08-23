@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { FriendSearchResult } from "@/lib/rewards/types";
 import { MIN_TRANSFER_AMOUNT, TRANSFER_STEP, validateTransferAmount } from "@/lib/rewards/points_rules";
+import { useBodyScrollLock } from "@/lib/hooks/useBodyScrollLock";
 
 type Step = "select" | "amount" | "confirm" | "success" | "error";
 
@@ -26,6 +27,8 @@ export function SendPointsSheet({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [resultBalance, setResultBalance] = useState<number | null>(null);
+
+  useBodyScrollLock(isOpen);
 
   if (!isOpen) return null;
 
@@ -106,7 +109,7 @@ export function SendPointsSheet({
 
   return (
     <div className="fixed inset-0 z-[85] flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
-      <div className="w-full max-w-md rounded-t-3xl border border-border-subtle bg-surface-elevated p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-2xl sm:rounded-3xl">
+      <div className="w-full max-w-md rounded-t-3xl border border-border-subtle bg-surface-elevated p-6 pb-[max(1.5rem,var(--safe-area-inset-bottom))] shadow-2xl sm:rounded-3xl">
         <div className="mb-5 flex items-center justify-between">
           <h3 className="font-display text-body font-800 text-foreground">Send Points</h3>
           <button type="button" onClick={handleClose} aria-label="Close" className="text-faint hover:text-foreground">

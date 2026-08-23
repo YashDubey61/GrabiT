@@ -11,7 +11,12 @@ export default async function StudentCanteenMenuPage({
   params: Promise<{ canteenId: string }>;
 }) {
   const { canteenId } = await params;
-  const { canteenInfo, items } = await getLiveCanteenMenuItems(canteenId);
+  // Offers are keyed off the same canteenId, not off canteenInfo — no
+  // need to wait for the menu fetch to resolve before starting this one.
+  const [{ canteenInfo, items }, offers] = await Promise.all([
+    getLiveCanteenMenuItems(canteenId),
+    getLiveCanteenActiveOffers(canteenId),
+  ]);
 
   if (!canteenInfo) {
     return (
@@ -26,8 +31,6 @@ export default async function StudentCanteenMenuPage({
       </main>
     );
   }
-
-  const offers = await getLiveCanteenActiveOffers(canteenInfo.id);
 
   return (
     <>

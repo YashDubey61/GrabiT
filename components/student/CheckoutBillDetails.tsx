@@ -1,5 +1,7 @@
 "use client";
 
+import { useBodyScrollLock } from "@/lib/hooks/useBodyScrollLock";
+
 /** Bottom-sheet "View Breakup" content — a real expand/collapse sheet,
  * not an anchor-scroll to a section that was already on screen.
  * GRABIT does not charge delivery, so no delivery-charge row is shown
@@ -23,11 +25,13 @@ export function CheckoutBillDetails({
   isOpen: boolean;
   onClose: () => void;
 }) {
+  useBodyScrollLock(isOpen);
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/70 backdrop-blur-sm">
-      <div className="glass-drawer w-full max-w-2xl animate-in slide-in-from-bottom-4 fade-in duration-200 p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:px-16">
+      <div className="glass-drawer w-full max-w-2xl animate-in slide-in-from-bottom-4 fade-in duration-200 p-6 pb-[max(1.5rem,var(--safe-area-inset-bottom))] md:px-16">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="font-display text-body font-800 text-foreground">Bill Details</h3>
           <button

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { calculateWalletTopupBonus } from "@/lib/pricing/wallet_topup";
 import { openCashfreeCheckout } from "@/lib/payments/cashfree_client";
+import { useBodyScrollLock } from "@/lib/hooks/useBodyScrollLock";
 
 const QUICK_AMOUNTS = [100, 500, 1000, 2000];
 
@@ -19,6 +20,8 @@ export function WalletTopUpSelector({ isOpen, onClose, onTopUpSuccess }: WalletT
   const [amountInput, setAmountInput] = useState("500");
   const [step, setStep] = useState<Step>("input");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useBodyScrollLock(isOpen);
 
   if (!isOpen) return null;
 
@@ -90,7 +93,7 @@ export function WalletTopUpSelector({ isOpen, onClose, onTopUpSuccess }: WalletT
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-4 pb-[calc(5rem+env(safe-area-inset-bottom))] backdrop-blur-sm sm:items-center sm:pb-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-4 pb-[calc(5rem+var(--safe-area-inset-bottom))] backdrop-blur-sm sm:items-center sm:pb-4">
       <div className="glass-modal w-full max-w-md max-h-[calc(100dvh-6rem)] overflow-y-auto p-5 animate-in fade-in slide-in-from-bottom-5">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">

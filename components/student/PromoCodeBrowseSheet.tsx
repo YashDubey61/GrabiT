@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useBodyScrollLock } from "@/lib/hooks/useBodyScrollLock";
 
 interface PromoCodeListItem {
   id: string;
@@ -45,11 +46,13 @@ export function PromoCodeBrowseSheet({ isOpen, onClose, onApply, isApplying }: P
       .finally(() => setIsLoading(false));
   }, [isOpen]);
 
+  useBodyScrollLock(isOpen);
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
-      <div className="glass-drawer max-h-[70vh] w-full max-w-md overflow-y-auto p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+      <div className="glass-drawer max-h-[70vh] w-full max-w-md overflow-y-auto p-5 pb-[max(1.25rem,var(--safe-area-inset-bottom))]">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="font-display text-body font-800 text-foreground">Promo Codes</h3>
           <button

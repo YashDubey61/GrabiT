@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { SupabaseCampus } from "@/lib/supabase/data";
+import { useBodyScrollLock } from "@/lib/hooks/useBodyScrollLock";
 
 interface CampusSelectorModalProps {
   isOpen: boolean;
@@ -33,6 +34,8 @@ export function CampusSelectorModal({
 }: CampusSelectorModalProps) {
   const [search, setSearch] = useState("");
 
+  useBodyScrollLock(isOpen);
+
   if (!isOpen) return null;
 
   const filteredCampuses = campuses.filter(
@@ -43,7 +46,7 @@ export function CampusSelectorModal({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-md transition-all p-0 sm:items-center sm:p-4 pb-[env(safe-area-inset-bottom)]">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-md transition-all p-0 sm:items-center sm:p-4 pb-[var(--safe-area-inset-bottom)]">
       <div className="w-full max-w-md max-h-[82dvh] flex flex-col rounded-t-3xl sm:rounded-3xl border border-border bg-surface p-4 sm:p-5 shadow-2xl animate-in slide-in-from-bottom duration-200">
         {/* Header */}
         <div className="mb-3 flex items-center justify-between gap-2 shrink-0">

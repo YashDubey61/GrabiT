@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { useBodyScrollLock } from "@/lib/hooks/useBodyScrollLock";
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -40,6 +41,8 @@ export function EditProfileModal({
     setAvatarPreview(currentAvatarUrl);
     setError(null);
   }, [currentFullName, currentPhone, currentAvatarUrl, isOpen]);
+
+  useBodyScrollLock(isOpen);
 
   if (!isOpen) return null;
 

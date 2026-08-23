@@ -122,17 +122,31 @@ export async function POST(request: Request) {
         .maybeSingle();
 
       if (orderRow?.student_id) {
-        await createStudentNotification({
+        const title = `Order ${updated.order_number} Completed`;
+        const message = "Your order has been handed over. Enjoy your meal!";
+        const notifResult = await createStudentNotification({
           userId: orderRow.student_id,
           type: "ORDER_COMPLETED",
-          title: `Order ${updated.order_number} Completed`,
-          message: "Your order has been handed over. Enjoy your meal!",
+          title,
+          message,
           severity: "INFO",
           category: "ORDERS",
           relatedOrderId: updated.id,
           actionUrl: `/customer/orders/${updated.id}`,
           dedupeKey: `order-completed:${updated.id}`,
         });
+
+        if (notifResult.success && !notifResult.alreadyExisted) {
+          const { sendStudentOrderPushNotification } = await import("@/lib/notifications/student_push_service");
+          await sendStudentOrderPushNotification({
+            userId: orderRow.student_id,
+            orderId: updated.id,
+            orderNumber: updated.order_number ?? updated.id.slice(0, 6),
+            type: "ORDER_COMPLETED",
+            title,
+            body: message,
+          });
+        }
       }
 
       // Same rule as the standard status-transition route: gift-food

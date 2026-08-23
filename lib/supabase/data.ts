@@ -191,11 +191,21 @@ export async function getLiveCanteenMenuItems(canteenId: string): Promise<{
     return { canteenInfo: null, items: [] };
   }
 
-  const { data: dbItems } = await supabase
-    .from("menu_items")
-    .select("*")
-    .eq("canteen_id", canteenId)
-    .order("name");
+  // menu_items and the campus name are both independent lookups keyed off
+  // data we already have (canteenId / canteen.campus_id) — run them
+  // together instead of one after another.
+  const [{ data: dbItems }, campusName] = await Promise.all([
+    supabase.from("menu_items").select("*").eq("canteen_id", canteenId).order("name"),
+    canteen.campus_id
+      ? supabase
+          .from("campuses")
+          .select("name")
+          .eq("id", canteen.campus_id)
+          .limit(1)
+          .maybeSingle()
+          .then(({ data }) => data?.name ?? null)
+      : Promise.resolve(null),
+  ]);
 
   const items = mapDbItemsToUI((dbItems as SupabaseMenuItem[]) ?? []);
 
@@ -203,17 +213,6 @@ export async function getLiveCanteenMenuItems(canteenId: string): Promise<{
   const resolvedImages = rawImages
     .map((url) => resolveImageUrl(url, "canteen"))
     .filter(Boolean);
-
-  let campusName: string | null = null;
-  if (canteen.campus_id) {
-    const { data: campus } = await supabase
-      .from("campuses")
-      .select("name")
-      .eq("id", canteen.campus_id)
-      .limit(1)
-      .maybeSingle();
-    campusName = campus?.name ?? null;
-  }
 
   return {
     canteenInfo: {

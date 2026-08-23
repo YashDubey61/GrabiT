@@ -74,7 +74,7 @@ export interface CreateStudentNotificationParams {
  */
 export async function createStudentNotification(
   params: CreateStudentNotificationParams,
-): Promise<{ success: boolean; id?: string }> {
+): Promise<{ success: boolean; id?: string; alreadyExisted?: boolean }> {
   try {
     const supabase = getSupabaseAdminClient();
 
@@ -87,7 +87,9 @@ export async function createStudentNotification(
         .limit(1);
 
       if (existing && existing.length > 0) {
-        return { success: true, id: existing[0].id };
+        // Already recorded for this exact event — callers (e.g. push
+        // dispatch) must treat this as a no-op, not a fresh notification.
+        return { success: true, id: existing[0].id, alreadyExisted: true };
       }
     }
 
@@ -147,7 +149,7 @@ export async function createStudentNotification(
       return { success: false };
     }
 
-    return { success: true, id: inserted.id };
+    return { success: true, id: inserted.id, alreadyExisted: false };
   } catch (err) {
     console.warn("Error dispatched in createStudentNotification (handled gracefully):", err);
     return { success: false };

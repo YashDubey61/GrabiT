@@ -1,4 +1,5 @@
 import { RoleShellTabBar, type NavItem } from "@/components/shared/RoleShellNav";
+import { StudentPushInit } from "@/components/student/StudentPushInit";
 import { CartProvider } from "@/lib/cart/CartContext";
 import { OrderProvider } from "@/lib/orders/OrderContext";
 
@@ -26,8 +27,11 @@ export default function StudentLayout({
   return (
     <CartProvider>
       <OrderProvider>
-        <div className="min-h-dvh bg-background pb-20">
-          {children}
+        <StudentPushInit />
+        <div className="relative min-h-dvh w-full overflow-x-hidden bg-background">
+          <div className="w-full min-h-dvh overflow-x-hidden">
+            {children}
+          </div>
           <RoleShellTabBar items={STUDENT_NAV} />
         </div>
       </OrderProvider>

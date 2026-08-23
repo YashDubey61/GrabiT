@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { RewardCatalogItem, FriendSearchResult } from "@/lib/rewards/types";
+import { useBodyScrollLock } from "@/lib/hooks/useBodyScrollLock";
 
 type Step = "choice" | "select-friend" | "confirm" | "success" | "error";
 
@@ -21,6 +22,11 @@ export function RedeemRewardSheet({
   forceGiftMode?: boolean;
   onShowMyRewards?: () => void;
 }) {
+  // Mounted only while open (parent conditionally renders it), so the
+  // lock is unconditional for the component's lifetime, not gated on a
+  // prop.
+  useBodyScrollLock(true);
+
   const [step, setStep] = useState<Step>(forceGiftMode ? "select-friend" : reward.isGiftable ? "choice" : "confirm");
   const [isGift, setIsGift] = useState(forceGiftMode);
   const [query, setQuery] = useState("");
@@ -87,7 +93,7 @@ export function RedeemRewardSheet({
 
   return (
     <div className="fixed inset-0 z-[85] flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
-      <div className="w-full max-w-md rounded-t-3xl border border-border-subtle bg-surface-elevated p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-2xl sm:rounded-3xl">
+      <div className="w-full max-w-md rounded-t-3xl border border-border-subtle bg-surface-elevated p-6 pb-[max(1.5rem,var(--safe-area-inset-bottom))] shadow-2xl sm:rounded-3xl">
         <div className="mb-5 flex items-center justify-between">
           <h3 className="font-display text-body font-800 text-foreground">{reward.name}</h3>
           <button type="button" onClick={onClose} aria-label="Close" className="text-faint hover:text-foreground">

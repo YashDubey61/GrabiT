@@ -49,6 +49,27 @@ export async function GET(request: Request) {
           .eq("order_id", orderId);
         return NextResponse.json({ ok: true, paymentStatus: "success", orderStatus: orderRow.status });
       }
+
+      // Cashfree order reached a terminal non-paid state (expired without
+      // payment, or explicitly terminated) — this is the authoritative
+      // signal for a dropped/abandoned checkout, since Cashfree never
+      // sends a webhook for "the student closed the checkout without
+      // attempting payment". Resolve it the same way the webhook resolves
+      // an explicit FAILED/USER_DROPPED/CANCELLED event, so polling
+      // eventually reaches a real terminal state instead of "pending"
+      // forever.
+      if (orderStatus === "EXPIRED" || orderStatus === "TERMINATED" || orderStatus === "TERMINATION_REQUESTED") {
+        await admin
+          .from("payments")
+          .update({ status: "failed", gateway_response: cfStatus, updated_at: new Date().toISOString() })
+          .eq("order_id", orderId);
+        await admin
+          .from("orders")
+          .update({ status: "cancelled", cancellation_reason: "Payment not completed" })
+          .eq("id", orderId)
+          .eq("status", "placed");
+        return NextResponse.json({ ok: true, paymentStatus: "failed", orderStatus: "cancelled" });
+      }
     } catch {
       // Fall through to the DB-known status.
     }

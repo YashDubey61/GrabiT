@@ -6,23 +6,29 @@
 // deliberately NOT a separate selectable GRABIT payment method.
 export type PaymentMethod = "wallet" | "card";
 
-const PAYMENT_OPTIONS: {
-  id: PaymentMethod;
-  label: string;
-  icon: string;
-  detail?: string;
-}[] = [
-  { id: "wallet", label: "GrabIt Wallet", icon: "account_balance_wallet", detail: "Balance: ₹450" },
-  { id: "card", label: "Pay Online", icon: "credit_card", detail: "Cards, UPI & more via Cashfree" },
-];
-
 export function PaymentMethodSelector({
   selected,
   onSelect,
+  walletBalance,
 }: {
   selected: PaymentMethod;
   onSelect: (method: PaymentMethod) => void;
+  /** Real balance fetched server-side by the caller; undefined while loading. */
+  walletBalance: number | undefined;
 }) {
+  const walletDetail =
+    walletBalance === undefined ? "Loading balance…" : `Balance: ₹${walletBalance.toFixed(2)}`;
+
+  const PAYMENT_OPTIONS: {
+    id: PaymentMethod;
+    label: string;
+    icon: string;
+    detail?: string;
+  }[] = [
+    { id: "wallet", label: "GrabIt Wallet", icon: "account_balance_wallet", detail: walletDetail },
+    { id: "card", label: "Pay Online", icon: "credit_card", detail: "Cards, UPI & more via Cashfree" },
+  ];
+
   return (
     <section>
       <h2 className="mb-4 flex items-center gap-2 text-label font-700 uppercase tracking-[0.08em] text-muted">

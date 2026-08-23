@@ -18,6 +18,7 @@ import {
 } from "@/lib/supabase/student_profile";
 import { createClient } from "@/lib/supabase/client";
 import type { GoldPlanId } from "@/lib/payments/gold_plans";
+import { unregisterStudentPushToken } from "@/lib/notifications/push_client";
 
 export default function StudentProfilePage() {
   const router = useRouter();
@@ -159,6 +160,7 @@ export default function StudentProfilePage() {
 
   const handleLogout = async () => {
     try {
+      await unregisterStudentPushToken();
       const supabase = createClient();
       await supabase.auth.signOut();
     } catch {
@@ -182,22 +184,24 @@ export default function StudentProfilePage() {
       };
 
   return (
-    <div className="min-h-dvh bg-background text-foreground">
+    <>
       <TrackEventOnMount payload={{ eventName: "gold_plan_viewed" }} />
 
       {/* Top Bar Header */}
-      <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-border-subtle bg-background/80 px-4 backdrop-blur-md">
-        <GrabItLogo heightClassName="h-10" priority />
-        <button
-          type="button"
-          onClick={() => showToast("Scan QR Code coming soon")}
-          className="rounded-full p-2 text-muted transition-transform active:scale-95 hover:text-foreground"
-          aria-label="Scan QR Code"
-        >
-          <span className="material-symbols-outlined text-[24px]" aria-hidden="true">
-            qr_code_scanner
-          </span>
-        </button>
+      <header className="sticky top-0 z-40 border-b border-border-subtle bg-background/80 backdrop-blur-md">
+        <div className="mx-auto flex h-14 sm:h-16 w-full max-w-lg items-center justify-between px-4">
+          <GrabItLogo heightClassName="h-8" priority />
+          <button
+            type="button"
+            onClick={() => showToast("Scan QR Code coming soon")}
+            className="rounded-full p-2 text-muted transition-transform active:scale-95 hover:text-foreground"
+            aria-label="Scan QR Code"
+          >
+            <span className="material-symbols-outlined text-[24px]" aria-hidden="true">
+              qr_code_scanner
+            </span>
+          </button>
+        </div>
       </header>
 
       {/* Main Profile Content */}
@@ -292,6 +296,6 @@ export default function StudentProfilePage() {
           <p className="font-display text-caption font-bold text-primary">{activeToast}</p>
         </div>
       )}
-    </div>
+    </>
   );
 }
