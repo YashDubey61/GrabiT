@@ -186,7 +186,10 @@ export async function PATCH(
       let message = "";
       let severity: "INFO" | "SUCCESS" | "WARNING" | "URGENT" = "INFO";
 
-      const orderNum = updatedOrder.order_number ?? updatedOrder.id.slice(0, 6);
+      // order_number is already stored with a leading "#" (e.g. "#6445");
+      // strip it here so every "Order #${orderNum}" template below adds
+      // exactly one, instead of doubling up as "Order ##6445".
+      const orderNum = (updatedOrder.order_number ?? updatedOrder.id.slice(0, 6)).replace(/^#/, "");
 
       if (targetStatus === "preparing") {
         notifType = "ORDER_PREPARING";

@@ -79,6 +79,27 @@ export default function StudentTrackOrderPage({
     };
   }, [id, localOrder, fetchOrder]);
 
+  // Backgrounding the Android app can drop the Realtime websocket (OS
+  // throttles/suspends background network activity), and reconnecting on
+  // resume does not replay missed postgres_changes events. A student who
+  // backgrounds GRABIT mid-order, or returns via a status-change push
+  // notification (which navigates to a URL this page may already be
+  // mounted on, so the mount effect above never re-runs), would otherwise
+  // keep seeing whatever status was current when the app went to the
+  // background. Refetch once on every foreground resume to close that gap.
+  useEffect(() => {
+    let removeListener: (() => void) | undefined;
+    import("@capacitor/app")
+      .then(({ App }) => App.addListener("resume", () => fetchOrder()))
+      .then((listener) => {
+        removeListener = () => listener.remove();
+      })
+      .catch(() => {
+        // Not running natively — no-op.
+      });
+    return () => removeListener?.();
+  }, [fetchOrder]);
+
   const handleConfirmStudentPickup = async () => {
     if (!liveOrder) return;
     try {
@@ -128,7 +149,7 @@ export default function StudentTrackOrderPage({
     <>
       <OrderTrackerHeader />
 
-      <main className="mx-auto flex max-w-2xl flex-col gap-6 px-5 pb-24 pt-20 md:px-16 md:pt-24">
+      <main className="mx-auto flex max-w-2xl flex-col gap-6 px-5 pb-24 pt-6 md:px-16 md:pt-8">
         {/* Cancellation Alert Banner */}
         {isCancelled && (
           <div className="flex flex-col gap-2 rounded-2xl border border-danger/40 bg-danger-soft/40 p-4 text-danger animate-in fade-in">
