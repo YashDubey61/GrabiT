@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import { sendFcmV1Message, isFcmV1Configured } from "@/lib/notifications/fcm_v1";
+import { sendFcmV1Message, isFcmV1Configured, diagnoseFcmServiceAccountConfig } from "@/lib/notifications/fcm_v1";
 
 /**
  * TEMPORARY, one-off diagnostic route for verifying the FCM HTTP v1 send
@@ -21,7 +21,10 @@ export async function POST(request: NextRequest) {
   }
 
   if (!isFcmV1Configured()) {
-    return NextResponse.json({ ok: false, error: "FCM_SERVICE_ACCOUNT_JSON not configured" }, { status: 503 });
+    return NextResponse.json(
+      { ok: false, error: "FCM_SERVICE_ACCOUNT_JSON not configured", diagnostics: diagnoseFcmServiceAccountConfig() },
+      { status: 503 },
+    );
   }
 
   const body = (await request.json().catch(() => null)) as { userId?: string } | null;
