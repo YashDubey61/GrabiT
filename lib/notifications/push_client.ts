@@ -17,11 +17,30 @@ export interface OrderPushData {
 let listenersRegistered = false;
 let lastKnownToken: string | null = null;
 
-/** True only for an actual native Android/iOS shell — never in the
- * regular browser, where the push-notifications plugin has nothing to
- * attach to. */
+/**
+ * There is no `android/app/google-services.json` in this build, so no
+ * default FirebaseApp exists in the running process. Calling
+ * `PushNotifications.register()` in that state doesn't fail gracefully —
+ * it throws `IllegalStateException: Default FirebaseApp is not
+ * initialized` from `FirebaseMessaging.getInstance()`, uncaught, on a
+ * background Capacitor plugin thread, which kills the entire app
+ * (confirmed via `adb logcat`: `FATAL EXCEPTION: CapacitorPlugins`,
+ * originating in `PushNotificationsPlugin.register()`). A JS-side
+ * try/catch around the call cannot save the process — the crash happens
+ * natively before the JS Promise can even reject.
+ *
+ * Flip this to `true` only once a real `google-services.json` has been
+ * added to the Android project (and `FCM_SERVER_KEY` is set server-side)
+ * — until then, push must stay fully inert: no permission prompt (there
+ * is nothing it would actually enable), no registration attempt.
+ */
+const FCM_TRANSPORT_CONFIGURED = false;
+
+/** True only for an actual native Android/iOS shell with a working FCM
+ * transport configured — never in the regular browser, and never while
+ * Firebase isn't set up natively (see FCM_TRANSPORT_CONFIGURED above). */
 export function isNativePushCapable(): boolean {
-  return Capacitor.isNativePlatform();
+  return Capacitor.isNativePlatform() && FCM_TRANSPORT_CONFIGURED;
 }
 
 /**
