@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description: "Order from your campus canteen faster. Download the GRABIT Student Android app.",
 };
 
-const APK_SIZE_MB = "43.5";
+const APK_SIZE_MB = "64.6";
 const APK_VERSION = "1.0";
 const RELEASE_DATE = "24 August 2026";
 const MIN_ANDROID = "Android 7.0 (Nougat) or later";
