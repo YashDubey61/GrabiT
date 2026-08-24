@@ -21,6 +21,17 @@ export function StudentPushInit() {
   const router = useRouter();
 
   useEffect(() => {
+    // Defensive reset: a modal's body-scroll lock (useBodyScrollLock) is
+    // meant to always release itself, but this guarantees a clean slate
+    // on every fresh mount of the customer shell regardless — if a prior
+    // JS session somehow left document.body.style.overflow stuck at
+    // "hidden" (e.g. an already-running WebView that never got this
+    // fix's code until now), this clears it immediately instead of
+    // requiring the student to force-close and relaunch the app.
+    if (typeof document !== "undefined") {
+      document.body.style.overflow = "";
+    }
+
     let cancelled = false;
 
     (async () => {
