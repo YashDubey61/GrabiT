@@ -1,8 +1,11 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules/
+vendor-mobile/node_modules/
 /.pnp
+
+
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -45,12 +48,35 @@ next-env.d.ts
 /scratch/
 /.agents/
 
-# Capacitor / Android build outputs — the android/ project itself is
-# committed, but generated build artifacts are not.
+# secrets and service account credentials
+*-service-account*.json
+fcm-service-account*.json
+*.keystore
+*.jks
+
+# android ide & builds
+android/.idea/
+android/.gradle/
 android/app/build/
 android/build/
-android/.gradle/
 android/local.properties
 android/captures/
 android/app/src/main/assets/public/
 android/app/src/main/assets/capacitor.config.json
+
+vendor-mobile/android/.idea/
+vendor-mobile/android/.gradle/
+vendor-mobile/android/app/build/
+vendor-mobile/android/build/
+vendor-mobile/android/local.properties
+vendor-mobile/android/captures/
+vendor-mobile/android/app/src/main/assets/public/
+vendor-mobile/android/app/src/main/assets/capacitor.config.json
+vendor-mobile/www/
+
+
+# binaries / APKs
+*.apk
+public/*.apk
+GrabiT/
+

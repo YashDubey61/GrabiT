@@ -11,6 +11,8 @@ import {
 import jsQR from "jsqr";
 import { buildPickupQrPayload, parsePickupQrPayload } from "@/lib/orders/pickup_qr";
 import { PICKUP_OTP_LENGTH } from "@/lib/orders/pickup_otp";
+import { openAppSettings } from "@/lib/capacitor/settings";
+import { useModalBackHandler } from "@/lib/navigation/backButtonManager";
 
 interface ScannedOrder {
   id: string;
@@ -21,7 +23,7 @@ interface ScannedOrder {
   items: { name: string; quantity: number }[];
 }
 
-type CameraState = "idle" | "starting" | "running" | "denied" | "unavailable";
+type CameraState = "idle" | "starting" | "running" | "denied" | "permanently-denied" | "unavailable";
 type EntryMode = "qr" | "otp";
 // Remembers exactly which credential verified, so completion consumes
 // the same one — regardless of whether it came from the camera, the
@@ -39,6 +41,7 @@ export function VendorQrScanner({
   onClose: () => void;
   onCompleted: (orderNumber: string) => void;
 }) {
+  useModalBackHandler(isOpen, onClose, "vendor-qr-scanner-modal");
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -178,7 +181,18 @@ export function VendorQrScanner({
       rafRef.current = requestAnimationFrame(tick);
     } catch (err) {
       const name = (err as { name?: string })?.name;
-      if (name === "NotAllowedError" || name === "SecurityError") {
+      if (name === "NotAllowedError" || name === "SecurityError" || name === "PermissionDeniedError") {
+        try {
+          if (navigator.permissions?.query) {
+            const status = await navigator.permissions.query({ name: "camera" as PermissionName });
+            if (status.state === "denied") {
+              setCameraState("permanently-denied");
+              return;
+            }
+          }
+        } catch {
+          // Fall back to denied
+        }
         setCameraState("denied");
       } else {
         setCameraState("unavailable");
@@ -219,6 +233,49 @@ export function VendorQrScanner({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, mode]);
+
+  // Returning from Android Settings or background — automatically
+  // re-check permission and initialize camera if granted.
+  useEffect(() => {
+    if (!isOpen || mode !== "qr") return;
+
+    const handleAppResume = () => {
+      if (cameraState === "denied" || cameraState === "permanently-denied") {
+        startCamera();
+      }
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        handleAppResume();
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("focus", handleAppResume);
+
+    let cleanCapacitorListener: (() => void) | null = null;
+    import("@capacitor/app")
+      .then(({ App }) => {
+        const appStatePromise = App.addListener("appStateChange", (state) => {
+          if (state.isActive) handleAppResume();
+        });
+        const resumePromise = App.addListener("resume", () => {
+          handleAppResume();
+        });
+        cleanCapacitorListener = () => {
+          appStatePromise.then((h) => h.remove());
+          resumePromise.then((h) => h.remove());
+        };
+      })
+      .catch(() => {});
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("focus", handleAppResume);
+      if (cleanCapacitorListener) cleanCapacitorListener();
+    };
+  }, [isOpen, mode, cameraState, startCamera]);
 
   const switchToOtp = () => {
     stopCamera();
@@ -493,21 +550,33 @@ export function VendorQrScanner({
                         <p className="text-caption text-muted">Starting camera…</p>
                       </>
                     )}
-                    {cameraState === "denied" && (
+                    {(cameraState === "denied" || cameraState === "permanently-denied") && (
                       <>
                         <span className="material-symbols-outlined text-[28px] text-danger">
                           videocam_off
                         </span>
-                        <p className="text-caption text-muted">
-                          Camera access is required to scan order QR codes.
+                        <p className="font-display text-body-sm font-bold text-foreground">
+                          Camera permission required
                         </p>
-                        <button
-                          type="button"
-                          onClick={startCamera}
-                          className="mt-1 rounded-lg border border-border px-3 py-1.5 font-display text-caption font-bold text-primary"
-                        >
-                          Retry Camera
-                        </button>
+                        <p className="text-caption text-muted">
+                          Allow camera access to scan customer Order QR codes.
+                        </p>
+                        <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+                          <button
+                            type="button"
+                            onClick={startCamera}
+                            className="rounded-lg bg-primary px-3 py-1.5 font-display text-caption font-bold text-on-primary shadow-glow-primary transition-all active:scale-95 hover:opacity-90"
+                          >
+                            Retry Camera
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openAppSettings()}
+                            className="rounded-lg border border-border bg-surface-elevated px-3 py-1.5 font-display text-caption font-bold text-foreground transition-all active:scale-95 hover:bg-surface"
+                          >
+                            Open Settings
+                          </button>
+                        </div>
                       </>
                     )}
                     {cameraState === "unavailable" && (

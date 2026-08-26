@@ -5,6 +5,7 @@ import type { VendorStoreConfig } from "@/lib/mock/vendor";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { hardNavigate } from "@/lib/auth/redirect";
+import { useModalBackHandler } from "@/lib/navigation/backButtonManager";
 
 interface VendorProfile {
   vendorId: string;
@@ -37,6 +38,7 @@ export function VendorProfileSheet({
   store: VendorStoreConfig;
 }) {
   const { signOut } = useAuth();
+  useModalBackHandler(isOpen, onClose, "vendor-profile-sheet");
   const [profile, setProfile] = useState<VendorProfile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);

@@ -7,9 +7,9 @@
  * touches any paid API — this is pure device GPS.
  *
  * Callers must only invoke this in direct response to a user tapping
- * "Auto-Detect Campus via GPS" — it triggers the OS permission prompt,
- * so calling it on page load would surprise the user with a permission
- * dialog before they asked for one.
+ * "Auto-Detect Campus via GPS" or a vendor location action — it triggers
+ * the OS permission prompt, so calling it on page load would surprise
+ * the user with a permission dialog before they asked for one.
  */
 
 export interface UserLocation {
@@ -20,6 +20,7 @@ export interface UserLocation {
 
 export type LocationErrorStatus =
   | "DENIED"
+  | "PERMANENTLY_DENIED"
   | "TIMEOUT"
   | "UNAVAILABLE"
   | "UNSUPPORTED";
@@ -27,28 +28,77 @@ export type LocationErrorStatus =
 export interface UserLocationResult {
   result?: UserLocation;
   errorStatus?: LocationErrorStatus;
+  isPermanentlyDenied?: boolean;
 }
 
 const DEFAULT_TIMEOUT_MS = 8000;
 
 /** True only inside the Capacitor native shell — guarded so this is
  * safe to evaluate during SSR and in a plain browser tab. */
-function isNativePlatform(): boolean {
+export function isNativePlatform(): boolean {
   if (typeof window === "undefined") return false;
   const cap = (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } })
     .Capacitor;
   return cap?.isNativePlatform?.() ?? false;
 }
 
+/** Check current location permission without prompting the user. */
+export async function checkLocationPermission(): Promise<"granted" | "denied" | "prompt" | "unknown"> {
+  if (typeof window === "undefined") return "unknown";
+
+  if (isNativePlatform()) {
+    try {
+      const { Geolocation } = await import("@capacitor/geolocation");
+      const status = await Geolocation.checkPermissions();
+      if (status.location === "granted" || status.coarseLocation === "granted") {
+        return "granted";
+      }
+      if (status.location === "denied" || status.coarseLocation === "denied") {
+        return "denied";
+      }
+      return "prompt";
+    } catch {
+      return "unknown";
+    }
+  }
+
+  if (navigator.permissions?.query) {
+    try {
+      const status = await navigator.permissions.query({ name: "geolocation" as PermissionName });
+      return status.state;
+    } catch {
+      return "unknown";
+    }
+  }
+
+  return "unknown";
+}
+
 async function getNativeLocation(timeoutMs: number): Promise<UserLocationResult> {
   try {
     const { Geolocation } = await import("@capacitor/geolocation");
 
-    const permission = await Geolocation.requestPermissions();
-    if (permission.location === "denied" || permission.coarseLocation === "denied") {
-      return { errorStatus: "DENIED" };
+    // 1. Check existing permission status before requesting
+    const currentStatus = await Geolocation.checkPermissions();
+    let isGranted = currentStatus.location === "granted" || currentStatus.coarseLocation === "granted";
+
+    // 2. If not granted, request permission
+    if (!isGranted) {
+      const reqStatus = await Geolocation.requestPermissions({
+        permissions: ["location", "coarseLocation"],
+      });
+      isGranted = reqStatus.location === "granted" || reqStatus.coarseLocation === "granted";
+
+      if (!isGranted) {
+        const isPermanentlyDenied = reqStatus.location === "denied" && reqStatus.coarseLocation === "denied";
+        return {
+          errorStatus: isPermanentlyDenied ? "PERMANENTLY_DENIED" : "DENIED",
+          isPermanentlyDenied,
+        };
+      }
     }
 
+    // 3. Obtain position with GPS fallback
     const position = await Geolocation.getCurrentPosition({
       enableHighAccuracy: true,
       timeout: timeoutMs,
@@ -66,7 +116,7 @@ async function getNativeLocation(timeoutMs: number): Promise<UserLocationResult>
     const code = (err as { code?: number; message?: string })?.code;
     const message = (err as { message?: string })?.message?.toLowerCase() ?? "";
     if (code === 1 || message.includes("denied") || message.includes("permission")) {
-      return { errorStatus: "DENIED" };
+      return { errorStatus: "DENIED", isPermanentlyDenied: message.includes("permanent") };
     }
     if (code === 3 || message.includes("timeout")) {
       return { errorStatus: "TIMEOUT" };
@@ -107,7 +157,10 @@ function getWebLocation(timeoutMs: number): Promise<UserLocationResult> {
         if (isHandled) return;
         isHandled = true;
         clearTimeout(timer);
-        resolve({ errorStatus: err.code === err.PERMISSION_DENIED ? "DENIED" : "UNAVAILABLE" });
+        resolve({
+          errorStatus: err.code === err.PERMISSION_DENIED ? "DENIED" : "UNAVAILABLE",
+          isPermanentlyDenied: err.code === err.PERMISSION_DENIED,
+        });
       },
       { enableHighAccuracy: true, timeout: timeoutMs, maximumAge: 0 },
     );

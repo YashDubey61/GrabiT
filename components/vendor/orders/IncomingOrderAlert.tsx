@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { VendorOrder } from "@/lib/mock/vendor";
+import { useModalBackHandler } from "@/lib/navigation/backButtonManager";
 
 const REJECT_REASONS = ["Item unavailable", "Vendor too busy", "Other"];
 
@@ -22,6 +23,7 @@ export function IncomingOrderAlert({
 }: IncomingOrderAlertProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
+  useModalBackHandler(isRejecting, () => setIsRejecting(false), "incoming-order-rejecting-dialog");
   const [reason, setReason] = useState(REJECT_REASONS[0]);
   const [customReason, setCustomReason] = useState("");
 

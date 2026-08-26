@@ -83,9 +83,9 @@ export default function SuperAdminLayout({
   }
 
   return (
-    <div className="flex min-h-dvh bg-background">
+    <div className="flex h-dvh overflow-hidden bg-background">
       <RoleShellRail items={SUPERADMIN_NAV} title="GrabIt Super Admin" />
-      <div className="flex-1 overflow-x-auto">{children}</div>
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-auto overscroll-contain">{children}</div>
       <GlobalSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </div>
   );

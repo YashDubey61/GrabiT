@@ -1,9 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import {
-  MOCK_VENDOR_STORE,
-} from "@/lib/mock/vendor";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { VendorHeader } from "@/components/vendor/orders/VendorHeader";
 import { VendorMoreFeaturesSheet } from "@/components/vendor/orders/VendorMoreFeaturesSheet";
 import { VendorMobileNavMenu } from "@/components/vendor/orders/VendorMobileNavMenu";
@@ -21,22 +18,18 @@ import {
   type VendorInventoryItem,
   type InventoryLogItem,
 } from "@/lib/supabase/vendor_inventory";
-import {
-  getLiveVendorCanteenId,
-  getLiveVendorShopName,
-} from "@/lib/supabase/vendor_context";
+import { useVendor } from "@/lib/vendor/VendorContext";
 import { toggleLiveVendorMenuItemStock } from "@/lib/supabase/vendor_menu";
 import { createClient } from "@/lib/supabase/client";
 import { useOrderAlertSound } from "@/lib/vendor/useOrderAlertSound";
 
 export default function VendorInventoryPage() {
+  const { store, canteenId } = useVendor();
   const sound = useOrderAlertSound();
-  const [store, setStore] = useState(MOCK_VENDOR_STORE);
   const [items, setItems] = useState<VendorInventoryItem[]>([]);
   const [logs, setLogs] = useState<InventoryLogItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
-  const [isError, setIsError] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
 
   // Search & Filters
@@ -54,20 +47,17 @@ export default function VendorInventoryPage() {
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
-  const canteenIdRef = useRef<string | null>(null);
-
-  const showNotification = (msg: string) => {
+  const showNotification = useCallback((msg: string) => {
     setNotification(msg);
     setTimeout(() => setNotification(null), 3000);
-  };
+  }, []);
 
   const loadInventory = useCallback(async () => {
-    const canteenId = canteenIdRef.current || (await getLiveVendorCanteenId());
-    canteenIdRef.current = canteenId;
+    if (!canteenId) return;
     const invItems = await getLiveVendorInventory(canteenId);
     setItems(invItems);
     setIsLoading(false);
-  }, []);
+  }, [canteenId]);
 
   const loadHistoryLogs = useCallback(async () => {
     setIsLoadingLogs(true);
@@ -79,39 +69,33 @@ export default function VendorInventoryPage() {
   useEffect(() => {
     let isMounted = true;
     let channel: ReturnType<ReturnType<typeof createClient>["channel"]> | null = null;
-    const supabase = createClient();
 
-    getLiveVendorShopName().then((name) => {
-      if (isMounted && name) {
-        setStore((prev) => ({ ...prev, name }));
+    if (!canteenId) return;
+
+    getLiveVendorInventory(canteenId).then((invItems) => {
+      if (isMounted) {
+        setItems(invItems);
+        setIsLoading(false);
       }
     });
 
-    getLiveVendorCanteenId().then((canteenId) => {
-      if (!isMounted) return;
-      canteenIdRef.current = canteenId;
-
-      loadInventory();
-
-      if (!canteenId) return;
-
-      channel = supabase
-        .channel(`vendor-inventory-realtime-${canteenId}`)
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "menu_items", filter: `canteen_id=eq.${canteenId}` },
-          () => {
-            loadInventory();
-          },
-        )
-        .subscribe();
-    });
+    const supabase = createClient();
+    channel = supabase
+      .channel(`vendor-inventory-realtime-${canteenId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "menu_items", filter: `canteen_id=eq.${canteenId}` },
+        () => {
+          loadInventory();
+        },
+      )
+      .subscribe();
 
     return () => {
       isMounted = false;
       if (channel) supabase.removeChannel(channel);
     };
-  }, [loadInventory]);
+  }, [canteenId, loadInventory]);
 
   // Derived Categories list
   const categories = useMemo(() => {
@@ -192,11 +176,11 @@ export default function VendorInventoryPage() {
     }
   };
 
-  const handleResetFilters = () => {
+  const handleResetFilters = useCallback(() => {
     setSearchQuery("");
     setStatusFilter("all");
     setCategoryFilter("all");
-  };
+  }, []);
 
   return (
     <div className="min-h-dvh bg-background text-foreground flex flex-col">

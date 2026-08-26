@@ -19,7 +19,7 @@ export function CategoryChips<T extends string>({
     <div
       role="tablist"
       aria-label="Filter by category"
-      className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:px-0"
+      className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-1 touch-pan-y [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:px-0"
     >
       {categories.map((category) => {
         const isSelected = category.id === selected;

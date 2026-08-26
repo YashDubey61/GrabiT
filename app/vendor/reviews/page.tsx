@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import { MOCK_VENDOR_STORE } from "@/lib/mock/vendor";
+import { useEffect, useState, useCallback } from "react";
 import { VendorHeader } from "@/components/vendor/orders/VendorHeader";
 import { VendorMoreFeaturesSheet } from "@/components/vendor/orders/VendorMoreFeaturesSheet";
 import { VendorMobileNavMenu } from "@/components/vendor/orders/VendorMobileNavMenu";
@@ -15,10 +14,7 @@ import {
   type VendorReviewsData,
   type VendorReviewItem,
 } from "@/lib/supabase/vendor_reviews";
-import {
-  getLiveVendorCanteenId,
-  getLiveVendorShopName,
-} from "@/lib/supabase/vendor_context";
+import { useVendor } from "@/lib/vendor/VendorContext";
 import { createClient } from "@/lib/supabase/client";
 import { useOrderAlertSound } from "@/lib/vendor/useOrderAlertSound";
 
@@ -30,8 +26,8 @@ import { VendorReviewDetailModal } from "@/components/vendor/reviews/VendorRevie
 import { VendorProductRatingInsights } from "@/components/vendor/reviews/VendorProductRatingInsights";
 
 export default function VendorReviewsPage() {
+  const { store, canteenId } = useVendor();
   const sound = useOrderAlertSound();
-  const [store, setStore] = useState(MOCK_VENDOR_STORE);
 
   const [data, setData] = useState<VendorReviewsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,12 +48,10 @@ export default function VendorReviewsPage() {
   const [selectedReviewForModal, setSelectedReviewForModal] = useState<VendorReviewItem | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
-  const canteenIdRef = useRef<string | null>(null);
-
-  const showNotification = (msg: string) => {
+  const showNotification = useCallback((msg: string) => {
     setNotification(msg);
     setTimeout(() => setNotification(null), 3000);
-  };
+  }, []);
 
   const loadReviews = useCallback(
     async (rating = selectedRating, resStatus = selectedResponseStatus, query = searchQuery) => {
@@ -80,39 +74,28 @@ export default function VendorReviewsPage() {
   useEffect(() => {
     let isMounted = true;
     let channel: ReturnType<ReturnType<typeof createClient>["channel"]> | null = null;
+
+    if (!canteenId) return;
+
+    loadReviews();
+
     const supabase = createClient();
-
-    getLiveVendorShopName().then((name) => {
-      if (isMounted && name) {
-        setStore((prev) => ({ ...prev, name }));
-      }
-    });
-
-    getLiveVendorCanteenId().then((canteenId) => {
-      if (!isMounted) return;
-      canteenIdRef.current = canteenId;
-
-      loadReviews();
-
-      if (!canteenId) return;
-
-      channel = supabase
-        .channel(`vendor-reviews-realtime-${canteenId}`)
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "order_reviews", filter: `canteen_id=eq.${canteenId}` },
-          () => {
-            loadReviews();
-          },
-        )
-        .subscribe();
-    });
+    channel = supabase
+      .channel(`vendor-reviews-realtime-${canteenId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "order_reviews", filter: `canteen_id=eq.${canteenId}` },
+        () => {
+          loadReviews();
+        },
+      )
+      .subscribe();
 
     return () => {
       isMounted = false;
       if (channel) supabase.removeChannel(channel);
     };
-  }, [loadReviews]);
+  }, [canteenId, loadReviews]);
 
   const handleSendReply = async (reviewId: string, replyText: string) => {
     const res = await replyToVendorReview(reviewId, replyText);
@@ -134,11 +117,11 @@ export default function VendorReviewsPage() {
     }
   };
 
-  const handleResetFilters = () => {
+  const handleResetFilters = useCallback(() => {
     setSearchQuery("");
     setSelectedRating("all");
     setSelectedResponseStatus("all");
-  };
+  }, []);
 
   return (
     <div className="min-h-dvh bg-background text-foreground flex flex-col">

@@ -51,36 +51,38 @@ export function RoleShellTabBar({ items }: { items: NavItem[] }) {
   }
 
   return (
-    <nav className="glass-bottom-nav fixed inset-x-4 z-40 mx-auto max-w-md [bottom:calc(env(safe-area-inset-bottom)+1rem)] sm:inset-x-0 sm:w-full sm:max-w-lg">
-      <ul className={`grid items-stretch gap-1 px-2 py-2 ${GRID_COLS_CLASS[items.length] ?? "grid-cols-4"}`}>
-        {items.map((item) => {
-          const isActive = isNavItemActive(item.href, pathname);
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center pb-[max(0.75rem,var(--safe-area-inset-bottom,0px))] px-4">
+      <nav className="pointer-events-auto w-full max-w-[340px] rounded-full border border-white/10 bg-[#121212]/95 px-2 py-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.7)] backdrop-blur-xl">
+        <ul className={`grid items-center gap-1 ${GRID_COLS_CLASS[items.length] ?? "grid-cols-4"}`}>
+          {items.map((item) => {
+            const isActive = isNavItemActive(item.href, pathname);
 
-          return (
-            <li key={item.href} className="min-w-0">
-              <Link
-                href={item.href}
-                aria-current={isActive ? "page" : undefined}
-                className={`flex h-full flex-col items-center justify-center gap-0.5 rounded-full px-1 py-1.5 text-center text-[10px] font-700 leading-tight transition-all duration-150 ${
-                  isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted hover:text-foreground"
-                }`}
-              >
-                <span
-                  className="material-symbols-outlined text-[20px]"
-                  style={isActive ? { fontVariationSettings: "'FILL' 1" } : undefined}
-                  aria-hidden="true"
+            return (
+              <li key={item.href} className="min-w-0">
+                <Link
+                  href={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`flex flex-col items-center justify-center gap-0.5 rounded-full py-1 px-1 text-center transition-all duration-150 ${
+                    isActive
+                      ? "bg-primary/15 text-primary font-bold"
+                      : "text-muted hover:text-foreground font-medium"
+                  }`}
                 >
-                  {item.icon}
-                </span>
-                <span className="line-clamp-2 break-words">{item.label}</span>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
+                  <span
+                    className="material-symbols-outlined text-[20px]"
+                    style={isActive ? { fontVariationSettings: "'FILL' 1" } : undefined}
+                    aria-hidden="true"
+                  >
+                    {item.icon}
+                  </span>
+                  <span className="text-[10px] leading-tight line-clamp-1">{item.label}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+    </div>
   );
 }
 

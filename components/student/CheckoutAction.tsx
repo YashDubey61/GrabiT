@@ -45,7 +45,7 @@ export function CheckoutAction({
         onClose={() => setIsBreakupOpen(false)}
       />
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-surface-elevated/90 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] backdrop-blur-md md:px-16">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-surface-elevated/90 p-5 pb-[max(1.25rem,var(--safe-area-inset-bottom))] backdrop-blur-md md:px-16">
         <div className="mx-auto flex max-w-2xl flex-col gap-4">
           <div className="flex items-center justify-between px-2">
             <div className="flex flex-col">

@@ -46,8 +46,8 @@ export function CampusSelectorModal({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-md transition-all p-0 sm:items-center sm:p-4 pb-[var(--safe-area-inset-bottom)]">
-      <div className="w-full max-w-md max-h-[82dvh] flex flex-col rounded-t-3xl sm:rounded-3xl border border-border bg-surface p-4 sm:p-5 shadow-2xl animate-in slide-in-from-bottom duration-200">
+    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/80 backdrop-blur-md transition-all p-0 sm:items-center sm:p-4">
+      <div className="w-full max-w-md max-h-[85dvh] flex flex-col rounded-t-3xl sm:rounded-3xl border border-border bg-surface p-4 sm:p-5 pb-[max(2rem,calc(var(--safe-area-inset-bottom,0px)+1.5rem))] sm:pb-5 shadow-2xl animate-in slide-in-from-bottom duration-200">
         {/* Header */}
         <div className="mb-3 flex items-center justify-between gap-2 shrink-0">
           <div>
@@ -149,7 +149,7 @@ export function CampusSelectorModal({
         </div>
 
         {/* Campus List */}
-        <div className="flex-1 overflow-y-auto space-y-1.5 pr-0.5">
+        <div className="flex-1 overflow-y-auto space-y-2 pr-0.5 pb-8">
           {filteredCampuses.map((cmp) => {
             const isSelected = cmp.id === selectedCampusId;
             return (

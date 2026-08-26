@@ -57,41 +57,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const refreshAuth = useCallback(async () => {
+    console.log("[AuthContext] refreshAuth starting...");
     try {
       const supabase = createClient();
-      const { data } = await supabase.auth.getSession();
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
+      console.log("[AuthContext] fetching getSession()...");
+      const sessionPromise = supabase.auth.getSession();
+      const timeoutPromise = new Promise<{ data: { session: Session | null } }>((resolve) =>
+        setTimeout(() => {
+          console.warn("[AuthContext] getSession timeout reached after 2500ms");
+          resolve({ data: { session: null } });
+        }, 2500),
+      );
 
-      if (data.session?.user) {
+      const { data } = await Promise.race([sessionPromise, timeoutPromise]);
+      console.log("[AuthContext] session resolved:", data?.session ? "User found: " + data.session.user.id : "No session");
+      setSession(data?.session ?? null);
+      setUser(data?.session?.user ?? null);
+
+      if (data?.session?.user) {
         const userRole = await fetchRoleAndProfile(data.session.user);
+        console.log("[AuthContext] role resolved:", userRole);
         setRole(userRole);
       } else {
         setRole(null);
       }
-    } catch {
+    } catch (err) {
+      console.error("[AuthContext] refreshAuth caught error:", err);
       setSession(null);
       setUser(null);
       setRole(null);
     } finally {
+      console.log("[AuthContext] setting isLoading = false");
       setIsLoading(false);
     }
   }, [fetchRoleAndProfile]);
 
   useEffect(() => {
-    const supabase = createClient();
+    console.log("[AuthContext] useEffect mounted, triggering refreshAuth");
+    refreshAuth();
 
+    const supabase = createClient();
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+    } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      console.log("[AuthContext] onAuthStateChange event:", event, currentSession ? "User: " + currentSession.user.id : "No session");
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
 
       if (currentSession?.user) {
-        fetchRoleAndProfile(currentSession.user).then((userRole) => {
+        try {
+          const userRole = await fetchRoleAndProfile(currentSession.user);
+          console.log("[AuthContext] onAuthStateChange role:", userRole);
           setRole(userRole);
+        } catch {
+          setRole("student");
+        } finally {
           setIsLoading(false);
-        });
+        }
       } else {
         setRole(null);
         setIsLoading(false);
@@ -101,7 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [fetchRoleAndProfile]);
+  }, [fetchRoleAndProfile, refreshAuth]);
 
   const signOut = async () => {
     const supabase = createClient();

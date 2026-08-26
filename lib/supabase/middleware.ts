@@ -43,6 +43,20 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
+  const userAgent = request.headers.get("user-agent") || "";
+  const isCapacitorApp =
+    userAgent.includes("CapacitorApp") ||
+    request.headers.get("x-requested-with") === "app.grabit.student" ||
+    request.headers.get("x-requested-with") === "app.grabit.campus";
+
+  // If request originates from the Capacitor Android Student APK and attempts to load `/`,
+  // redirect immediately to `/customer` so the Student APK never displays the public landing page.
+  if (isCapacitorApp && pathname === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/customer";
+    return NextResponse.redirect(url);
+  }
+
   const isStudentAuth =
     pathname === "/auth" ||
     (pathname.startsWith("/auth/") &&

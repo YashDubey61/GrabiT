@@ -76,31 +76,33 @@ export default function StudentOrderHistoryPage() {
   return (
     <>
       {/* Sticky Header Bar */}
-      <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-border/50 bg-background/90 px-4 backdrop-blur-md sm:px-6">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/customer"
-            aria-label="Back to home"
-            className="flex h-10 w-10 items-center justify-center rounded-xl text-muted transition-colors hover:bg-surface-elevated hover:text-foreground active:scale-95"
-          >
-            <span className="material-symbols-outlined text-[24px]" aria-hidden="true">
-              arrow_back
-            </span>
-          </Link>
-          <h1 className="font-display text-title font-bold tracking-tight text-primary">
-            Your Orders
-          </h1>
-        </div>
+      <header className="sticky top-0 z-40 border-b border-border/50 bg-background/90 backdrop-blur-md">
+        <div className="mx-auto flex h-14 sm:h-16 w-full max-w-2xl items-center justify-between px-4 sm:px-6">
+          <div className="flex items-center gap-3 min-w-0">
+            <Link
+              href="/customer"
+              aria-label="Back to home"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-muted transition-colors hover:bg-surface-elevated hover:text-foreground active:scale-95"
+            >
+              <span className="material-symbols-outlined text-[24px]" aria-hidden="true">
+                arrow_back
+              </span>
+            </Link>
+            <h1 className="font-display text-title font-bold tracking-tight text-primary truncate">
+              Your Orders
+            </h1>
+          </div>
 
-        {rawOrders.length > 0 && (
-          <span className="rounded-full bg-primary/10 px-3 py-1 font-display text-caption font-semibold text-primary">
-            {rawOrders.length} {rawOrders.length === 1 ? "Order" : "Orders"}
-          </span>
-        )}
+          {rawOrders.length > 0 && (
+            <span className="shrink-0 rounded-full bg-primary/10 px-3 py-1 font-display text-caption font-semibold text-primary">
+              {rawOrders.length} {rawOrders.length === 1 ? "Order" : "Orders"}
+            </span>
+          )}
+        </div>
       </header>
 
       {/* Main Content Area */}
-      <main className="mx-auto flex max-w-2xl flex-col gap-6 px-4 pb-24 pt-6 sm:px-6">
+      <main className="mx-auto flex max-w-2xl flex-col gap-6 px-4 pb-[calc(7rem+var(--safe-area-inset-bottom,0px))] pt-6 sm:px-6">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
             <span className="material-symbols-outlined text-[32px] text-primary animate-spin">

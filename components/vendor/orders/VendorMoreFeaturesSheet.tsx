@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import type { VendorStoreConfig } from "@/lib/mock/vendor";
+import { useModalBackHandler } from "@/lib/navigation/backButtonManager";
 
 interface VendorMoreFeaturesSheetProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface VendorMoreFeaturesSheetProps {
   onChangePrepTime: () => void;
   isSoundUnlocked: boolean;
   onUnlockSound: () => void;
+  onOpenPrinterSetup?: () => void;
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -63,8 +65,10 @@ export function VendorMoreFeaturesSheet({
   onChangePrepTime,
   isSoundUnlocked,
   onUnlockSound,
+  onOpenPrinterSetup,
 }: VendorMoreFeaturesSheetProps) {
   const router = useRouter();
+  useModalBackHandler(isOpen, onClose, "vendor-more-features-sheet");
   if (!isOpen) return null;
 
   const go = (path: string) => {
@@ -103,9 +107,22 @@ export function VendorMoreFeaturesSheet({
             />
             <Tile
               icon="notifications_active"
-              label="Order Sound"
-              value={isSoundUnlocked ? "Enabled" : "Tap to enable"}
-              onClick={onUnlockSound}
+              label="Order Alerts"
+              value={isSoundUnlocked ? "Sound Active" : "Tap to enable"}
+              onClick={async () => {
+                onUnlockSound();
+                const { sendTestOrderAlert } = await import("@/lib/vendor/orderAlertService");
+                sendTestOrderAlert();
+              }}
+            />
+            <Tile
+              icon="print"
+              label="Kitchen Printer"
+              value="Thermal Setup"
+              onClick={() => {
+                onClose();
+                onOpenPrinterSetup?.();
+              }}
             />
           </Section>
 

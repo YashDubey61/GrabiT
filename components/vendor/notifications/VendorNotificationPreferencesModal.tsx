@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import type { VendorNotificationPreferences } from "@/lib/supabase/vendor_notifications_center";
+import { useModalBackHandler } from "@/lib/navigation/backButtonManager";
 
 export interface VendorNotificationPreferencesModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ export function VendorNotificationPreferencesModal({
   onClose,
   onSavePreferences,
 }: VendorNotificationPreferencesModalProps) {
+  useModalBackHandler(isOpen, onClose, "vendor-notification-preferences-modal");
   const [prefs, setPrefs] = useState<VendorNotificationPreferences>({
     orderAlerts: true,
     inventoryAlerts: true,

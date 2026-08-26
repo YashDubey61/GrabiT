@@ -191,25 +191,27 @@ export async function PATCH(
       // exactly one, instead of doubling up as "Order ##6445".
       const orderNum = (updatedOrder.order_number ?? updatedOrder.id.slice(0, 6)).replace(/^#/, "");
 
+      const vendorName = vendorCtx.canteenName;
+
       if (targetStatus === "preparing") {
         notifType = "ORDER_PREPARING";
-        title = `Order #${orderNum} Accepted!`;
-        message = "The canteen has accepted your order and started cooking.";
+        title = "Your Order Is Being Prepared 🍔";
+        message = `Your order #${orderNum} is now being prepared${vendorName ? ` by ${vendorName}` : ""}.`;
         severity = "INFO";
       } else if (targetStatus === "ready") {
         notifType = "ORDER_READY";
-        title = `Order #${orderNum} Ready for Pickup!`;
-        message = "Your food is fresh & hot at the counter. Head to the pickup lane.";
+        title = "Order Ready for Pickup 🔥";
+        message = `Your GRABIT order #${orderNum} is ready for pickup.`;
         severity = "SUCCESS";
       } else if (targetStatus === "picked_up") {
         notifType = "ORDER_PICKED_UP";
-        title = `Order #${orderNum} Picked Up`;
-        message = "Your order has been collected at the counter. Enjoy your meal!";
+        title = "Order Picked Up 🛍️";
+        message = `Your order #${orderNum} has been collected at the counter. Enjoy your meal!`;
         severity = "SUCCESS";
       } else if (targetStatus === "completed") {
         notifType = "ORDER_COMPLETED";
-        title = `Order #${orderNum} Completed`;
-        message = "Thank you for ordering with GrabIt! Enjoy your meal.";
+        title = "Order Completed ✅";
+        message = `Your GRABIT order #${orderNum} has been delivered/completed.`;
         severity = "SUCCESS";
       } else if (targetStatus === "cancelled") {
         notifType = "ORDER_CANCELLED";

@@ -205,7 +205,7 @@ export default function StudentProfilePage() {
       </header>
 
       {/* Main Profile Content */}
-      <main className="mx-auto max-w-lg px-4 pt-6 pb-24">
+      <main className="mx-auto max-w-lg px-4 pt-6 pb-[calc(7rem+var(--safe-area-inset-bottom,0px))]">
         {isLoading ? (
           <div className="py-16 text-center space-y-4">
             <div className="mx-auto h-24 w-24 rounded-full bg-surface-elevated animate-pulse" />

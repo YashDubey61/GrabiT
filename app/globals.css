@@ -166,13 +166,6 @@
 
 html {
   color-scheme: dark;
-  max-width: 100vw;
-  overflow-x: hidden;
-  /* Stops Android WebView's rubber-band/scroll-chaining bounce at the
-     top/bottom edge of the page from visually reading as the page
-     "jumping" back and forth — the single body scroll container should
-     just stop at its own edges, not hand overscroll off anywhere else. */
-  overscroll-behavior-y: contain;
 
   /* Safe-area tokens — single source of truth for the whole app.
      On native Android, Capacitor 8's built-in SystemBars plugin injects
@@ -194,9 +187,8 @@ body {
   color: var(--color-foreground);
   font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   font-size: var(--text-body);
-  max-width: 100vw;
-  overflow-x: hidden;
-  overscroll-behavior-y: contain;
+  min-height: 100vh;
+  min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -455,4 +447,12 @@ header {
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
   }
+}
+
+/* Hide Next.js dev tools and indicators in WebView/client view */
+nextjs-portal,
+[data-nextjs-toast],
+[data-next-badge],
+div[data-nextjs-dev-overlay] {
+  display: none !important;
 }

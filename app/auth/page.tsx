@@ -10,6 +10,7 @@ import {
   sendPasswordResetEmail,
 } from "@/lib/supabase/auth";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { isNativePlatform } from "@/lib/capacitor/platform";
 import { getSafeRedirectUrl, hardNavigate, authLog, authError } from "@/lib/auth/redirect";
 
 function GoogleIcon() {
@@ -225,7 +226,20 @@ function AuthFormContent() {
     const res = await signInWithGoogle();
     if (!res.ok) {
       setIsGoogleLoading(false);
-      setErrorMessage(res.error || "Failed to initiate Google authentication.");
+      if (res.error !== "USER_CANCELLED") {
+        setErrorMessage(res.error || "Failed to initiate Google authentication.");
+      }
+      return;
+    }
+
+    if (isNativePlatform()) {
+      setIsGoogleLoading(false);
+      try {
+        await refreshAuth();
+      } catch (err) {
+        // ignore
+      }
+      hardNavigate(getSafeRedirectUrl(nextParam, "student"));
     }
   };
 
@@ -255,11 +269,27 @@ function AuthFormContent() {
 
   const strength = passwordStrength(password);
 
+  if (user && role) {
+    return (
+      <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-4 py-12 text-foreground">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <GrabItLogo href="/customer" heightClassName="h-16 sm:h-20" priority />
+        </div>
+        <div className="flex items-center gap-2 text-muted font-display font-medium">
+          <span className="material-symbols-outlined animate-spin text-[24px] text-primary">
+            progress_activity
+          </span>
+          <span>Redirecting to your campus...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-4 py-12 text-foreground">
       {/* Header Logo */}
       <div className="mb-6 flex flex-col items-center text-center">
-        <GrabItLogo href="/" heightClassName="h-16 sm:h-20" priority />
+        <GrabItLogo href="/customer" heightClassName="h-16 sm:h-20" priority />
       </div>
 
       {/* Main Container Card */}

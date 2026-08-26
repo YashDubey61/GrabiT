@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import type { OperationalNotificationItem } from "@/lib/notifications/operational_notifications";
+import { useModalBackHandler } from "@/lib/navigation/backButtonManager";
 
 interface VendorNotificationsDrawerProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ export function VendorNotificationsDrawer({
   onClose,
   onSelectOrder,
 }: VendorNotificationsDrawerProps) {
+  useModalBackHandler(isOpen, onClose, "vendor-notifications-drawer");
   const [notifications, setNotifications] = useState<OperationalNotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);

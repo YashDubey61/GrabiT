@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
-import { MOCK_VENDOR_STORE } from "@/lib/mock/vendor";
+import { useEffect, useState, useCallback } from "react";
 import { VendorHeader } from "@/components/vendor/orders/VendorHeader";
 import { VendorMoreFeaturesSheet } from "@/components/vendor/orders/VendorMoreFeaturesSheet";
 import { VendorMobileNavMenu } from "@/components/vendor/orders/VendorMobileNavMenu";
@@ -13,10 +12,7 @@ import {
   exportVendorAnalyticsCsv,
   type VendorAnalyticsData,
 } from "@/lib/supabase/vendor_analytics";
-import {
-  getLiveVendorCanteenId,
-  getLiveVendorShopName,
-} from "@/lib/supabase/vendor_context";
+import { useVendor } from "@/lib/vendor/VendorContext";
 import { createClient } from "@/lib/supabase/client";
 import { useOrderAlertSound } from "@/lib/vendor/useOrderAlertSound";
 
@@ -30,11 +26,11 @@ import { VendorAnalyticsCustomerOfferInsights } from "@/components/vendor/analyt
 import { VendorAnalyticsInventoryInsights } from "@/components/vendor/analytics/VendorAnalyticsInventoryInsights";
 
 export default function VendorAnalyticsPage() {
+  const { store, canteenId } = useVendor();
   const sound = useOrderAlertSound();
-  const [store, setStore] = useState(MOCK_VENDOR_STORE);
   const [timeframe, setTimeframe] = useState("7d");
-  const [customStart, setCustomStart] = useState("");
-  const [customEnd, setCustomEnd] = useState("");
+  const [customStart] = useState("");
+  const [customEnd] = useState("");
 
   const [data, setData] = useState<VendorAnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,12 +43,10 @@ export default function VendorAnalyticsPage() {
   const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  const canteenIdRef = useRef<string | null>(null);
-
-  const showNotification = (msg: string) => {
+  const showNotification = useCallback((msg: string) => {
     setNotification(msg);
     setTimeout(() => setNotification(null), 3000);
-  };
+  }, []);
 
   const loadAnalytics = useCallback(
     async (tf = timeframe, start = customStart, end = customEnd) => {
@@ -71,51 +65,40 @@ export default function VendorAnalyticsPage() {
   useEffect(() => {
     let isMounted = true;
     let channel: ReturnType<ReturnType<typeof createClient>["channel"]> | null = null;
+
+    if (!canteenId) return;
+
+    loadAnalytics();
+
     const supabase = createClient();
-
-    getLiveVendorShopName().then((name) => {
-      if (isMounted && name) {
-        setStore((prev) => ({ ...prev, name }));
-      }
-    });
-
-    getLiveVendorCanteenId().then((canteenId) => {
-      if (!isMounted) return;
-      canteenIdRef.current = canteenId;
-
-      loadAnalytics();
-
-      if (!canteenId) return;
-
-      channel = supabase
-        .channel(`vendor-analytics-realtime-${canteenId}`)
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "orders", filter: `canteen_id=eq.${canteenId}` },
-          () => {
-            loadAnalytics();
-          },
-        )
-        .subscribe();
-    });
+    channel = supabase
+      .channel(`vendor-analytics-realtime-${canteenId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "orders", filter: `canteen_id=eq.${canteenId}` },
+        () => {
+          loadAnalytics();
+        },
+      )
+      .subscribe();
 
     return () => {
       isMounted = false;
       if (channel) supabase.removeChannel(channel);
     };
-  }, [loadAnalytics]);
+  }, [canteenId, loadAnalytics]);
 
-  const handleTimeframeChange = (newTf: string) => {
+  const handleTimeframeChange = useCallback((newTf: string) => {
     setTimeframe(newTf);
     setIsLoading(true);
     loadAnalytics(newTf);
-  };
+  }, [loadAnalytics]);
 
-  const handleExportCsv = () => {
+  const handleExportCsv = useCallback(() => {
     if (!data) return;
     exportVendorAnalyticsCsv(data);
     showNotification("Analytics CSV report generated and downloaded.");
-  };
+  }, [data, showNotification]);
 
   return (
     <div className="min-h-dvh bg-background text-foreground flex flex-col">

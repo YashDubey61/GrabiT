@@ -191,15 +191,15 @@ export default function HelpSupportPage() {
   return (
     <div className="min-h-dvh bg-background pb-24">
       {/* Header */}
-      <header className="glass-navbar fixed inset-x-0 top-0 z-40 px-5 py-3 md:px-16">
-        <div className="mx-auto flex max-w-4xl items-center gap-4">
+      <header className="glass-navbar sticky top-0 z-40">
+        <div className="mx-auto flex h-14 sm:h-16 max-w-4xl items-center gap-3 px-4 sm:px-6 md:px-16">
           <button
             type="button"
             aria-label="Go back"
             onClick={() => router.back()}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-foreground transition-colors hover:bg-white/10 active:scale-95"
+            className="-ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-muted transition-colors hover:bg-surface-elevated hover:text-foreground active:scale-95"
           >
-            <span className="material-symbols-outlined" aria-hidden="true">
+            <span className="material-symbols-outlined text-[24px]" aria-hidden="true">
               arrow_back
             </span>
           </button>
@@ -212,11 +212,11 @@ export default function HelpSupportPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-5 pt-24 md:px-16">
+      <main className="mx-auto max-w-4xl px-5 pt-6 md:px-16 md:pt-8">
         {/* Search */}
         <div className="relative mb-4">
           <span
-            className="material-symbols-outlined pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted"
+            className="material-symbols-outlined pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-muted z-10 select-none"
             aria-hidden="true"
           >
             search
@@ -227,7 +227,7 @@ export default function HelpSupportPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search for help — payment issues, refund, GRABIT Gold..."
             aria-label="Search for help"
-            className="glass-input h-12 w-full pl-12 pr-4 text-body-sm text-foreground placeholder:text-faint focus:outline-none"
+            className="glass-input h-12 w-full pl-12 pr-4 text-body-sm text-foreground placeholder:text-muted focus:outline-none"
           />
         </div>
 
@@ -333,7 +333,7 @@ export default function HelpSupportPage() {
                 <Badge variant="neutral">Coming soon</Badge>
               </div>
               <div className="flex items-center justify-between gap-3 border-t border-white/10 pt-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <span className="material-symbols-outlined text-primary" aria-hidden="true">
                     mail
                   </span>
@@ -341,7 +341,7 @@ export default function HelpSupportPage() {
                 </div>
                 <a
                   href={`mailto:${SUPPORT_CONTACT.email}`}
-                  className="rounded-full border border-border px-3 py-1.5 text-body-sm font-semibold text-primary hover:bg-white/5"
+                  className="rounded-full border border-border px-3 py-1.5 text-caption sm:text-body-sm font-semibold text-primary hover:bg-white/5 transition-colors whitespace-nowrap"
                 >
                   {SUPPORT_CONTACT.email}
                 </a>

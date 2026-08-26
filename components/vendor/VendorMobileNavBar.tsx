@@ -62,7 +62,7 @@ export function VendorMobileNavBar() {
       {/* 1. Floating Dark Glassmorphism 4-Item Bottom Navigation Bar (Mobile Only) */}
       <nav
         aria-label="Vendor Mobile Navigation"
-        className="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-40 mx-auto max-w-md rounded-[24px] border border-white/10 bg-surface/90 backdrop-blur-xl shadow-2xl shadow-black/80 sm:hidden transition-all duration-200"
+        className="z-40 mx-4 mt-2 shrink-0 rounded-[24px] border border-white/10 bg-surface/90 backdrop-blur-xl shadow-2xl shadow-black/80 sm:hidden transition-all duration-200 mb-[max(0.75rem,var(--safe-area-inset-bottom))]"
       >
         {/* Subtle glass top highlight edge */}
         <div className="absolute inset-x-0 top-0 h-px rounded-t-[24px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
@@ -159,7 +159,7 @@ export function VendorMobileNavBar() {
           />
 
           {/* Sheet Body */}
-          <div className="w-full rounded-t-3xl border-t border-white/10 bg-surface-elevated p-5 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] shadow-2xl animate-in slide-in-from-bottom duration-200">
+          <div className="w-full rounded-t-3xl border-t border-white/10 bg-surface-elevated p-5 pb-[calc(var(--safe-area-inset-bottom)+1.5rem)] shadow-2xl animate-in slide-in-from-bottom duration-200">
             {/* Handle Drag Bar */}
             <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-border" />
 

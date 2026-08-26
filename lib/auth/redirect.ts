@@ -37,8 +37,24 @@ export function hardNavigate(url: string): void {
   window.location.assign(url);
 }
 
+/**
+ * Same full-document-navigation guarantee as `hardNavigate`, but replaces
+ * the current history entry instead of pushing a new one. Use this for
+ * "already authenticated, bounce away from this page" redirects that can
+ * fire again on their own target (e.g. the Android back button returning
+ * to /vendor/auth, which immediately re-redirects to /vendor) — pushing
+ * there would grow WebView history without bound, so `canGoBack` never
+ * turns false and the app's back-button priority chain can never reach
+ * its terminal "no history left" step.
+ */
+export function hardReplace(url: string): void {
+  window.location.replace(url);
+}
+
 export function authLog(...args: unknown[]): void {
-  console.log("[AUTH]", ...args);
+  if (process.env.NODE_ENV !== "production") {
+    console.log("[AUTH]", ...args);
+  }
 }
 
 export function authError(...args: unknown[]): void {

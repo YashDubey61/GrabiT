@@ -494,18 +494,34 @@ export async function POST(request: Request) {
 
     // 14. Notifications Side-Effects
     try {
+      const orderNum = String(createdOrder.order_number ?? createdOrder.id.slice(0, 6)).replace(/^#/, "");
       const { createStudentNotification } = await import("@/lib/notifications/student_notifications");
-      await createStudentNotification({
+      const notifResult = await createStudentNotification({
         userId: user.id,
         type: "ORDER_PLACED",
-        title: `Order #${createdOrder.order_number ?? createdOrder.id.slice(0, 6)} Placed`,
-        message: `Your order for ₹${totalAmount} has been placed successfully at ${payload.canteenName ?? "Campus Canteen"}.`,
+        title: "Order Placed 🎉",
+        message: `Your GRABIT order #${orderNum} has been placed successfully at ${payload.canteenName ?? "Campus Canteen"}.`,
         severity: "INFO",
         category: "ORDERS",
         relatedOrderId: createdOrder.id,
         actionUrl: `/customer/orders/${createdOrder.id}`,
         dedupeKey: `order-placed:${createdOrder.id}`,
       });
+
+      if (notifResult.success && !notifResult.alreadyExisted) {
+        const { sendStudentOrderPushNotification } = await import(
+          "@/lib/notifications/student_push_service"
+        );
+        await sendStudentOrderPushNotification({
+          userId: user.id,
+          orderId: createdOrder.id,
+          orderNumber: orderNum,
+          type: "ORDER_PLACED",
+          title: "Order Placed 🎉",
+          body: `Your GRABIT order #${orderNum} has been placed successfully at ${payload.canteenName ?? "Campus Canteen"}.`,
+          actionUrl: `/customer/orders/${createdOrder.id}`,
+        });
+      }
 
       const { createOperationalNotification } = await import("@/lib/notifications/operational_notifications");
       await createOperationalNotification({
@@ -518,6 +534,16 @@ export async function POST(request: Request) {
         actionUrl: "/vendor",
         relatedOrderId: createdOrder.id,
         dedupeKey: `vendor-new-order:${createdOrder.id}`,
+      });
+
+      const { sendVendorNewOrderPushNotification } = await import("@/lib/notifications/vendor_push_service");
+      await sendVendorNewOrderPushNotification({
+        orderId: createdOrder.id,
+        orderNumber: String(createdOrder.order_number ?? createdOrder.id.slice(0, 6)),
+        canteenId: createdOrder.canteen_id,
+        itemCount: validatedLineItems.length,
+        totalAmount,
+        slot: payload.slot,
       });
     } catch (notifErr) {
       console.warn("Non-critical notification side-effect error:", notifErr);

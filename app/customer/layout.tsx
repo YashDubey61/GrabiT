@@ -28,8 +28,8 @@ export default function StudentLayout({
     <CartProvider>
       <OrderProvider>
         <StudentPushInit />
-        <div className="relative min-h-dvh w-full overflow-x-hidden bg-background">
-          <div className="w-full min-h-dvh overflow-x-hidden">
+        <div className="relative min-h-dvh w-full bg-background">
+          <div className="w-full min-h-dvh">
             {children}
           </div>
           <RoleShellTabBar items={STUDENT_NAV} />

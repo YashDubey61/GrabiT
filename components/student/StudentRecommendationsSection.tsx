@@ -88,11 +88,13 @@ export function StudentRecommendationsSection() {
     return (
       <section className="mb-6 space-y-3">
         <div className="flex items-center justify-between">
-          <div className="h-5 w-40 bg-surface-elevated rounded animate-pulse"></div>
+          <div className="h-5 w-48 rounded bg-surface-elevated animate-pulse"></div>
+          <div className="h-4 w-24 rounded bg-surface-elevated animate-pulse"></div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="h-28 rounded-2xl bg-surface-elevated animate-pulse border border-border-subtle"></div>
-          <div className="h-28 rounded-2xl bg-surface-elevated animate-pulse border border-border-subtle"></div>
+        <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 sm:-mx-6 sm:px-6 touch-pan-y [::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="h-36 w-[230px] shrink-0 rounded-2xl bg-surface-elevated animate-pulse border border-border-subtle"></div>
+          <div className="h-36 w-[230px] shrink-0 rounded-2xl bg-surface-elevated animate-pulse border border-border-subtle"></div>
+          <div className="h-36 w-[230px] shrink-0 rounded-2xl bg-surface-elevated animate-pulse border border-border-subtle"></div>
         </div>
       </section>
     );
@@ -104,25 +106,27 @@ export function StudentRecommendationsSection() {
 
   return (
     <section className="mb-6 space-y-3">
+      {/* Fixed Section Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-body font-bold text-foreground flex items-center gap-2">
+        <h2 className="flex items-center gap-2 text-body font-bold text-foreground">
           <span className="material-symbols-outlined text-primary text-lg">auto_awesome</span>
           {data.isPersonalized ? "Recommended for You" : `Popular Around ${data.campusName}`}
         </h2>
-        <span className="text-[11px] font-mono text-muted uppercase">
+        <span className="text-[11px] font-mono text-muted uppercase tracking-wider">
           {data.timeBucket} PICK
         </span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {/* Horizontal Scrollable Cards Container */}
+      <div className="flex overflow-x-auto gap-3 pb-2 pt-1 -mx-4 px-4 sm:-mx-6 sm:px-6 snap-x snap-mandatory touch-pan-y [::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {data.recommendations.map((item, idx) => (
           <div
             key={item.itemId}
-            className="p-4 rounded-2xl bg-surface-elevated border border-border-subtle hover:border-primary/40 transition-all flex flex-col justify-between space-y-3 group"
+            className="w-[230px] sm:w-[250px] md:w-[270px] shrink-0 snap-start p-4 rounded-2xl bg-surface-elevated border border-border-subtle hover:border-primary/40 transition-all flex flex-col justify-between space-y-3 group"
           >
             <div className="flex items-start justify-between gap-2">
-              <div>
-                <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-[10px] font-semibold tracking-wider font-mono">
+              <div className="min-w-0 flex-1">
+                <span className="inline-block px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-[10px] font-semibold tracking-wider font-mono">
                   {item.category === "ORDER_AGAIN"
                     ? "ORDER AGAIN"
                     : item.category === "TRENDING_NOW"
@@ -131,35 +135,39 @@ export function StudentRecommendationsSection() {
                     ? "TIME OF DAY"
                     : "CAMPUS PICK"}
                 </span>
-                <h3 className="text-body font-bold text-foreground mt-1.5 group-hover:text-primary transition-colors">
+                <h3 className="text-body font-bold text-foreground mt-1.5 group-hover:text-primary transition-colors truncate">
                   {item.title}
                 </h3>
-                <p className="text-body-sm text-muted text-[11px]">{item.canteenName}</p>
+                <p className="text-body-sm text-muted text-[11px] truncate">{item.canteenName}</p>
               </div>
 
-              <div className="text-right">
+              <div className="text-right shrink-0">
                 <span className="text-body font-bold text-foreground font-mono">₹{item.price}</span>
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-border-subtle text-xs">
-              <span className="text-[11px] text-muted italic flex items-center gap-1">
-                <span className="material-symbols-outlined text-sm text-primary">local_offer</span>
-                {item.reason}
+            <div className="flex items-center justify-between pt-2 border-t border-border-subtle text-xs gap-1">
+              <span className="text-[11px] text-muted italic flex items-center gap-1 min-w-0 truncate">
+                <span className="material-symbols-outlined text-sm text-primary shrink-0">local_offer</span>
+                <span className="truncate">{item.reason}</span>
               </span>
 
               <button
+                type="button"
                 onClick={() => handleAddToCart(item, idx)}
-                className={`px-3 py-1.5 rounded-xl font-semibold text-xs transition-all flex items-center gap-1 ${
+                aria-label={`Quick add ${item.title} to cart`}
+                className={`px-3 py-1.5 rounded-xl font-display font-bold text-xs transition-all flex items-center gap-1 shrink-0 ${
                   addedItem === item.itemId
-                    ? "bg-emerald-600 text-white shadow-md"
-                    : "bg-primary text-white hover:bg-primary/90 shadow-md"
+                    ? "bg-primary text-black shadow-md scale-95"
+                    : "bg-primary text-black hover:bg-primary-hover shadow-[0_4px_16px_-4px_rgb(255_109_0_/_0.4)] active:scale-95"
                 }`}
               >
-                <span className="material-symbols-outlined text-sm">
+                <span className="material-symbols-outlined text-[16px] text-black font-bold" aria-hidden="true">
                   {addedItem === item.itemId ? "check" : "add"}
                 </span>
-                {addedItem === item.itemId ? "Added!" : "Quick Add"}
+                <span className="text-black font-bold">
+                  {addedItem === item.itemId ? "Added!" : "Quick Add"}
+                </span>
               </button>
             </div>
           </div>

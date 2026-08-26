@@ -40,7 +40,12 @@ public class MainActivity extends BridgeActivity {
         createOrdersNotificationChannel();
 
         Bridge bridge = getBridge();
-        bridge.getWebView().setWebViewClient(new GrabitWebViewClient(bridge));
+        WebView webView = bridge.getWebView();
+        webView.setWebViewClient(new GrabitWebViewClient(bridge));
+        webView.setVerticalScrollBarEnabled(true);
+        webView.setHorizontalScrollBarEnabled(false);
+        webView.setOverScrollMode(android.view.View.OVER_SCROLL_IF_CONTENT_SCROLLS);
+        webView.setNestedScrollingEnabled(false);
     }
 
     private void createOrdersNotificationChannel() {

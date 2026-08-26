@@ -10,7 +10,7 @@ import {
   sendPasswordResetEmail,
 } from "@/lib/supabase/auth";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { getSafeRedirectUrl, hardNavigate, authLog, authError, authReject } from "@/lib/auth/redirect";
+import { getSafeRedirectUrl, hardNavigate, hardReplace, authLog, authError, authReject } from "@/lib/auth/redirect";
 
 type ViewMode = "signin" | "forgot";
 
@@ -42,7 +42,7 @@ function VendorAuthFormContent() {
     if (user && role === "vendor") {
       const destination = getSafeRedirectUrl(nextParam, "vendor");
       authLog("Already authenticated as vendor on mount, target:", destination);
-      hardNavigate(destination);
+      hardReplace(destination);
     }
   }, [user, role, isLoading, nextParam]);
 

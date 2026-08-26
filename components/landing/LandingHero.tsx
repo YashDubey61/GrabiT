@@ -30,7 +30,7 @@ export function LandingHero() {
           </h1>
 
           <p className="max-w-xl text-body-lg text-muted font-normal leading-relaxed">
-            The ultimate stealth canteen ordering app designed for campus life. Skip the queue, pay with your digital wallet, and pick up your food without missing a lecture.
+            Skip the queue. Order ahead. Pick up your food in minutes — without missing a lecture.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 pt-2">
@@ -78,7 +78,7 @@ export function LandingHero() {
               />
             </div>
             <span className="text-body-sm text-muted font-medium">
-              Join <strong className="text-foreground">15,000+</strong> campus students skipping lines daily.
+              Join <strong className="text-foreground">100+</strong> campus students skipping lines daily.
             </span>
           </div>
         </div>

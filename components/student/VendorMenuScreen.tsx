@@ -59,7 +59,7 @@ export function VendorMenuScreen({
         onOpenInfo={() => setIsInfoOpen(true)}
       />
 
-      <main className="mx-auto max-w-4xl px-5 pt-20 pb-32 md:px-16 md:pt-24">
+      <main className="mx-auto max-w-4xl px-5 pt-6 pb-32 md:px-16 md:pt-8">
         <div className="relative mb-4 h-56 w-full overflow-hidden rounded-2xl border border-border-subtle md:h-72">
           <CanteenImageCarousel images={canteenInfo.images} alt={canteenInfo.name} />
         </div>

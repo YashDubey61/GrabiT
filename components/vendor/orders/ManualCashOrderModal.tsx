@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import type { VendorMenuItem } from "@/lib/mock/vendor";
 import { saveOfflineManualOrder, type OfflineManualOrder } from "@/lib/offline/manual_order_db";
 import { syncPendingManualCashOrders } from "@/lib/offline/manual_order_sync";
+import { useModalBackHandler } from "@/lib/navigation/backButtonManager";
 
 interface ManualCashOrderModalProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export function ManualCashOrderModal({
   menuItems,
   onOrderCreated,
 }: ManualCashOrderModalProps) {
+  useModalBackHandler(isOpen, onClose, "manual-cash-order-modal");
   const [step, setStep] = useState<"select" | "review" | "success">("select");
   const [customerType, setCustomerType] = useState<"walkin" | "student">("walkin");
   const [customerName, setCustomerName] = useState("");

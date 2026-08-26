@@ -39,23 +39,25 @@ export default function CampusLeadersPage() {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center gap-2 bg-background px-5 md:px-16">
-        <button
-          type="button"
-          aria-label="Back to Rewards"
-          onClick={() => router.push("/customer/rewards")}
-          className="-ml-2 p-2 text-foreground transition-transform active:scale-95"
-        >
-          <span className="material-symbols-outlined" aria-hidden="true">
-            arrow_back
-          </span>
-        </button>
-        <h1 className="font-display text-heading font-800 tracking-tight text-foreground">
-          🏆 Campus Leaders
-        </h1>
+      <header className="sticky top-0 z-40 border-b border-border/50 bg-background/90 backdrop-blur-md">
+        <div className="mx-auto flex h-14 sm:h-16 w-full max-w-2xl items-center gap-3 px-4 sm:px-6 md:px-16">
+          <button
+            type="button"
+            aria-label="Back to Rewards"
+            onClick={() => router.push("/customer/rewards")}
+            className="-ml-1 flex h-10 w-10 items-center justify-center rounded-xl text-muted transition-colors hover:bg-surface-elevated hover:text-foreground active:scale-95"
+          >
+            <span className="material-symbols-outlined text-[24px]" aria-hidden="true">
+              arrow_back
+            </span>
+          </button>
+          <h1 className="font-display text-heading font-800 tracking-tight text-foreground">
+            🏆 Campus Leaders
+          </h1>
+        </div>
       </header>
 
-      <main className="mx-auto max-w-2xl px-5 pb-24 pt-20 md:px-16 md:pt-24">
+      <main className="mx-auto max-w-2xl px-5 pb-24 pt-6 md:px-16 md:pt-8">
         <div className="mb-4 flex justify-center gap-1 rounded-lg border border-border-subtle p-0.5">
           {(["weekly", "monthly", "alltime"] as const).map((p) => (
             <button

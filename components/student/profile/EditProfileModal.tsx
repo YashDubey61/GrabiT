@@ -98,8 +98,8 @@ export function EditProfileModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 p-0 sm:p-4 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-md rounded-t-2xl sm:rounded-2xl border border-border-subtle bg-surface-elevated p-6 shadow-2xl">
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/70 p-0 sm:p-4 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="w-full max-w-md rounded-t-2xl sm:rounded-2xl border border-border-subtle bg-surface-elevated p-6 pb-[max(1.5rem,var(--safe-area-inset-bottom,0px))] sm:pb-6 shadow-2xl">
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-border-subtle pb-4">
           <div className="flex items-center gap-2">

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { AuthProvider } from "@/lib/auth/AuthContext";
+import { CapacitorAppListener } from "@/components/shared/CapacitorAppListener";
 import "./globals.css";
 
 // Single product sans per GRABIT_DESIGN.md — Inter, used for both display
@@ -44,7 +45,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
         {/* Material Symbols is not distributed via next/font; loaded as a stylesheet
             deliberately, matching the icon system already used across the 17 locked
@@ -83,8 +84,11 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body>
-        <AuthProvider>{children}</AuthProvider>
+      <body suppressHydrationWarning>
+        <AuthProvider>
+          <CapacitorAppListener />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

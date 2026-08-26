@@ -16,8 +16,10 @@ export default function StudentWalletPage() {
   const [activeToast, setActiveToast] = useState<string | null>(null);
 
   const loadLiveWallet = async () => {
-    const liveWallet = await getLiveWalletForStudent();
-    const liveTxs = await getLiveWalletTransactions();
+    const [liveWallet, liveTxs] = await Promise.all([
+      getLiveWalletForStudent(),
+      getLiveWalletTransactions(),
+    ]);
     if (liveWallet) setWallet(liveWallet);
     if (liveTxs && liveTxs.length > 0) setTransactions(liveTxs);
   };
@@ -25,8 +27,10 @@ export default function StudentWalletPage() {
   useEffect(() => {
     let isMounted = true;
     (async () => {
-      const liveWallet = await getLiveWalletForStudent();
-      const liveTxs = await getLiveWalletTransactions();
+      const [liveWallet, liveTxs] = await Promise.all([
+        getLiveWalletForStudent(),
+        getLiveWalletTransactions(),
+      ]);
       if (isMounted) {
         if (liveWallet) setWallet(liveWallet);
         if (liveTxs && liveTxs.length > 0) setTransactions(liveTxs);
@@ -53,33 +57,35 @@ export default function StudentWalletPage() {
   };
 
   return (
-    <div className="min-h-dvh bg-background text-foreground">
+    <>
       <TrackEventOnMount payload={{ eventName: "wallet_viewed" }} />
 
       {/* Top Header Bar */}
-      <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-border-subtle bg-background/80 px-4 backdrop-blur-md">
-        <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-[24px] text-primary" aria-hidden="true">
-            location_on
-          </span>
-          <span className="font-display text-title font-extrabold tracking-tight text-primary">
-            GrabIt
-          </span>
+      <header className="sticky top-0 z-40 border-b border-border-subtle bg-background/80 backdrop-blur-md">
+        <div className="mx-auto flex h-14 sm:h-16 w-full max-w-lg items-center justify-between px-4">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-[24px] text-primary" aria-hidden="true">
+              location_on
+            </span>
+            <span className="font-display text-title font-extrabold tracking-tight text-primary">
+              GrabIt
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => showToast("Scan QR Code scanner ready")}
+            className="rounded-full p-2 text-muted transition-transform active:scale-95 hover:text-foreground"
+            aria-label="Scan QR Code"
+          >
+            <span className="material-symbols-outlined text-[24px]" aria-hidden="true">
+              qr_code_scanner
+            </span>
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => showToast("Scan QR Code scanner ready")}
-          className="rounded-full p-2 text-muted transition-transform active:scale-95 hover:text-foreground"
-          aria-label="Scan QR Code"
-        >
-          <span className="material-symbols-outlined text-[24px]" aria-hidden="true">
-            qr_code_scanner
-          </span>
-        </button>
       </header>
 
       {/* Main Wallet Content */}
-      <main className="mx-auto max-w-lg px-4 pt-6 pb-24">
+      <main className="mx-auto max-w-lg px-4 pt-6 pb-[calc(7rem+var(--safe-area-inset-bottom,0px))]">
         {/* Balance Card */}
         <WalletBalanceCard
           wallet={wallet}
@@ -121,6 +127,6 @@ export default function StudentWalletPage() {
           <p className="font-display text-caption font-bold text-primary">{activeToast}</p>
         </div>
       )}
-    </div>
+    </>
   );
 }

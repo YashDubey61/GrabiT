@@ -20,7 +20,7 @@ export function CanteenConflictModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="conflict-modal-title"
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-md p-4 sm:items-center"
+      className="fixed inset-0 z-[100] flex items-end justify-center bg-black/80 backdrop-blur-md p-4 sm:items-center"
     >
       <div className="w-full max-w-md rounded-2xl border border-border bg-[#121212] p-5 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-200">
         {/* Header / Icon */}

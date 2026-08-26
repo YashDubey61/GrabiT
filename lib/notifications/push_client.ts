@@ -12,6 +12,9 @@ export interface OrderPushData {
   type?: string;
   orderId?: string;
   orderNumber?: string;
+  actionUrl?: string;
+  title?: string;
+  body?: string;
 }
 
 let listenersRegistered = false;
@@ -98,7 +101,7 @@ export async function initStudentPushNotifications(
     // notification before this fires; this only handles the tap.
     PushNotifications.addListener("pushNotificationActionPerformed", (action: ActionPerformed) => {
       const data = action.notification?.data as OrderPushData | undefined;
-      if (data?.orderId) {
+      if (data) {
         onOrderNotificationTap(data);
       }
     });

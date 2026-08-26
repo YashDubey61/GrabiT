@@ -36,6 +36,8 @@ interface CartContextValue extends CartState {
   addItem: (input: AddItemInput) => void;
   increment: (menuItemId: string) => void;
   decrement: (menuItemId: string) => void;
+  removeItem: (menuItemId: string) => void;
+  updateQuantity: (menuItemId: string, quantity: number) => void;
   clearCart: () => void;
   dismissConflict: () => void;
   /** Clears the current cart and adds the item that triggered the conflict. */
@@ -149,6 +151,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const removeItem = useCallback((menuItemId: string) => {
+    setCart((prev) => {
+      const items = prev.items.filter((i) => i.menuItemId !== menuItemId);
+      return items.length === 0 ? EMPTY_CART : { ...prev, items };
+    });
+  }, []);
+
+  const updateQuantity = useCallback((menuItemId: string, quantity: number) => {
+    setCart((prev) => {
+      if (quantity <= 0) {
+        const items = prev.items.filter((i) => i.menuItemId !== menuItemId);
+        return items.length === 0 ? EMPTY_CART : { ...prev, items };
+      }
+      const existing = prev.items.find((i) => i.menuItemId === menuItemId);
+      if (!existing) return prev;
+      const items = prev.items.map((i) =>
+        i.menuItemId === menuItemId ? { ...i, quantity } : i,
+      );
+      return { ...prev, items };
+    });
+  }, []);
+
   const clearCart = useCallback(() => {
     setCart(EMPTY_CART);
     if (typeof window !== "undefined") {
@@ -195,6 +219,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     addItem,
     increment,
     decrement,
+    removeItem,
+    updateQuantity,
     clearCart,
     dismissConflict,
     resolveConflictByStartingOver,

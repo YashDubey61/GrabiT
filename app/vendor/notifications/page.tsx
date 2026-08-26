@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import { MOCK_VENDOR_STORE } from "@/lib/mock/vendor";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { VendorHeader } from "@/components/vendor/orders/VendorHeader";
 import { VendorMoreFeaturesSheet } from "@/components/vendor/orders/VendorMoreFeaturesSheet";
 import { VendorMobileNavMenu } from "@/components/vendor/orders/VendorMobileNavMenu";
@@ -16,12 +15,8 @@ import {
   markAllNotificationsReadApi,
   getCategoryForType,
   type NotificationCategory,
-  type VendorNotificationPreferences,
 } from "@/lib/supabase/vendor_notifications_center";
-import {
-  getLiveVendorCanteenId,
-  getLiveVendorShopName,
-} from "@/lib/supabase/vendor_context";
+import { useVendor } from "@/lib/vendor/VendorContext";
 import { createClient } from "@/lib/supabase/client";
 import { useOrderAlertSound } from "@/lib/vendor/useOrderAlertSound";
 
@@ -31,8 +26,8 @@ import { VendorNotificationCard } from "@/components/vendor/notifications/Vendor
 import { VendorNotificationPreferencesModal } from "@/components/vendor/notifications/VendorNotificationPreferencesModal";
 
 export default function VendorNotificationsPage() {
+  const { store, canteenId } = useVendor();
   const sound = useOrderAlertSound();
-  const [store, setStore] = useState(MOCK_VENDOR_STORE);
 
   const [notifications, setNotifications] = useState<OperationalNotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -52,12 +47,10 @@ export default function VendorNotificationsPage() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isPrefsModalOpen, setIsPrefsModalOpen] = useState(false);
 
-  const canteenIdRef = useRef<string | null>(null);
-
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 3000);
-  };
+  }, []);
 
   const loadNotifications = useCallback(async () => {
     setIsError(false);
@@ -74,22 +67,11 @@ export default function VendorNotificationsPage() {
   useEffect(() => {
     let isMounted = true;
     let channel: ReturnType<ReturnType<typeof createClient>["channel"]> | null = null;
-    const supabase = createClient();
 
-    getLiveVendorShopName().then((name) => {
-      if (isMounted && name) {
-        setStore((prev) => ({ ...prev, name }));
-      }
-    });
+    loadNotifications();
 
-    getLiveVendorCanteenId().then((canteenId) => {
-      if (!isMounted) return;
-      canteenIdRef.current = canteenId;
-
-      loadNotifications();
-
-      if (!canteenId) return;
-
+    if (canteenId) {
+      const supabase = createClient();
       channel = supabase
         .channel(`vendor-notifications-center-realtime-${canteenId}`)
         .on(
@@ -105,13 +87,16 @@ export default function VendorNotificationsPage() {
           },
         )
         .subscribe();
-    });
+    }
 
     return () => {
       isMounted = false;
-      if (channel) supabase.removeChannel(channel);
+      if (channel) {
+        const supabase = createClient();
+        supabase.removeChannel(channel);
+      }
     };
-  }, [loadNotifications]);
+  }, [canteenId, loadNotifications]);
 
   const handleToggleRead = async (id: string, currentStatus: string) => {
     if (currentStatus === "OPEN") {
@@ -142,11 +127,11 @@ export default function VendorNotificationsPage() {
     }
   };
 
-  const handleResetFilters = () => {
+  const handleResetFilters = useCallback(() => {
     setSearchQuery("");
     setSelectedCategory("ALL");
     setSelectedStatus("ALL");
-  };
+  }, []);
 
   // Filtered Notifications
   const filteredNotifications = useMemo(() => {

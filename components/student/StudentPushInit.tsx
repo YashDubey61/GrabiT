@@ -42,8 +42,12 @@ export function StudentPushInit() {
       if (cancelled || !user) return;
 
       await initStudentPushNotifications((data: OrderPushData) => {
-        if (data.orderId) {
+        if (data.actionUrl) {
+          router.push(data.actionUrl);
+        } else if (data.orderId) {
           router.push(`/customer/orders/${data.orderId}`);
+        } else {
+          router.push("/customer/notifications");
         }
       });
     })();

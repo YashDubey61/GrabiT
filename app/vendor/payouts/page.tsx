@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
-import { MOCK_VENDOR_STORE } from "@/lib/mock/vendor";
+import { useEffect, useState, useCallback } from "react";
 import { VendorHeader } from "@/components/vendor/orders/VendorHeader";
 import { VendorMoreFeaturesSheet } from "@/components/vendor/orders/VendorMoreFeaturesSheet";
 import { VendorMobileNavMenu } from "@/components/vendor/orders/VendorMobileNavMenu";
@@ -14,10 +13,7 @@ import {
   exportVendorFinanceCsv,
   type VendorFinanceData,
 } from "@/lib/supabase/vendor_payouts";
-import {
-  getLiveVendorCanteenId,
-  getLiveVendorShopName,
-} from "@/lib/supabase/vendor_context";
+import { useVendor } from "@/lib/vendor/VendorContext";
 import { createClient } from "@/lib/supabase/client";
 import { useOrderAlertSound } from "@/lib/vendor/useOrderAlertSound";
 
@@ -29,8 +25,8 @@ import { VendorFinancialLedger } from "@/components/vendor/payouts/VendorFinanci
 import { VendorPayoutAccountCard } from "@/components/vendor/payouts/VendorPayoutAccountCard";
 
 export default function VendorPayoutsPage() {
+  const { store, canteenId } = useVendor();
   const sound = useOrderAlertSound();
-  const [store, setStore] = useState(MOCK_VENDOR_STORE);
   const [timeframe, setTimeframe] = useState("7d");
 
   const [data, setData] = useState<VendorFinanceData | null>(null);
@@ -44,12 +40,10 @@ export default function VendorPayoutsPage() {
   const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  const canteenIdRef = useRef<string | null>(null);
-
-  const showNotification = (msg: string) => {
+  const showNotification = useCallback((msg: string) => {
     setNotification(msg);
     setTimeout(() => setNotification(null), 3000);
-  };
+  }, []);
 
   const loadFinanceData = useCallback(
     async (tf = timeframe) => {
@@ -68,45 +62,34 @@ export default function VendorPayoutsPage() {
   useEffect(() => {
     let isMounted = true;
     let channel: ReturnType<ReturnType<typeof createClient>["channel"]> | null = null;
+
+    if (!canteenId) return;
+
+    loadFinanceData();
+
     const supabase = createClient();
-
-    getLiveVendorShopName().then((name) => {
-      if (isMounted && name) {
-        setStore((prev) => ({ ...prev, name }));
-      }
-    });
-
-    getLiveVendorCanteenId().then((canteenId) => {
-      if (!isMounted) return;
-      canteenIdRef.current = canteenId;
-
-      loadFinanceData();
-
-      if (!canteenId) return;
-
-      channel = supabase
-        .channel(`vendor-payouts-realtime-${canteenId}`)
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "vendor_settlements", filter: `canteen_id=eq.${canteenId}` },
-          () => {
-            loadFinanceData();
-          },
-        )
-        .subscribe();
-    });
+    channel = supabase
+      .channel(`vendor-payouts-realtime-${canteenId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "vendor_settlements", filter: `canteen_id=eq.${canteenId}` },
+        () => {
+          loadFinanceData();
+        },
+      )
+      .subscribe();
 
     return () => {
       isMounted = false;
       if (channel) supabase.removeChannel(channel);
     };
-  }, [loadFinanceData]);
+  }, [canteenId, loadFinanceData]);
 
-  const handleTimeframeChange = (newTf: string) => {
+  const handleTimeframeChange = useCallback((newTf: string) => {
     setTimeframe(newTf);
     setIsLoading(true);
     loadFinanceData(newTf);
-  };
+  }, [loadFinanceData]);
 
   const handleSaveBankAccount = async (payload: {
     accountHolderName: string;
@@ -124,11 +107,11 @@ export default function VendorPayoutsPage() {
     return res;
   };
 
-  const handleExportCsv = () => {
+  const handleExportCsv = useCallback(() => {
     if (!data) return;
     exportVendorFinanceCsv(data);
     showNotification("Financial statement CSV generated and downloaded.");
-  };
+  }, [data, showNotification]);
 
   return (
     <div className="min-h-dvh bg-background text-foreground flex flex-col">

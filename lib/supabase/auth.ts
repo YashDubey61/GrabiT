@@ -1,4 +1,6 @@
 import { createClient } from "./client";
+import { isNativePlatform, NATIVE_AUTH_REDIRECT } from "@/lib/capacitor/platform";
+import { NativeGoogleAuth } from "@/lib/capacitor/googleAuth";
 import type { UserRole } from "@/types";
 import type { User, Session } from "@supabase/supabase-js";
 
@@ -236,6 +238,80 @@ export async function signStudentUp(
 export async function signInWithGoogle(): Promise<{ ok: boolean; error?: string }> {
   try {
     const supabase = createClient();
+
+    if (isNativePlatform()) {
+      const clientId = process.env.NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID || "";
+      if (!clientId) {
+        console.warn("[Google Auth] NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID is not set in environment variables.");
+      }
+
+      let googleUser;
+      try {
+        googleUser = await NativeGoogleAuth.signIn({ clientId });
+      } catch (nativeErr: any) {
+        const errMsg = String(nativeErr?.message || nativeErr || "");
+        if (errMsg.includes("USER_CANCELLED") || errMsg.includes("12501")) {
+          return { ok: false, error: "USER_CANCELLED" };
+        }
+        console.error("Native Google Sign In error:", nativeErr);
+        if (errMsg.includes("DEVELOPER_ERROR") || !clientId) {
+          return {
+            ok: false,
+            error: "Google Web Client ID missing or SHA-1 fingerprint not registered in Google Cloud Console.",
+          };
+        }
+        return {
+          ok: false,
+          error: "Google Sign-In failed. Please try again.",
+        };
+      }
+
+      if (!googleUser || !googleUser.idToken) {
+        console.error("Native Google Sign In returned no idToken (SHA-1 fingerprint mismatch or Android OAuth Client missing in Google Cloud Console)");
+        return {
+          ok: false,
+          error: "Google ID Token missing. Please ensure the Android OAuth Client (app.grabit.student + SHA-1) is saved in Google Cloud Console.",
+        };
+      }
+
+      // Authenticate with Supabase using native Google ID token
+      const { data: sessionData, error: idTokenErr } = await supabase.auth.signInWithIdToken({
+        provider: "google",
+        token: googleUser.idToken,
+      });
+
+      if (idTokenErr || !sessionData.session) {
+        console.error("Supabase signInWithIdToken error:", idTokenErr);
+        return {
+          ok: false,
+          error: idTokenErr?.message || "Google Sign-In failed with Supabase. Please try again.",
+        };
+      }
+
+      const authUser = sessionData.session.user;
+      if (authUser) {
+        // Verify or create student profile in public.users
+        const { data: profile } = await supabase
+          .from("users")
+          .select("role")
+          .eq("id", authUser.id)
+          .maybeSingle();
+
+        if (!profile) {
+          const randomPhone = `+91${Math.floor(1000000000 + Math.random() * 9000000000)}`;
+          await supabase.from("users").upsert({
+            id: authUser.id,
+            phone: authUser.phone || randomPhone,
+            role: "student",
+            campus_id: "a1000000-0000-0000-0000-000000000001",
+          });
+        }
+      }
+
+      return { ok: true };
+    }
+
+    // Normal Web Browser OAuth Flow
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     const redirectTo = `${origin}/auth/callback`;
 
@@ -269,7 +345,8 @@ export async function signInWithGoogle(): Promise<{ ok: boolean; error?: string 
     }
 
     return { ok: true };
-  } catch {
+  } catch (err) {
+    console.error("Unexpected error during Google Sign-In:", err);
     return {
       ok: false,
       error: "Google Sign-In is temporarily unavailable. Please try again later.",

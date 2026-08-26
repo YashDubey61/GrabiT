@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { Suspense, useEffect, useMemo, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { type VendorMenuItem } from "@/lib/mock/vendor";
 import { VendorMenuHeader } from "@/components/vendor/menu/VendorMenuHeader";
@@ -18,7 +18,7 @@ import {
   toggleLiveVendorMenuItemStock,
   updateLiveVendorMenuItem,
 } from "@/lib/supabase/vendor_menu";
-import { getLiveVendorCanteenId } from "@/lib/supabase/vendor_context";
+import { useVendor } from "@/lib/vendor/VendorContext";
 import { getLiveVendorCategories, type VendorCategory } from "@/lib/supabase/vendor_categories";
 import { VendorCategoryManagerModal } from "@/components/vendor/menu/VendorCategoryManagerModal";
 import { createClient } from "@/lib/supabase/client";
@@ -32,6 +32,7 @@ export default function VendorMenuManagementPage() {
 }
 
 function VendorMenuManagementPageInner() {
+  const { canteenId } = useVendor();
   const [menuItems, setMenuItems] = useState<VendorMenuItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -44,8 +45,6 @@ function VendorMenuManagementPageInner() {
   const [notification, setNotification] = useState<string | null>(null);
   const [categoryRows, setCategoryRows] = useState<VendorCategory[]>([]);
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
-
-  const canteenIdRef = useRef<string | null>(null);
 
   const categories = useMemo(() => {
     const fromRows = categoryRows.map((c) => c.name.trim()).filter(Boolean);
@@ -62,18 +61,17 @@ function VendorMenuManagementPageInner() {
     return combined.length > 0 ? combined : ["Breakfast", "Lunch", "Snacks", "Beverages"];
   }, [categoryRows, menuItems]);
 
-  const showNotification = (msg: string) => {
+  const showNotification = useCallback((msg: string) => {
     setNotification(msg);
     setTimeout(() => setNotification(null), 3000);
-  };
+  }, []);
 
   const loadMenuItems = useCallback(async () => {
-    const canteenId = canteenIdRef.current || (await getLiveVendorCanteenId());
-    canteenIdRef.current = canteenId;
+    if (!canteenId) return;
     const items = await getLiveVendorMenuItems(canteenId);
     setMenuItems(items);
     setIsLoading(false);
-  }, []);
+  }, [canteenId]);
 
   const loadCategories = useCallback(async () => {
     const live = await getLiveVendorCategories();
@@ -85,28 +83,31 @@ function VendorMenuManagementPageInner() {
   useEffect(() => {
     let isMounted = true;
     let channel: ReturnType<ReturnType<typeof createClient>["channel"]> | null = null;
-    const supabase = createClient();
 
-    getLiveVendorCanteenId().then((canteenId) => {
+    if (!canteenId) return;
+
+    // Fetch menu items and categories in parallel
+    Promise.all([
+      getLiveVendorMenuItems(canteenId),
+      getLiveVendorCategories(),
+    ]).then(([items, liveCats]) => {
       if (!isMounted) return;
-      canteenIdRef.current = canteenId;
-
-      loadMenuItems();
-      loadCategories();
-
-      if (!canteenId) return;
-
-      channel = supabase
-        .channel(`vendor-menu-realtime-${canteenId}`)
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "menu_items", filter: `canteen_id=eq.${canteenId}` },
-          () => {
-            loadMenuItems();
-          },
-        )
-        .subscribe();
+      setMenuItems(items);
+      setCategoryRows(liveCats);
+      setIsLoading(false);
     });
+
+    const supabase = createClient();
+    channel = supabase
+      .channel(`vendor-menu-realtime-${canteenId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "menu_items", filter: `canteen_id=eq.${canteenId}` },
+        () => {
+          loadMenuItems();
+        },
+      )
+      .subscribe();
 
     if (searchParams.get("manage") === "categories") {
       setIsCategoryManagerOpen(true);
@@ -120,7 +121,7 @@ function VendorMenuManagementPageInner() {
       isMounted = false;
       if (channel) supabase.removeChannel(channel);
     };
-  }, [loadMenuItems, loadCategories, searchParams]);
+  }, [canteenId, loadMenuItems, searchParams]);
 
   const handleToggleStock = async (itemId: string, inStock: boolean) => {
     const targetItem = menuItems.find((i) => i.id === itemId);
@@ -166,15 +167,15 @@ function VendorMenuManagementPageInner() {
     }
   };
 
-  const handleOpenAddModal = () => {
+  const handleOpenAddModal = useCallback(() => {
     setEditingItem(null);
     setIsModalOpen(true);
-  };
+  }, []);
 
-  const handleOpenEditModal = (item: VendorMenuItem) => {
+  const handleOpenEditModal = useCallback((item: VendorMenuItem) => {
     setEditingItem(item);
     setIsModalOpen(true);
-  };
+  }, []);
 
   const handleSaveItem = async (
     itemData: Omit<VendorMenuItem, "id"> & { id?: string },
@@ -242,11 +243,11 @@ function VendorMenuManagementPageInner() {
     return groups;
   }, [filteredItems, categories]);
 
-  const handleResetFilters = () => {
+  const handleResetFilters = useCallback(() => {
     setSearchQuery("");
     setSelectedCategory("All Items");
     setAvailabilityFilter("all");
-  };
+  }, []);
 
   return (
     <div className="min-h-dvh bg-background text-foreground flex flex-col">

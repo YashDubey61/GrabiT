@@ -71,7 +71,7 @@ export function SavedAddressesModal({ isOpen, onClose }: SavedAddressesModalProp
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 p-0 pb-[calc(5rem+var(--safe-area-inset-bottom))] sm:p-4 sm:pb-4 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/70 p-0 pb-[calc(5rem+var(--safe-area-inset-bottom))] sm:p-4 sm:pb-4 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="w-full max-w-md rounded-t-2xl sm:rounded-2xl border border-border-subtle bg-surface-elevated p-6 shadow-2xl max-h-[calc(100dvh-8rem)] sm:max-h-[85vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border-subtle pb-4">

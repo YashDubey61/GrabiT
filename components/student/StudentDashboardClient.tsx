@@ -215,23 +215,34 @@ export function StudentDashboardClient({
     setLocationStatusMessage("No GRABIT campus detected nearby. Please select your campus manually below.");
   }, [loadCampusData]);
 
-  // Initial Load: Fetch campus list & restore any saved selection.
+  // Initial Load: restore any saved campus selection.
   // GPS is never triggered here — only from the explicit Auto-Detect
   // button, so no permission prompt fires before the student asks.
+  // The campus list & default campus data are already server-rendered
+  // (see app/customer/page.tsx) and passed in as initialCampuses/
+  // initialCampusDetails, so this only re-fetches when there's actually
+  // new work to do: a saved campus different from the one SSR picked, or
+  // a cold client-side navigation that landed here with no campus list.
   useEffect(() => {
     async function init() {
-      const liveCampuses = await getLiveCampusList();
-      setCampuses(liveCampuses);
+      let liveCampuses = initialCampuses;
+      if (liveCampuses.length === 0) {
+        liveCampuses = await getLiveCampusList();
+        setCampuses(liveCampuses);
+      }
 
       const savedId = typeof window !== "undefined" ? localStorage.getItem(SAVED_CAMPUS_KEY) : null;
       const found = savedId ? liveCampuses.find((c) => c.id === savedId) : null;
-      if (found) {
+      if (found && found.id !== initialCampusDetails?.id) {
         loadCampusData(found.id);
       }
     }
 
     init();
-  }, [loadCampusData]);
+    // Intentionally mount-only: this restores the saved campus once; later
+    // campus switches go through handleSelectCampus/triggerAutoDetection.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Handle manual campus selection
   const handleSelectCampus = (campus: SupabaseCampus) => {
@@ -292,8 +303,10 @@ export function StudentDashboardClient({
       />
 
       <main
-        className={`mx-auto max-w-2xl px-5 pt-20 md:px-16 md:pt-24 ${
-          cart.itemCount > 0 ? "pb-32" : "pb-10"
+        className={`mx-auto max-w-2xl px-4 pt-4 md:px-16 md:pt-6 ${
+          cart.itemCount > 0
+            ? "pb-[calc(10rem+var(--safe-area-inset-bottom,0px))]"
+            : "pb-[calc(7.5rem+var(--safe-area-inset-bottom,0px))]"
         }`}
       >
         {/* Dynamic Canteen Status Banner */}

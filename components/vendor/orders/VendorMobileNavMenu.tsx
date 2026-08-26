@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { hardNavigate } from "@/lib/auth/redirect";
 import type { NavItem } from "@/components/shared/RoleShellNav";
+import { useModalBackHandler } from "@/lib/navigation/backButtonManager";
 
 interface VendorMobileNavMenuProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export function VendorMobileNavMenu({ isOpen, onClose, items, onOpenProfile }: V
   const pathname = usePathname();
   const { signOut } = useAuth();
   const [isSigningOut, setIsSigningOut] = useState(false);
+  useModalBackHandler(isOpen, onClose, "vendor-mobile-nav-menu");
 
   useEffect(() => {
     if (!isOpen) return;

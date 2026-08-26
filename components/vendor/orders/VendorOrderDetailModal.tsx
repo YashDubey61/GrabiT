@@ -1,11 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import type { VendorOrder } from "@/lib/mock/vendor";
+import { vendorOrderToReceipt } from "@/components/shared/receipt-printer/adapters";
+import { ThermalPrinterModal } from "@/components/vendor/printer/ThermalPrinterModal";
+import { useModalBackHandler } from "@/lib/navigation/backButtonManager";
 
 export interface VendorOrderDetailModalProps {
   order: VendorOrder | null;
   isOpen: boolean;
   onClose: () => void;
+  vendorName?: string;
   onAdvanceStatus?: (orderId: string) => Promise<void> | void;
   onCancelOrder?: (orderId: string, reason: string) => Promise<void> | void;
 }
@@ -14,8 +19,11 @@ export function VendorOrderDetailModal({
   order,
   isOpen,
   onClose,
+  vendorName = "Kitchen",
   onAdvanceStatus,
 }: VendorOrderDetailModalProps) {
+  const [isPrinterOpen, setIsPrinterOpen] = useState(false);
+  useModalBackHandler(isOpen, onClose, "vendor-order-detail-modal");
   if (!isOpen || !order) return null;
 
   const isNew = order.status === "placed";
@@ -150,34 +158,51 @@ export function VendorOrderDetailModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="flex justify-end gap-3 pt-2">
-          {onAdvanceStatus && !isCompleted && !isCancelled && (
-            <button
-              type="button"
-              onClick={async () => {
-                await onAdvanceStatus(order.id);
-                onClose();
-              }}
-              className="rounded-xl bg-primary px-5 py-2.5 font-display text-caption font-bold text-on-primary hover:opacity-90 active:scale-95"
-            >
-              {isNew
-                ? "Accept Order"
-                : isPreparing
-                  ? "Mark Ready"
-                  : isReady
-                    ? "Confirm Pickup"
-                    : "Complete Handover"}
-            </button>
-          )}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
           <button
             type="button"
-            onClick={onClose}
-            className="rounded-xl border border-border px-4 py-2.5 font-display text-caption font-bold text-muted hover:text-foreground"
+            onClick={() => setIsPrinterOpen(true)}
+            className="flex items-center gap-1.5 rounded-xl border border-border bg-surface-sunken px-4 py-2.5 font-display text-caption font-bold text-muted hover:border-primary/40 hover:text-foreground transition-colors"
           >
-            Close
+            <span className="material-symbols-outlined text-[16px]">print</span>
+            Print Receipt
           </button>
+
+          <div className="flex items-center gap-3">
+            {onAdvanceStatus && !isCompleted && !isCancelled && (
+              <button
+                type="button"
+                onClick={async () => {
+                  await onAdvanceStatus(order.id);
+                  onClose();
+                }}
+                className="rounded-xl bg-primary px-5 py-2.5 font-display text-caption font-bold text-on-primary hover:opacity-90 active:scale-95"
+              >
+                {isNew
+                  ? "Accept Order"
+                  : isPreparing
+                    ? "Mark Ready"
+                    : isReady
+                      ? "Confirm Pickup"
+                      : "Complete Handover"}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-xl border border-border px-4 py-2.5 font-display text-caption font-bold text-muted hover:text-foreground"
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
+
+      <ThermalPrinterModal
+        open={isPrinterOpen}
+        onClose={() => setIsPrinterOpen(false)}
+        order={vendorOrderToReceipt(order, vendorName)}
+      />
     </div>
   );
 }

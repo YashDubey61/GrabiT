@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
-import { MOCK_VENDOR_STORE } from "@/lib/mock/vendor";
+import { useEffect, useState, useCallback } from "react";
+import { type VendorStoreConfig } from "@/lib/mock/vendor";
 import { VendorHeader } from "@/components/vendor/orders/VendorHeader";
 import { VendorMoreFeaturesSheet } from "@/components/vendor/orders/VendorMoreFeaturesSheet";
 import { VendorMobileNavMenu } from "@/components/vendor/orders/VendorMobileNavMenu";
@@ -13,10 +13,7 @@ import {
   updateVendorStoreSettings,
   type VendorStoreSettingsData,
 } from "@/lib/supabase/vendor_settings";
-import {
-  getLiveVendorCanteenId,
-  getLiveVendorShopName,
-} from "@/lib/supabase/vendor_context";
+import { useVendor } from "@/lib/vendor/VendorContext";
 import { createClient } from "@/lib/supabase/client";
 import { useOrderAlertSound } from "@/lib/vendor/useOrderAlertSound";
 
@@ -31,8 +28,8 @@ import { VendorPayoutAccountSection } from "@/components/vendor/settings/VendorP
 import { VendorSecurityAccountSection } from "@/components/vendor/settings/VendorSecurityAccountSection";
 
 export default function VendorSettingsPage() {
+  const { store, setStore, canteenId } = useVendor();
   const sound = useOrderAlertSound();
-  const [store, setStore] = useState(MOCK_VENDOR_STORE);
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
 
   const [data, setData] = useState<VendorStoreSettingsData | null>(null);
@@ -46,49 +43,36 @@ export default function VendorSettingsPage() {
   const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  const canteenIdRef = useRef<string | null>(null);
-
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 3000);
-  };
+  }, []);
 
   const loadSettings = useCallback(async () => {
     setIsError(false);
     const res = await getLiveVendorStoreSettings();
     if (res.ok && res.data) {
       setData(res.data);
-      setStore((prev) => ({
+      setStore((prev: VendorStoreConfig) => ({
         ...prev,
         name: res.data!.name,
-        isStoreOpen: res.data!.status === "active" || res.data!.status === "busy",
+        isOpen: res.data!.status === "active" || res.data!.status === "busy",
         prepTimeMinutes: res.data!.prepTimeMinutes,
       }));
     } else {
       setIsError(true);
     }
     setIsLoading(false);
-  }, []);
+  }, [setStore]);
 
   useEffect(() => {
     let isMounted = true;
     let channel: ReturnType<ReturnType<typeof createClient>["channel"]> | null = null;
-    const supabase = createClient();
 
-    getLiveVendorShopName().then((name) => {
-      if (isMounted && name) {
-        setStore((prev) => ({ ...prev, name }));
-      }
-    });
+    loadSettings();
 
-    getLiveVendorCanteenId().then((canteenId) => {
-      if (!isMounted) return;
-      canteenIdRef.current = canteenId;
-
-      loadSettings();
-
-      if (!canteenId) return;
-
+    if (canteenId) {
+      const supabase = createClient();
       channel = supabase
         .channel(`vendor-settings-realtime-${canteenId}`)
         .on(
@@ -99,13 +83,16 @@ export default function VendorSettingsPage() {
           },
         )
         .subscribe();
-    });
+    }
 
     return () => {
       isMounted = false;
-      if (channel) supabase.removeChannel(channel);
+      if (channel) {
+        const supabase = createClient();
+        supabase.removeChannel(channel);
+      }
     };
-  }, [loadSettings]);
+  }, [canteenId, loadSettings]);
 
   const handlePartialUpdate = async (payload: Partial<VendorStoreSettingsData>) => {
     const res = await updateVendorStoreSettings(payload);

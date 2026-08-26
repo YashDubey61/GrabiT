@@ -41,7 +41,7 @@ export function CartBar({
       aria-hidden={!isBarVisible}
       className={cn(
         "fixed inset-x-4 z-40 mx-auto max-w-md transition-all duration-300 ease-standard sm:inset-x-0 md:max-w-lg",
-        "[bottom:calc(env(safe-area-inset-bottom)+5.5rem)]",
+        "[bottom:calc(var(--safe-area-inset-bottom)+5.5rem)]",
         isBarVisible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0",
       )}
     >

@@ -3,11 +3,10 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
 import {
-  MOCK_VENDOR_STORE,
-  MOCK_VENDOR_STATS,
   type VendorOrder,
   type VendorOrderStatus,
   type VendorMenuItem,
+  type VendorStoreConfig,
 } from "@/lib/mock/vendor";
 import { VendorHeader } from "@/components/vendor/orders/VendorHeader";
 import { VendorMoreFeaturesSheet } from "@/components/vendor/orders/VendorMoreFeaturesSheet";
@@ -46,11 +45,7 @@ import {
   getLiveVendorAnalytics,
   type LiveVendorAnalyticsData,
 } from "@/lib/supabase/vendor_analytics";
-import {
-  getLiveVendorCanteenId,
-  getLiveVendorShopName,
-  getLiveVendorPauseStatus,
-} from "@/lib/supabase/vendor_context";
+import { useVendor } from "@/lib/vendor/VendorContext";
 import { createClient } from "@/lib/supabase/client";
 import { useOrderAlertSound } from "@/lib/vendor/useOrderAlertSound";
 import { hardNavigate } from "@/lib/auth/redirect";
@@ -59,8 +54,7 @@ const TAB_TITLE_DEFAULT = "GrabIt Vendor";
 const TAB_TITLE_ALERT = "🔔 NEW ORDER — GRABIT Vendor";
 
 export default function VendorActiveOrdersPage() {
-  const [store, setStore] = useState(MOCK_VENDOR_STORE);
-  const [pauseStatus, setPauseStatus] = useState<{ isPaused: boolean; reason: string | null } | null>(null);
+  const { store, setStore, canteenId, pauseStatus } = useVendor();
   const [orders, setOrders] = useState<VendorOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [notification, setNotification] = useState<string | null>(null);
@@ -83,7 +77,6 @@ export default function VendorActiveOrdersPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isManualOrderOpen, setIsManualOrderOpen] = useState(false);
 
-  const canteenIdRef = useRef<string | null>(null);
   const ordersBoardRef = useRef<HTMLDivElement>(null);
 
   const sound = useOrderAlertSound();
@@ -94,10 +87,10 @@ export default function VendorActiveOrdersPage() {
   const alertedOrderIdsRef = useRef<Set<string>>(new Set());
   const hasLoadedOnceRef = useRef(false);
 
-  const showNotification = (msg: string) => {
+  const showNotification = useCallback((msg: string) => {
     setNotification(msg);
     setTimeout(() => setNotification(null), 3000);
-  };
+  }, []);
 
   const applyOrders = useCallback((liveOrders: VendorOrder[]) => {
     setOrders(liveOrders);
@@ -125,8 +118,14 @@ export default function VendorActiveOrdersPage() {
 
   const loadMenuAndCategories = useCallback(async (cId?: string | null) => {
     setIsMenuLoading(true);
-    const liveItems = await getLiveVendorMenuItems(cId ?? null);
+    const [liveItems, cats] = await Promise.all([
+      getLiveVendorMenuItems(cId ?? null),
+      getLiveVendorCategories(),
+    ]);
     setMenuItems(liveItems);
+    setCategories(cats.map((c) => c.name));
+    setIsMenuLoading(false);
+
     if (cId && liveItems.length > 0) {
       cacheVendorMenuLocally(
         cId,
@@ -140,19 +139,17 @@ export default function VendorActiveOrdersPage() {
         }))
       );
     }
-    setIsMenuLoading(false);
-    const cats = await getLiveVendorCategories();
-    setCategories(cats.map((c) => c.name));
   }, []);
 
   const fetchOrders = useCallback(async () => {
-    setIsLoading(true);
-    const liveOrders = canteenIdRef.current
-      ? await getLiveVendorOrders(canteenIdRef.current)
-      : [];
+    if (!canteenId) {
+      setIsLoading(false);
+      return;
+    }
+    const liveOrders = await getLiveVendorOrders(canteenId);
     applyOrders(liveOrders);
     setIsLoading(false);
-  }, [applyOrders]);
+  }, [canteenId, applyOrders]);
 
   const fetchAnalytics = useCallback(async (tf: "today" | "7d" | "30d" = "today") => {
     setIsAnalyticsLoading(true);
@@ -166,56 +163,52 @@ export default function VendorActiveOrdersPage() {
     setIsAnalyticsLoading(false);
   }, []);
 
+  // Primary data loader: runs in parallel once canteenId is resolved
   useEffect(() => {
     let isMounted = true;
     let channel: ReturnType<ReturnType<typeof createClient>["channel"]> | null = null;
-    const supabase = createClient();
-
-    getLiveVendorShopName().then((name) => {
-      if (isMounted && name) {
-        setStore((prev) => ({ ...prev, name }));
-      }
-    });
-
-    getLiveVendorPauseStatus().then((pause) => {
-      if (isMounted) setPauseStatus(pause);
-    });
-
-    fetchAnalytics("today");
-
     let cleanupSync: (() => void) | null = null;
 
-    getLiveVendorCanteenId().then((id) => {
+    if (!canteenId) {
+      setIsLoading(false);
+      setIsAnalyticsLoading(false);
+      return;
+    }
+
+    cleanupSync = initAutomaticManualOrderSync(canteenId);
+
+    // Parallel fetch of critical live orders and analytics
+    Promise.all([
+      getLiveVendorOrders(canteenId),
+      getLiveVendorAnalytics("today"),
+    ]).then(([liveOrders, analyticsRes]) => {
       if (!isMounted) return;
-      canteenIdRef.current = id;
+      applyOrders(liveOrders);
+      setIsLoading(false);
 
-      if (id) {
-        cleanupSync = initAutomaticManualOrderSync(id);
+      if (analyticsRes.ok && analyticsRes.data) {
+        setAnalyticsData(analyticsRes.data);
+      } else {
+        setIsAnalyticsError(true);
       }
-
-      loadMenuAndCategories(id ?? undefined);
-
-      getLiveVendorOrders(id ?? undefined).then((liveOrders) => {
-        if (isMounted) {
-          applyOrders(liveOrders);
-          setIsLoading(false);
-        }
-      });
-
-      if (!id) return;
-
-      channel = supabase
-        .channel(`vendor-dashboard-realtime-${id}`)
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "orders", filter: `canteen_id=eq.${id}` },
-          () => {
-            fetchOrders();
-            fetchAnalytics(timeframe);
-          },
-        )
-        .subscribe();
+      setIsAnalyticsLoading(false);
     });
+
+    // Secondary load: menu and categories
+    loadMenuAndCategories(canteenId);
+
+    const supabase = createClient();
+    channel = supabase
+      .channel(`vendor-dashboard-realtime-${canteenId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "orders", filter: `canteen_id=eq.${canteenId}` },
+        () => {
+          fetchOrders();
+          fetchAnalytics(timeframe);
+        },
+      )
+      .subscribe();
 
     return () => {
       isMounted = false;
@@ -224,7 +217,7 @@ export default function VendorActiveOrdersPage() {
       sound.stop();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [canteenId]);
 
   const pendingPlacedOrders = useMemo(
     () =>
@@ -252,28 +245,30 @@ export default function VendorActiveOrdersPage() {
     };
   }, [pendingPlacedOrders.length]);
 
-  const handleToggleStoreStatus = () => {
-    setStore((prev) => {
+  const handleToggleStoreStatus = useCallback(() => {
+    setStore((prev: VendorStoreConfig) => {
       const nextOpen = !prev.isOpen;
       showNotification(`Store status changed to ${nextOpen ? "OPEN" : "CLOSED"}`);
       return { ...prev, isOpen: nextOpen };
     });
-  };
+  }, [setStore, showNotification]);
 
-  const handleChangePrepTime = () => {
+  const handleChangePrepTime = useCallback(() => {
     const options = [10, 12, 15, 20];
-    const currentIndex = options.indexOf(store.prepTimeMinutes);
-    const nextPrepTime = options[(currentIndex + 1) % options.length];
-    setStore((prev) => ({ ...prev, prepTimeMinutes: nextPrepTime }));
-    showNotification(`Default prep time updated to ${nextPrepTime} mins`);
-  };
+    setStore((prev: VendorStoreConfig) => {
+      const currentIndex = options.indexOf(prev.prepTimeMinutes);
+      const nextPrepTime = options[(currentIndex + 1) % options.length];
+      showNotification(`Default prep time updated to ${nextPrepTime} mins`);
+      return { ...prev, prepTimeMinutes: nextPrepTime };
+    });
+  }, [setStore, showNotification]);
 
   const handleAuthExpired = useCallback(() => {
     soundRef.current.stop();
     setActionError("Your vendor session expired. Please sign in again to manage orders.");
     showNotification("Session expired — redirecting to sign in…");
     setTimeout(() => hardNavigate("/vendor/auth?next=%2Fvendor"), 2500);
-  }, []);
+  }, [showNotification]);
 
   const handleAdvanceOrderStatus = async (orderId: string) => {
     const targetOrder = orders.find((o) => o.id === orderId);
@@ -289,14 +284,9 @@ export default function VendorActiveOrdersPage() {
 
     setActionError(null);
 
-    // Locally-queued manual cash orders (created while offline, or whose
-    // creation hasn't synced yet) use a clientOrderId, not a real database
-    // id — the status API has nothing to PATCH until this order is
-    // persisted server-side. Sync it first; if sync itself can't complete
-    // right now, queue the status change so it's never lost.
     let targetId = orderId;
     if (orderId.startsWith("manual_client_")) {
-      const syncResult = await syncSingleManualOrder(orderId, canteenIdRef.current ?? undefined);
+      const syncResult = await syncSingleManualOrder(orderId, canteenId ?? undefined);
       if (!syncResult.ok) {
         await setDesiredStatus(orderId, nextStatus);
         const msg =
@@ -397,8 +387,8 @@ export default function VendorActiveOrdersPage() {
     const res = await toggleLiveVendorMenuItemStock(itemId, inStock);
     if (res.ok) {
       showNotification(`Item marked ${inStock ? "IN STOCK" : "OUT OF STOCK"}`);
-      if (canteenIdRef.current) {
-        loadMenuAndCategories(canteenIdRef.current);
+      if (canteenId) {
+        loadMenuAndCategories(canteenId);
       }
     } else {
       showNotification(res.error ?? "Failed to update item availability.");
@@ -411,8 +401,8 @@ export default function VendorActiveOrdersPage() {
     const res = await addLiveVendorMenuItem(itemData);
     if (res.ok) {
       showNotification(`"${itemData.name}" added to menu successfully`);
-      if (canteenIdRef.current) {
-        loadMenuAndCategories(canteenIdRef.current);
+      if (canteenId) {
+        loadMenuAndCategories(canteenId);
       }
     } else {
       showNotification(res.error ?? "Failed to add dish.");
@@ -663,7 +653,7 @@ export default function VendorActiveOrdersPage() {
       <ManualCashOrderModal
         isOpen={isManualOrderOpen}
         onClose={() => setIsManualOrderOpen(false)}
-        canteenId={canteenIdRef.current || ""}
+        canteenId={canteenId || ""}
         menuItems={menuItems}
         onOrderCreated={(num) => {
           showNotification(num ? `Manual Cash Order ${num} created` : "Manual Cash Order saved locally (Pending Sync)");

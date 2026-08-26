@@ -5,15 +5,20 @@ import type { CapacitorConfig } from "@capacitor/cli";
 // rather than bundling a static export, which would break all of that.
 // GRABIT_WEB_URL must be the real deployed origin for production builds;
 // unset it (or point it at your `next dev` LAN address) for local dev.
-const devUrl = process.env.GRABIT_WEB_URL;
+const rawUrl = process.env.GRABIT_WEB_URL || "http://localhost:3000";
+const entryUrl = rawUrl.replace(/\/$/, "").endsWith("/customer")
+  ? rawUrl.replace(/\/$/, "")
+  : `${rawUrl.replace(/\/$/, "")}/customer`;
 
 const config: CapacitorConfig = {
-  appId: "app.grabit.campus",
-  appName: "GrabIt",
+  appId: "app.grabit.student",
+  appName: "GRABIT Student",
   webDir: "public",
-  server: devUrl
-    ? { url: devUrl, cleartext: devUrl.startsWith("http://") }
-    : undefined,
+  appendUserAgent: "CapacitorApp/GrabItStudent",
+  server: {
+    url: entryUrl,
+    cleartext: entryUrl.startsWith("http://"),
+  },
 };
 
 export default config;

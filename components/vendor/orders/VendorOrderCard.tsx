@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import type { VendorOrder } from "@/lib/mock/vendor";
-import { ReceiptPrinter } from "@/components/shared/receipt-printer/ReceiptPrinter";
 import { vendorOrderToReceipt } from "@/components/shared/receipt-printer/adapters";
+import { ThermalPrinterModal } from "@/components/vendor/printer/ThermalPrinterModal";
+import { printerService } from "@/lib/printer/printerService";
 
 interface VendorOrderCardProps {
   order: VendorOrder;
@@ -29,6 +30,7 @@ export function VendorOrderCard({
   onSelectOrder,
 }: VendorOrderCardProps) {
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
+  const [printState, setPrintState] = useState<"idle" | "printing" | "printed">("idle");
   const isNew = order.status === "placed";
   const isPreparing = order.status === "preparing";
   const isReady = order.status === "ready";
@@ -63,6 +65,30 @@ export function VendorOrderCard({
     await onCancelOrder(order.id, finalReason);
     setIsCancelling(false);
     setShowCancelModal(false);
+  };
+
+  const handlePrintClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const active = printerService.getActivePrinter();
+    if (!active) {
+      setIsReceiptOpen(true);
+      return;
+    }
+
+    setPrintState("printing");
+    try {
+      const res = await printerService.printReceipt(vendorOrderToReceipt(order, vendorName));
+      if (res.success) {
+        setPrintState("printed");
+        setTimeout(() => setPrintState("idle"), 2500);
+      } else {
+        setPrintState("idle");
+        setIsReceiptOpen(true);
+      }
+    } catch {
+      setPrintState("idle");
+      setIsReceiptOpen(true);
+    }
   };
 
   return (
@@ -163,21 +189,53 @@ export function VendorOrderCard({
           ))}
         </div>
 
-        {/* Print Kitchen Receipt — available regardless of status, never
-            forces navigation away from this order card. */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsReceiptOpen(true);
-          }}
-          className="flex h-10 items-center justify-center gap-1.5 rounded-lg border border-border text-caption font-semibold text-muted transition-colors hover:border-primary/40 hover:text-foreground"
-        >
-          <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
-            receipt_long
-          </span>
-          Print Kitchen Receipt
-        </button>
+        {/* Print Kitchen Receipt — 1-tap print with direct setup access */}
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={handlePrintClick}
+            disabled={printState === "printing"}
+            className={`flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg border text-caption font-semibold transition-all ${
+              printState === "printed"
+                ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 font-bold"
+                : printState === "printing"
+                  ? "border-primary/50 bg-primary/10 text-primary font-bold animate-pulse"
+                  : "border-border text-muted hover:border-primary/40 hover:text-foreground"
+            }`}
+          >
+            <span
+              className={`material-symbols-outlined text-[16px] ${
+                printState === "printing" ? "animate-spin" : ""
+              }`}
+              aria-hidden="true"
+            >
+              {printState === "printed"
+                ? "check_circle"
+                : printState === "printing"
+                  ? "progress_activity"
+                  : "receipt_long"}
+            </span>
+            {printState === "printed"
+              ? "Printed ✓"
+              : printState === "printing"
+                ? "Printing..."
+                : "Print Kitchen Receipt"}
+          </button>
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsReceiptOpen(true);
+            }}
+            title="Printer Settings & Preview"
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-border text-muted hover:border-primary/40 hover:text-foreground transition-colors"
+          >
+            <span className="material-symbols-outlined text-[18px]">
+              settings
+            </span>
+          </button>
+        </div>
 
         {/* OTP Code Badge if Ready */}
         {isReady && order.otpCode && (
@@ -343,11 +401,14 @@ export function VendorOrderCard({
         </div>
       )}
 
-      <ReceiptPrinter
-        mode="vendor"
-        order={vendorOrderToReceipt(order, vendorName)}
+      <ThermalPrinterModal
         open={isReceiptOpen}
         onClose={() => setIsReceiptOpen(false)}
+        order={vendorOrderToReceipt(order, vendorName)}
+        onPrinted={() => {
+          setPrintState("printed");
+          setTimeout(() => setPrintState("idle"), 2500);
+        }}
       />
     </>
   );

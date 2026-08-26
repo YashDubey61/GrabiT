@@ -13,27 +13,6 @@ export function LandingNavbar() {
     <nav className="fixed top-0 inset-x-0 z-50 flex h-16 items-center justify-between border-b border-border bg-background/80 px-6 backdrop-blur-xl md:px-12">
       <GrabItLogo href="/" heightClassName="h-9 md:h-10" priority />
 
-      <div className="hidden items-center gap-8 md:flex">
-        <Link
-          href="/customer"
-          className="font-display text-caption font-bold tracking-wider uppercase text-foreground hover:text-primary transition-colors"
-        >
-          Student App
-        </Link>
-        <Link
-          href="/vendor"
-          className="font-display text-caption font-bold tracking-wider uppercase text-foreground hover:text-primary transition-colors"
-        >
-          Vendors
-        </Link>
-        <Link
-          href="/superadmin"
-          className="font-display text-caption font-bold tracking-wider uppercase text-foreground hover:text-primary transition-colors"
-        >
-          Super Admin
-        </Link>
-      </div>
-
       <div className="flex items-center gap-3">
         {user ? (
           <>

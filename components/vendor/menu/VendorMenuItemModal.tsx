@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import type { VendorMenuItem, VendorMenuCategory } from "@/lib/mock/vendor";
 import { createClient } from "@/lib/supabase/client";
+import { useModalBackHandler } from "@/lib/navigation/backButtonManager";
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
@@ -305,6 +306,7 @@ export function VendorMenuItemModal({
   editingItem,
   categories,
 }: VendorMenuItemModalProps) {
+  useModalBackHandler(isOpen, onClose, "vendor-menu-item-modal");
   if (!isOpen) return null;
 
   return (

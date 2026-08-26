@@ -146,27 +146,29 @@ export default function StudentNotificationsPage() {
   return (
     <div className="min-h-dvh bg-background text-foreground flex flex-col">
       {/* Header Bar */}
-      <header className="sticky top-0 z-40 flex h-16 items-center justify-between bg-background border-b border-border px-5 md:px-16">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/customer"
-            className="p-1 rounded-lg text-muted hover:text-white hover:bg-white/10 transition-colors"
-          >
-            <span className="material-symbols-outlined">arrow_back</span>
-          </Link>
-          <div>
-            <h1 className="text-body font-bold text-foreground">Notification Center</h1>
-            <p className="text-[11px] text-muted">Order updates, wallet receipts &amp; recommendations</p>
+      <header className="sticky top-0 z-40 bg-background border-b border-border">
+        <div className="mx-auto flex h-14 sm:h-16 w-full max-w-3xl items-center justify-between px-4 sm:px-6 md:px-16">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/customer"
+              className="-ml-1 flex h-10 w-10 items-center justify-center rounded-xl text-muted transition-colors hover:bg-surface-elevated hover:text-foreground active:scale-95"
+            >
+              <span className="material-symbols-outlined text-[24px]">arrow_back</span>
+            </Link>
+            <div>
+              <h1 className="text-body font-bold text-foreground">Notification Center</h1>
+              <p className="text-[11px] text-muted">Order updates, wallet receipts &amp; recommendations</p>
+            </div>
           </div>
-        </div>
 
-        <button
-          onClick={() => setShowPreferencesModal(true)}
-          className="p-2 rounded-xl bg-surface-elevated border border-border text-muted hover:text-white transition-all text-xs font-semibold flex items-center gap-1.5"
-        >
-          <span className="material-symbols-outlined text-base">settings</span>
-          <span className="hidden sm:inline">Preferences</span>
-        </button>
+          <button
+            onClick={() => setShowPreferencesModal(true)}
+            className="p-2 rounded-xl bg-surface-elevated border border-border text-muted hover:text-white transition-all text-xs font-semibold flex items-center gap-1.5"
+          >
+            <span className="material-symbols-outlined text-base">settings</span>
+            <span className="hidden sm:inline">Preferences</span>
+          </button>
+        </div>
       </header>
 
       <main className="flex-1 max-w-3xl mx-auto w-full p-5 space-y-6 pb-24">

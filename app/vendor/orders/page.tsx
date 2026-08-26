@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
 import {
-  MOCK_VENDOR_STORE,
   type VendorOrder,
   type VendorOrderStatus,
+  type VendorStoreConfig,
 } from "@/lib/mock/vendor";
 import { VendorHeader } from "@/components/vendor/orders/VendorHeader";
 import { VendorMoreFeaturesSheet } from "@/components/vendor/orders/VendorMoreFeaturesSheet";
@@ -23,24 +23,27 @@ const VendorQrScanner = dynamic(
 );
 import { VendorOrdersFilterBar } from "@/components/vendor/orders/VendorOrdersFilterBar";
 import { VendorOrderDetailModal } from "@/components/vendor/orders/VendorOrderDetailModal";
+import { ThermalPrinterModal } from "@/components/vendor/printer/ThermalPrinterModal";
 import { getLiveVendorOrders } from "@/lib/supabase/vendor_orders";
-import {
-  getLiveVendorCanteenId,
-  getLiveVendorShopName,
-  getLiveVendorPauseStatus,
-} from "@/lib/supabase/vendor_context";
+import { useVendor } from "@/lib/vendor/VendorContext";
 import { createClient } from "@/lib/supabase/client";
 import { useOrderAlertSound } from "@/lib/vendor/useOrderAlertSound";
 import { hardNavigate } from "@/lib/auth/redirect";
 import { syncSingleManualOrder } from "@/lib/offline/manual_order_sync";
 import { setDesiredStatus } from "@/lib/offline/manual_order_db";
+import {
+  isOrderAlreadyAlerted,
+  markOrderAlerted,
+  getPendingOrderNavigation,
+  clearPendingOrderNavigation,
+  onOrderNotificationTapped,
+} from "@/lib/vendor/orderAlertService";
 
 const TAB_TITLE_DEFAULT = "Live Orders — GRABIT Vendor";
 const TAB_TITLE_ALERT = "🔔 NEW ORDER — GRABIT Vendor";
 
 export default function VendorLiveOrdersPage() {
-  const [store, setStore] = useState(MOCK_VENDOR_STORE);
-  const [pauseStatus, setPauseStatus] = useState<{ isPaused: boolean; reason: string | null } | null>(null);
+  const { store, setStore, canteenId, pauseStatus } = useVendor();
   const [orders, setOrders] = useState<VendorOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
@@ -53,6 +56,7 @@ export default function VendorLiveOrdersPage() {
   const [isMoreFeaturesOpen, setIsMoreFeaturesOpen] = useState(false);
   const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isPrinterSetupOpen, setIsPrinterSetupOpen] = useState(false);
   const [scannerInitialMode, setScannerInitialMode] = useState<"qr" | "otp">("qr");
 
   // Detail Modal
@@ -65,8 +69,6 @@ export default function VendorLiveOrdersPage() {
   const [selectedPayment, setSelectedPayment] = useState("all");
   const [selectedDate, setSelectedDate] = useState("today");
 
-  const canteenIdRef = useRef<string | null>(null);
-
   const sound = useOrderAlertSound();
   const soundRef = useRef(sound);
   useEffect(() => {
@@ -75,88 +77,139 @@ export default function VendorLiveOrdersPage() {
   const alertedOrderIdsRef = useRef<Set<string>>(new Set());
   const hasLoadedOnceRef = useRef(false);
 
-  const showNotification = (msg: string) => {
+  const showNotification = useCallback((msg: string) => {
     setNotification(msg);
     setTimeout(() => setNotification(null), 3000);
-  };
+  }, []);
+
+  // Notification-tap deep links can arrive before the live orders list has
+  // finished loading (cold start especially: this effect and the orders
+  // fetch both kick off on mount, racing). Rather than looking the order up
+  // in a state snapshot that's still empty, the target id is parked here and
+  // resolved every time fresh orders come in via applyOrders, so it survives
+  // until the order it points to actually exists in state.
+  const pendingNotificationOrderIdRef = useRef<string | null>(null);
+
+  const openOrderById = useCallback((orderId: string) => {
+    if (!orderId) return;
+    setOrders((currentOrders) => {
+      const match = currentOrders.find((o) => o.id === orderId);
+      if (match) {
+        setSelectedOrder(match);
+        setIsDetailModalOpen(true);
+        pendingNotificationOrderIdRef.current = null;
+      } else {
+        pendingNotificationOrderIdRef.current = orderId;
+      }
+      return currentOrders;
+    });
+  }, []);
+
+  useEffect(() => {
+    getPendingOrderNavigation().then((res) => {
+      if (res.pending && res.orderId) {
+        openOrderById(res.orderId);
+        clearPendingOrderNavigation();
+      }
+    });
+
+    let cleanupListener: (() => void) | null = null;
+    onOrderNotificationTapped((data) => {
+      if (data && data.orderId) {
+        openOrderById(data.orderId);
+      }
+    }).then((unsub) => {
+      cleanupListener = unsub;
+    });
+
+    return () => {
+      if (cleanupListener) cleanupListener();
+    };
+  }, [openOrderById]);
 
   const applyOrders = useCallback((liveOrders: VendorOrder[]) => {
     setOrders(liveOrders);
 
+    const pendingId = pendingNotificationOrderIdRef.current;
+    if (pendingId) {
+      const match = liveOrders.find((o) => o.id === pendingId);
+      if (match) {
+        setSelectedOrder(match);
+        setIsDetailModalOpen(true);
+        pendingNotificationOrderIdRef.current = null;
+      }
+    }
+
     const currentPlacedIds = liveOrders
-      .filter((o) => o.status === "placed")
+      .filter((o) => o.status === "placed" && !o.isManual)
       .map((o) => o.id);
 
     if (!hasLoadedOnceRef.current) {
-      currentPlacedIds.forEach((id) => alertedOrderIdsRef.current.add(id));
+      currentPlacedIds.forEach((id) => {
+        alertedOrderIdsRef.current.add(id);
+        markOrderAlerted(id);
+      });
       hasLoadedOnceRef.current = true;
       return;
     }
 
     const genuinelyNewIds = currentPlacedIds.filter(
-      (id) => !alertedOrderIdsRef.current.has(id),
+      (id) => !alertedOrderIdsRef.current.has(id) && !isOrderAlreadyAlerted(id),
     );
-    currentPlacedIds.forEach((id) => alertedOrderIdsRef.current.add(id));
+    currentPlacedIds.forEach((id) => {
+      alertedOrderIdsRef.current.add(id);
+      markOrderAlerted(id);
+    });
 
     if (genuinelyNewIds.length > 0) {
       soundRef.current.start();
     }
   }, []);
 
+
   const fetchOrders = useCallback(async () => {
+    if (!canteenId) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     setIsError(false);
     try {
-      const liveOrders = canteenIdRef.current
-        ? await getLiveVendorOrders(canteenIdRef.current)
-        : [];
+      const liveOrders = await getLiveVendorOrders(canteenId);
       applyOrders(liveOrders);
     } catch {
       setIsError(true);
     } finally {
       setIsLoading(false);
     }
-  }, [applyOrders]);
+  }, [canteenId, applyOrders]);
 
   useEffect(() => {
     let isMounted = true;
     let channel: ReturnType<ReturnType<typeof createClient>["channel"]> | null = null;
-    const supabase = createClient();
 
-    getLiveVendorShopName().then((name) => {
-      if (isMounted && name) {
-        setStore((prev) => ({ ...prev, name }));
+    if (!canteenId) {
+      return;
+    }
+
+    getLiveVendorOrders(canteenId).then((liveOrders) => {
+      if (isMounted) {
+        applyOrders(liveOrders);
+        setIsLoading(false);
       }
     });
 
-    getLiveVendorPauseStatus().then((pause) => {
-      if (isMounted) setPauseStatus(pause);
-    });
-
-    getLiveVendorCanteenId().then((id) => {
-      if (!isMounted) return;
-      canteenIdRef.current = id;
-
-      getLiveVendorOrders(id ?? undefined).then((liveOrders) => {
-        if (isMounted) {
-          applyOrders(liveOrders);
-          setIsLoading(false);
-        }
-      });
-
-      if (!id) return;
-
-      channel = supabase
-        .channel(`vendor-live-orders-realtime-${id}`)
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "orders", filter: `canteen_id=eq.${id}` },
-          () => {
-            fetchOrders();
-          },
-        )
-        .subscribe();
-    });
+    const supabase = createClient();
+    channel = supabase
+      .channel(`vendor-live-orders-realtime-${canteenId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "orders", filter: `canteen_id=eq.${canteenId}` },
+        () => {
+          fetchOrders();
+        },
+      )
+      .subscribe();
 
     return () => {
       isMounted = false;
@@ -164,7 +217,7 @@ export default function VendorLiveOrdersPage() {
       sound.stop();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [canteenId]);
 
   const pendingPlacedOrders = useMemo(
     () => orders.filter((o) => o.status === "placed"),
@@ -185,28 +238,30 @@ export default function VendorLiveOrdersPage() {
     };
   }, [pendingPlacedOrders.length]);
 
-  const handleToggleStoreStatus = () => {
-    setStore((prev) => {
+  const handleToggleStoreStatus = useCallback(() => {
+    setStore((prev: VendorStoreConfig) => {
       const nextOpen = !prev.isOpen;
       showNotification(`Store status changed to ${nextOpen ? "OPEN" : "CLOSED"}`);
       return { ...prev, isOpen: nextOpen };
     });
-  };
+  }, [setStore, showNotification]);
 
-  const handleChangePrepTime = () => {
+  const handleChangePrepTime = useCallback(() => {
     const options = [10, 12, 15, 20];
-    const currentIndex = options.indexOf(store.prepTimeMinutes);
-    const nextPrepTime = options[(currentIndex + 1) % options.length];
-    setStore((prev) => ({ ...prev, prepTimeMinutes: nextPrepTime }));
-    showNotification(`Default prep time updated to ${nextPrepTime} mins`);
-  };
+    setStore((prev: VendorStoreConfig) => {
+      const currentIndex = options.indexOf(prev.prepTimeMinutes);
+      const nextPrepTime = options[(currentIndex + 1) % options.length];
+      showNotification(`Default prep time updated to ${nextPrepTime} mins`);
+      return { ...prev, prepTimeMinutes: nextPrepTime };
+    });
+  }, [setStore, showNotification]);
 
   const handleAuthExpired = useCallback(() => {
     soundRef.current.stop();
     setActionError("Your vendor session expired. Please sign in again to manage orders.");
     showNotification("Session expired — redirecting to sign in…");
     setTimeout(() => hardNavigate("/vendor/auth?next=%2Fvendor%2Forders"), 2500);
-  }, []);
+  }, [showNotification]);
 
   const handleAdvanceOrderStatus = async (orderId: string) => {
     const targetOrder = orders.find((o) => o.id === orderId);
@@ -222,14 +277,9 @@ export default function VendorLiveOrdersPage() {
 
     setActionError(null);
 
-    // Locally-queued manual cash orders (created while offline, or whose
-    // creation hasn't synced yet) use a clientOrderId, not a real database
-    // id — the status API has nothing to PATCH until this order is
-    // persisted server-side. Sync it first; if sync itself can't complete
-    // right now, queue the status change so it's never lost.
     let targetId = orderId;
     if (orderId.startsWith("manual_client_")) {
-      const syncResult = await syncSingleManualOrder(orderId, canteenIdRef.current ?? undefined);
+      const syncResult = await syncSingleManualOrder(orderId, canteenId ?? undefined);
       if (!syncResult.ok) {
         await setDesiredStatus(orderId, nextStatus);
         const msg =
@@ -368,12 +418,12 @@ export default function VendorLiveOrdersPage() {
     });
   }, [orders, searchQuery, selectedStatus, selectedPayment, selectedDate]);
 
-  const handleResetFilters = () => {
+  const handleResetFilters = useCallback(() => {
     setSearchQuery("");
     setSelectedStatus("all");
     setSelectedPayment("all");
     setSelectedDate("today");
-  };
+  }, []);
 
   return (
     <div
@@ -406,6 +456,7 @@ export default function VendorLiveOrdersPage() {
         onChangePrepTime={handleChangePrepTime}
         isSoundUnlocked={sound.isUnlocked}
         onUnlockSound={sound.unlock}
+        onOpenPrinterSetup={() => setIsPrinterSetupOpen(true)}
       />
 
       <VendorProfileSheet
@@ -557,12 +608,18 @@ export default function VendorLiveOrdersPage() {
       <VendorOrderDetailModal
         order={selectedOrder}
         isOpen={isDetailModalOpen}
+        vendorName={store.name}
         onClose={() => {
           setIsDetailModalOpen(false);
           setSelectedOrder(null);
         }}
         onAdvanceStatus={handleAdvanceOrderStatus}
         onCancelOrder={handleCancelOrder}
+      />
+
+      <ThermalPrinterModal
+        open={isPrinterSetupOpen}
+        onClose={() => setIsPrinterSetupOpen(false)}
       />
     </div>
   );

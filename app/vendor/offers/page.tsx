@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import { MOCK_VENDOR_STORE } from "@/lib/mock/vendor";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { VendorHeader } from "@/components/vendor/orders/VendorHeader";
 import { VendorMoreFeaturesSheet } from "@/components/vendor/orders/VendorMoreFeaturesSheet";
 import { VendorMobileNavMenu } from "@/components/vendor/orders/VendorMobileNavMenu";
@@ -22,16 +21,13 @@ import {
   type VendorOffer,
   type OfferRedemptionLog,
 } from "@/lib/supabase/vendor_offers";
-import {
-  getLiveVendorCanteenId,
-  getLiveVendorShopName,
-} from "@/lib/supabase/vendor_context";
+import { useVendor } from "@/lib/vendor/VendorContext";
 import { createClient } from "@/lib/supabase/client";
 import { useOrderAlertSound } from "@/lib/vendor/useOrderAlertSound";
 
 export default function VendorOffersPage() {
+  const { store, canteenId } = useVendor();
   const sound = useOrderAlertSound();
-  const [store, setStore] = useState(MOCK_VENDOR_STORE);
   const [offers, setOffers] = useState<VendorOffer[]>([]);
   const [stats, setStats] = useState({
     activeOffersCount: 0,
@@ -64,12 +60,10 @@ export default function VendorOffersPage() {
   const [isLoadingRedemptions, setIsLoadingRedemptions] = useState(false);
   const [isRedemptionsModalOpen, setIsRedemptionsModalOpen] = useState(false);
 
-  const canteenIdRef = useRef<string | null>(null);
-
-  const showNotification = (msg: string) => {
+  const showNotification = useCallback((msg: string) => {
     setNotification(msg);
     setTimeout(() => setNotification(null), 3000);
-  };
+  }, []);
 
   const loadOffers = useCallback(async () => {
     setIsError(false);
@@ -87,22 +81,11 @@ export default function VendorOffersPage() {
   useEffect(() => {
     let isMounted = true;
     let channel: ReturnType<ReturnType<typeof createClient>["channel"]> | null = null;
-    const supabase = createClient();
 
-    getLiveVendorShopName().then((name) => {
-      if (isMounted && name) {
-        setStore((prev) => ({ ...prev, name }));
-      }
-    });
+    loadOffers();
 
-    getLiveVendorCanteenId().then((canteenId) => {
-      if (!isMounted) return;
-      canteenIdRef.current = canteenId;
-
-      loadOffers();
-
-      if (!canteenId) return;
-
+    if (canteenId) {
+      const supabase = createClient();
       channel = supabase
         .channel(`vendor-offers-realtime-${canteenId}`)
         .on(
@@ -113,13 +96,16 @@ export default function VendorOffersPage() {
           },
         )
         .subscribe();
-    });
+    }
 
     return () => {
       isMounted = false;
-      if (channel) supabase.removeChannel(channel);
+      if (channel) {
+        const supabase = createClient();
+        supabase.removeChannel(channel);
+      }
     };
-  }, [loadOffers]);
+  }, [canteenId, loadOffers]);
 
   // Filtered offers
   const filteredOffers = useMemo(() => {
@@ -204,11 +190,11 @@ export default function VendorOffersPage() {
     setIsLoadingRedemptions(false);
   };
 
-  const handleResetFilters = () => {
+  const handleResetFilters = useCallback(() => {
     setSearchQuery("");
     setSelectedStatus("all");
     setSelectedType("all");
-  };
+  }, []);
 
   return (
     <div className="min-h-dvh bg-background text-foreground flex flex-col">

@@ -122,8 +122,9 @@ export async function POST(request: Request) {
         .maybeSingle();
 
       if (orderRow?.student_id) {
-        const title = `Order ${updated.order_number} Completed`;
-        const message = "Your order has been handed over. Enjoy your meal!";
+        const orderNum = (updated.order_number ?? updated.id.slice(0, 6)).replace(/^#/, "");
+        const title = "Order Completed ✅";
+        const message = `Your GRABIT order #${orderNum} has been delivered/completed.`;
         const notifResult = await createStudentNotification({
           userId: orderRow.student_id,
           type: "ORDER_COMPLETED",
