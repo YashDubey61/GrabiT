@@ -2,7 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { AuthProvider } from "@/lib/auth/AuthContext";
 import { CapacitorAppListener } from "@/components/shared/CapacitorAppListener";
+import { OfflineOverlay } from "@/components/shared/OfflineOverlay";
 import "./globals.css";
+
 
 // Single product sans per GRABIT_DESIGN.md — Inter, used for both display
 // and body text (headings at 700, body at 400/500, buttons/labels at 600).
@@ -87,8 +89,10 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         <AuthProvider>
           <CapacitorAppListener />
+          <OfflineOverlay />
           {children}
         </AuthProvider>
+
       </body>
     </html>
   );
