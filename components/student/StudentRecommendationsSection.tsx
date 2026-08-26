@@ -11,7 +11,6 @@ import { useCart } from "@/lib/cart/CartContext";
 export function StudentRecommendationsSection() {
   const [data, setData] = useState<StudentRecommendationsPayload | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [addedItem, setAddedItem] = useState<string | null>(null);
   const cart = useCart();
 
   useEffect(() => {
@@ -48,6 +47,10 @@ export function StudentRecommendationsSection() {
     };
   }, []);
 
+  const quantityOf = (itemId: string) => {
+    return cart.items.find((i) => i.menuItemId === itemId)?.quantity ?? 0;
+  };
+
   const handleAddToCart = (item: RecommendationItem, index: number) => {
     cart.addItem({
       canteenId: item.canteenId,
@@ -57,9 +60,6 @@ export function StudentRecommendationsSection() {
       price: item.price,
       image: item.imageUrl,
     });
-
-    setAddedItem(item.itemId);
-    setTimeout(() => setAddedItem(null), 1500);
 
     // Track recommendation click & cart addition (non-blocking)
     trackProductEvent({
@@ -82,6 +82,19 @@ export function StudentRecommendationsSection() {
         category: item.category,
       },
     });
+  };
+
+  const handleIncrement = (item: RecommendationItem, index: number) => {
+    const currentQty = quantityOf(item.itemId);
+    if (currentQty === 0) {
+      handleAddToCart(item, index);
+    } else {
+      cart.increment(item.itemId);
+    }
+  };
+
+  const handleDecrement = (item: RecommendationItem) => {
+    cart.decrement(item.itemId);
   };
 
   if (loading) {
@@ -119,59 +132,91 @@ export function StudentRecommendationsSection() {
 
       {/* Horizontal Scrollable Cards Container */}
       <div className="flex overflow-x-auto gap-3 pb-2 pt-1 -mx-4 px-4 sm:-mx-6 sm:px-6 snap-x snap-mandatory touch-pan-y [::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        {data.recommendations.map((item, idx) => (
-          <div
-            key={item.itemId}
-            className="w-[230px] sm:w-[250px] md:w-[270px] shrink-0 snap-start p-4 rounded-2xl bg-surface-elevated border border-border-subtle hover:border-primary/40 transition-all flex flex-col justify-between space-y-3 group"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0 flex-1">
-                <span className="inline-block px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-[10px] font-semibold tracking-wider font-mono">
-                  {item.category === "ORDER_AGAIN"
-                    ? "ORDER AGAIN"
-                    : item.category === "TRENDING_NOW"
-                    ? "TRENDING"
-                    : item.category === "TIME_OF_DAY"
-                    ? "TIME OF DAY"
-                    : "CAMPUS PICK"}
-                </span>
-                <h3 className="text-body font-bold text-foreground mt-1.5 group-hover:text-primary transition-colors truncate">
-                  {item.title}
-                </h3>
-                <p className="text-body-sm text-muted text-[11px] truncate">{item.canteenName}</p>
+        {data.recommendations.map((item, idx) => {
+          const quantity = quantityOf(item.itemId);
+          return (
+            <div
+              key={item.itemId}
+              className="w-[230px] sm:w-[250px] md:w-[270px] shrink-0 snap-start p-4 rounded-2xl bg-surface-elevated border border-border-subtle hover:border-primary/40 transition-all flex flex-col justify-between space-y-3 group"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <span className="inline-block px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-[10px] font-semibold tracking-wider font-mono">
+                    {item.category === "ORDER_AGAIN"
+                      ? "ORDER AGAIN"
+                      : item.category === "TRENDING_NOW"
+                      ? "TRENDING"
+                      : item.category === "TIME_OF_DAY"
+                      ? "TIME OF DAY"
+                      : "CAMPUS PICK"}
+                  </span>
+                  <h3 className="text-body font-bold text-foreground mt-1.5 group-hover:text-primary transition-colors truncate">
+                    {item.title}
+                  </h3>
+                  <p className="text-body-sm text-muted text-[11px] truncate">{item.canteenName}</p>
+                </div>
+
+                <div className="text-right shrink-0">
+                  <span className="text-body font-bold text-foreground font-mono">₹{item.price}</span>
+                </div>
               </div>
 
-              <div className="text-right shrink-0">
-                <span className="text-body font-bold text-foreground font-mono">₹{item.price}</span>
+              <div className="flex items-center justify-between pt-2 border-t border-border-subtle text-xs gap-1">
+                <span className="text-[11px] text-muted italic flex items-center gap-1 min-w-0 truncate">
+                  <span className="material-symbols-outlined text-sm text-primary shrink-0">local_offer</span>
+                  <span className="truncate">{item.reason}</span>
+                </span>
+
+                {quantity === 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => handleAddToCart(item, idx)}
+                    aria-label={`Quick add ${item.title} to cart`}
+                    className="px-3 py-1.5 rounded-xl font-display font-bold text-xs transition-all flex items-center gap-1 shrink-0 bg-primary text-black hover:bg-primary-hover shadow-[0_4px_16px_-4px_rgb(255_109_0_/_0.4)] active:scale-95 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[16px] text-black font-bold" aria-hidden="true">
+                      add
+                    </span>
+                    <span className="text-black font-bold">Quick Add</span>
+                  </button>
+                ) : (
+                  <div
+                    className="flex h-[28px] items-center gap-2 rounded-xl bg-primary px-2 text-black shadow-[0_4px_16px_-4px_rgb(255_109_0_/_0.4)] shrink-0 font-display font-bold text-xs"
+                    role="group"
+                    aria-label={`Quantity of ${item.title}`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleDecrement(item)}
+                      aria-label={`Remove one ${item.title}`}
+                      className="flex h-full w-4 items-center justify-center text-black font-bold transition-transform active:scale-90 cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-[16px] font-bold" aria-hidden="true">
+                        remove
+                      </span>
+                    </button>
+                    <span
+                      className="min-w-[1ch] text-center font-mono font-bold text-xs text-black tabular-nums"
+                      aria-live="polite"
+                    >
+                      {quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleIncrement(item, idx)}
+                      aria-label={`Add one more ${item.title}`}
+                      className="flex h-full w-4 items-center justify-center text-black font-bold transition-transform active:scale-90 cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-[16px] font-bold" aria-hidden="true">
+                        add
+                      </span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
-
-            <div className="flex items-center justify-between pt-2 border-t border-border-subtle text-xs gap-1">
-              <span className="text-[11px] text-muted italic flex items-center gap-1 min-w-0 truncate">
-                <span className="material-symbols-outlined text-sm text-primary shrink-0">local_offer</span>
-                <span className="truncate">{item.reason}</span>
-              </span>
-
-              <button
-                type="button"
-                onClick={() => handleAddToCart(item, idx)}
-                aria-label={`Quick add ${item.title} to cart`}
-                className={`px-3 py-1.5 rounded-xl font-display font-bold text-xs transition-all flex items-center gap-1 shrink-0 ${
-                  addedItem === item.itemId
-                    ? "bg-primary text-black shadow-md scale-95"
-                    : "bg-primary text-black hover:bg-primary-hover shadow-[0_4px_16px_-4px_rgb(255_109_0_/_0.4)] active:scale-95"
-                }`}
-              >
-                <span className="material-symbols-outlined text-[16px] text-black font-bold" aria-hidden="true">
-                  {addedItem === item.itemId ? "check" : "add"}
-                </span>
-                <span className="text-black font-bold">
-                  {addedItem === item.itemId ? "Added!" : "Quick Add"}
-                </span>
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
