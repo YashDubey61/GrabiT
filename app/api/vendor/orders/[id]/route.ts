@@ -149,6 +149,32 @@ export async function PATCH(
       }
     }
 
+    // 5c. Server-Authoritative Financial Refund on Order Cancellation
+    let refundInfo: {
+      success: boolean;
+      refunded: boolean;
+      alreadyRefunded?: boolean;
+      amount: number;
+      method?: "wallet" | "upi" | "cashfree";
+      newBalance?: number;
+      error?: string;
+    } | null = null;
+
+    if (targetStatus === "cancelled") {
+      try {
+        const { processOrderCancellationRefund } = await import(
+          "@/lib/payments/refund_service"
+        );
+        refundInfo = await processOrderCancellationRefund({
+          orderId: currentOrder.id,
+          reason: payload.reason?.trim() || "Store was unable to fulfill this order.",
+          cancelledBy: vendorCtx.userId,
+        });
+      } catch (refundErr) {
+        console.error("Order cancellation refund execution error:", refundErr);
+      }
+    }
+
     // 6. Auto-resolve corresponding vendor new order notification
     if (targetStatus === "preparing" || targetStatus === "cancelled") {
       try {
@@ -215,9 +241,21 @@ export async function PATCH(
         severity = "SUCCESS";
       } else if (targetStatus === "cancelled") {
         notifType = "ORDER_CANCELLED";
-        title = `Order #${orderNum} Cancelled by Store`;
-        message = `Reason: ${payload.reason?.trim() || "Store unable to process item"}. Any paid amount will be refunded.`;
-        severity = "WARNING";
+        const reasonText = payload.reason?.trim() || "Store unable to process item";
+        if (refundInfo?.refunded && refundInfo.amount > 0) {
+          title = "Order Cancelled & Refunded";
+          const methodLabel = refundInfo.method === "wallet" ? "GrabIt Wallet" : "original payment method";
+          message = `Your order #${orderNum} was cancelled by the store. ₹${refundInfo.amount.toFixed(2)} has been refunded to your ${methodLabel}.`;
+          severity = "WARNING";
+        } else if (refundInfo?.alreadyRefunded && refundInfo.amount > 0) {
+          title = "Order Cancelled";
+          message = `Your order #${orderNum} was cancelled by the store. Your payment of ₹${refundInfo.amount.toFixed(2)} was already refunded.`;
+          severity = "WARNING";
+        } else {
+          title = `Order #${orderNum} Cancelled by Store`;
+          message = `Reason: ${reasonText}.`;
+          severity = "WARNING";
+        }
       }
 
       if (notifType && updatedOrder.student_id) {
@@ -237,7 +275,13 @@ export async function PATCH(
         // notification types that warrant a push, and only when this was
         // a genuinely new event (not a dedupe hit on the same status
         // transition), so a retried/duplicate call never double-pushes.
-        const PUSH_NOTIF_TYPES = new Set(["ORDER_PREPARING", "ORDER_READY", "ORDER_PICKED_UP", "ORDER_COMPLETED"]);
+        const PUSH_NOTIF_TYPES = new Set([
+          "ORDER_PREPARING",
+          "ORDER_READY",
+          "ORDER_PICKED_UP",
+          "ORDER_COMPLETED",
+          "ORDER_CANCELLED",
+        ]);
         if (notifResult.success && !notifResult.alreadyExisted && PUSH_NOTIF_TYPES.has(notifType)) {
           const { sendStudentOrderPushNotification } = await import(
             "@/lib/notifications/student_push_service"
@@ -246,7 +290,12 @@ export async function PATCH(
             userId: updatedOrder.student_id,
             orderId: updatedOrder.id,
             orderNumber: orderNum,
-            type: notifType as "ORDER_PREPARING" | "ORDER_READY" | "ORDER_PICKED_UP" | "ORDER_COMPLETED",
+            type: notifType as
+              | "ORDER_PREPARING"
+              | "ORDER_READY"
+              | "ORDER_PICKED_UP"
+              | "ORDER_COMPLETED"
+              | "ORDER_CANCELLED",
             title,
             body: message,
           });
@@ -301,6 +350,7 @@ export async function PATCH(
         cancelledAt: updatedOrder.cancelled_at,
         cancellationReason: updatedOrder.cancellation_reason,
       },
+      refund: refundInfo,
     });
   } catch (err) {
     console.error("Vendor order route error:", err);

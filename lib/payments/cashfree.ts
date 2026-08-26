@@ -109,6 +109,39 @@ export async function getCashfreeOrderPayments(cashfreeOrderId: string) {
   return cashfreeFetch(`/orders/${encodeURIComponent(cashfreeOrderId)}/payments`, { method: "GET" });
 }
 
+export interface CashfreeRefundParams {
+  orderId: string;
+  refundId: string;
+  refundAmount: number;
+  refundNote?: string;
+  refundSpeed?: "STANDARD" | "INSTANT";
+}
+
+export interface CashfreeRefundResponse {
+  cf_payment_id?: string;
+  cf_refund_id?: string;
+  order_id: string;
+  refund_id: string;
+  refund_amount: number;
+  refund_currency?: string;
+  refund_status: "SUCCESS" | "PENDING" | "FAILED" | string;
+  status_description?: string;
+}
+
+/** Initiates a server-side refund for a Cashfree order. */
+export async function createCashfreeRefund(params: CashfreeRefundParams): Promise<CashfreeRefundResponse> {
+  const body = await cashfreeFetch(`/orders/${encodeURIComponent(params.orderId)}/refunds`, {
+    method: "POST",
+    body: JSON.stringify({
+      refund_id: params.refundId,
+      refund_amount: Number(params.refundAmount.toFixed(2)),
+      refund_note: params.refundNote ?? "Order cancelled by store",
+      refund_speed: params.refundSpeed ?? "STANDARD",
+    }),
+  });
+  return body as CashfreeRefundResponse;
+}
+
 /** Cashfree webhook signature: base64(HMAC_SHA256(timestamp + rawBody, client_secret)),
  * compared against the `x-webhook-signature` header. Uses a constant-time
  * comparison to avoid timing side-channels. */

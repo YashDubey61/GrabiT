@@ -122,7 +122,7 @@ function mapSupabaseTxToUI(row: SupabaseWalletTransactionRow): WalletTransaction
   const titleMap: Record<string, string> = {
     topup: "Wallet Top-up",
     spend: "Canteen Food Order",
-    refund: "Order Refund — Cancelled Item",
+    refund: "Order Cancelled — Refund",
     bonus: "Wallet Top-up Bonus",
   };
 
