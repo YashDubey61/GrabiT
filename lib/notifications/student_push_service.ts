@@ -49,14 +49,22 @@ export async function sendStudentOrderPushNotification(
       .from("student_device_tokens")
       .select("id, token")
       .eq("user_id", params.userId)
-      .eq("is_active", true);
+      .eq("is_active", true)
+      .order("last_active_at", { ascending: false });
 
     if (error || !tokens || tokens.length === 0) {
       return { success: true, dispatchedCount: 0 };
     }
 
+    // Deduplicate in-memory by token string to guarantee no physical device receives duplicates
+    const uniqueTokens = Array.from(new Map(tokens.map((t) => [t.token, t])).values());
+
+    console.info(
+      `[student-push] Dispatching order push: type=${params.type}, orderId=${params.orderId ?? "none"}, studentId=${params.userId.slice(0, 8)}..., activeTokens=${uniqueTokens.length}`,
+    );
+
     const results = await Promise.allSettled(
-      tokens.map(async ({ id, token }) => {
+      uniqueTokens.map(async ({ id, token }) => {
         const result = await sendFcmV1Message({
           token,
           title: params.title,
@@ -103,7 +111,8 @@ export async function sendStudentBatchPushNotification(
   params: SendBatchPushParams,
 ): Promise<{ success: boolean; totalTokens: number; dispatchedCount: number; failedCount: number }> {
   try {
-    if (!isFcmV1Configured() || params.userIds.length === 0) {
+    const uniqueUserIds = Array.from(new Set(params.userIds));
+    if (!isFcmV1Configured() || uniqueUserIds.length === 0) {
       return { success: true, totalTokens: 0, dispatchedCount: 0, failedCount: 0 };
     }
 
@@ -111,15 +120,23 @@ export async function sendStudentBatchPushNotification(
     const { data: tokens, error } = await supabase
       .from("student_device_tokens")
       .select("id, user_id, token")
-      .in("user_id", params.userIds)
-      .eq("is_active", true);
+      .in("user_id", uniqueUserIds)
+      .eq("is_active", true)
+      .order("last_active_at", { ascending: false });
 
     if (error || !tokens || tokens.length === 0) {
       return { success: true, totalTokens: 0, dispatchedCount: 0, failedCount: 0 };
     }
 
+    // Deduplicate tokens array by token string so no device is messaged more than once in batch
+    const uniqueTokens = Array.from(new Map(tokens.map((t) => [t.token, t])).values());
+
+    console.info(
+      `[student-push] Dispatching batch push: type=${params.type ?? "ADMIN_MESSAGE"}, uniqueUsers=${uniqueUserIds.length}, activeTokens=${uniqueTokens.length}`,
+    );
+
     const results = await Promise.allSettled(
-      tokens.map(async ({ id, token }) => {
+      uniqueTokens.map(async ({ id, token }) => {
         const result = await sendFcmV1Message({
           token,
           title: params.title,
@@ -151,7 +168,7 @@ export async function sendStudentBatchPushNotification(
 
     return {
       success: true,
-      totalTokens: tokens.length,
+      totalTokens: uniqueTokens.length,
       dispatchedCount,
       failedCount,
     };

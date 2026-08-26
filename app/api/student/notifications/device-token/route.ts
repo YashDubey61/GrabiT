@@ -38,6 +38,19 @@ export async function POST(request: Request) {
     const deviceName = body.deviceName || "Android Student Device";
 
     const admin = getSupabaseAdminClient();
+    const nowIso = new Date().toISOString();
+
+    // 1. Deactivate any existing active tokens for this student so they do not
+    // accumulate duplicate active tokens upon token rotation, reinstall, or re-auth.
+    await admin
+      .from("student_device_tokens")
+      .update({ is_active: false, updated_at: nowIso })
+      .eq("user_id", user.id)
+      .neq("token", token);
+
+    // 2. Upsert the current token as the single active token for this student/device.
+    // If the token was previously registered to a different user (e.g. account switch
+    // on a shared device), onConflict: "token" reassigns ownership to the current student.
     const { error } = await admin.from("student_device_tokens").upsert(
       {
         user_id: user.id,
@@ -45,8 +58,8 @@ export async function POST(request: Request) {
         device_type: deviceType,
         device_name: deviceName,
         is_active: true,
-        updated_at: new Date().toISOString(),
-        last_active_at: new Date().toISOString(),
+        updated_at: nowIso,
+        last_active_at: nowIso,
       },
       { onConflict: "token" },
     );

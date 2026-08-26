@@ -145,6 +145,10 @@ export async function createStudentNotification(
       .single();
 
     if (error) {
+      if (error.code === "23505" || error.message?.includes("duplicate key") || error.message?.includes("dedupe_key")) {
+        // Handled race condition: unique constraint prevented duplicate insertion.
+        return { success: true, alreadyExisted: true };
+      }
       console.warn("Could not insert student notification (safe warning):", error.message);
       return { success: false };
     }

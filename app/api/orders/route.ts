@@ -505,7 +505,7 @@ export async function POST(request: Request) {
         category: "ORDERS",
         relatedOrderId: createdOrder.id,
         actionUrl: `/customer/orders/${createdOrder.id}`,
-        dedupeKey: `order-placed:${createdOrder.id}`,
+        dedupeKey: `order-status:placed:${createdOrder.id}`,
       });
 
       if (notifResult.success && !notifResult.alreadyExisted) {

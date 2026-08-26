@@ -19,6 +19,7 @@ export interface OrderPushData {
 
 let listenersRegistered = false;
 let lastKnownToken: string | null = null;
+let activeTapHandler: ((data: OrderPushData) => void) | null = null;
 
 /**
  * Without `android/app/google-services.json`, no default FirebaseApp
@@ -62,6 +63,9 @@ export async function initStudentPushNotifications(
 ): Promise<void> {
   if (!isNativePushCapable()) return;
 
+  // Always keep tap handler reference current across page navigations/remounts
+  activeTapHandler = onOrderNotificationTap;
+
   if (!listenersRegistered) {
     listenersRegistered = true;
 
@@ -101,8 +105,8 @@ export async function initStudentPushNotifications(
     // notification before this fires; this only handles the tap.
     PushNotifications.addListener("pushNotificationActionPerformed", (action: ActionPerformed) => {
       const data = action.notification?.data as OrderPushData | undefined;
-      if (data) {
-        onOrderNotificationTap(data);
+      if (data && activeTapHandler) {
+        activeTapHandler(data);
       }
     });
   }

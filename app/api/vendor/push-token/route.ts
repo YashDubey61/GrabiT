@@ -31,8 +31,16 @@ export async function POST(request: Request) {
     const deviceName = body.deviceName || "Android Vendor Terminal";
 
     const supabase = getSupabaseAdminClient();
+    const nowIso = new Date().toISOString();
 
-    // Upsert token for this vendor and canteen
+    // 1. Deactivate older active tokens for this user
+    await supabase
+      .from("vendor_device_tokens")
+      .update({ is_active: false, updated_at: nowIso })
+      .eq("user_id", vendorCtx.userId)
+      .neq("token", token);
+
+    // 2. Upsert token for this vendor and canteen
     const { error } = await supabase.from("vendor_device_tokens").upsert(
       {
         user_id: vendorCtx.userId,
@@ -41,8 +49,8 @@ export async function POST(request: Request) {
         device_type: deviceType,
         device_name: deviceName,
         is_active: true,
-        updated_at: new Date().toISOString(),
-        last_active_at: new Date().toISOString(),
+        updated_at: nowIso,
+        last_active_at: nowIso,
       },
       { onConflict: "token" }
     );

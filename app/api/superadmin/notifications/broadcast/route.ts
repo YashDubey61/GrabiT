@@ -171,6 +171,9 @@ export async function POST(request: Request) {
       targetLabel = "All Registered Students";
     }
 
+    // Enforce unique targeted student IDs
+    targetUserIds = Array.from(new Set(targetUserIds.filter(Boolean)));
+
     if (targetUserIds.length === 0) {
       return NextResponse.json(
         {

@@ -134,7 +134,7 @@ export async function POST(request: Request) {
           category: "ORDERS",
           relatedOrderId: updated.id,
           actionUrl: `/customer/orders/${updated.id}`,
-          dedupeKey: `order-completed:${updated.id}`,
+          dedupeKey: `order-status:completed:${updated.id}`,
         });
 
         if (notifResult.success && !notifResult.alreadyExisted) {
