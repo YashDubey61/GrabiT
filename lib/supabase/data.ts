@@ -334,3 +334,76 @@ function mapDbItemsToUI(dbItems: SupabaseMenuItem[]): MockMenuItem[] {
   }));
 }
 
+export interface CampusFoodItem {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  category: string;
+  imageUrl: string;
+  isVeg: boolean;
+  available: boolean;
+  canteenId: string;
+  canteenName: string;
+  canteenImage?: string;
+  canteenCuisineTags?: string;
+}
+
+/**
+ * Fetch all available menu items across active canteens for a campus.
+ * Powers the unified search across food dishes and vendor stalls.
+ */
+export async function getLiveCampusFoodItems(campusId?: string): Promise<CampusFoodItem[]> {
+  const supabase = createClient();
+  let query = supabase
+    .from("menu_items")
+    .select(`
+      id,
+      name,
+      price,
+      availability,
+      is_sponsored,
+      category,
+      description,
+      image_url,
+      canteen_id,
+      canteens!inner(
+        id,
+        name,
+        campus_id,
+        status,
+        image_url,
+        cuisine_tags
+      )
+    `)
+    .eq("canteens.status", "active")
+    .eq("availability", "available");
+
+  if (campusId) {
+    query = query.eq("canteens.campus_id", campusId);
+  }
+
+  const { data, error } = await query.order("name");
+  if (error || !data) return [];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return data.map((item: any) => {
+    const rawCanteen = Array.isArray(item.canteens) ? item.canteens[0] : item.canteens;
+    return {
+      id: item.id,
+      name: item.name,
+      price: Number(item.price),
+      description: item.description || (item.is_sponsored ? "Sponsored Campus Choice" : ""),
+      category: item.category || "General",
+      imageUrl: resolveImageUrl(item.image_url, "dish"),
+      isVeg: true,
+      available: item.availability === "available",
+      canteenId: item.canteen_id,
+      canteenName: rawCanteen?.name || "Campus Vendor",
+      canteenImage: resolveImageUrl(rawCanteen?.image_url, "canteen"),
+      canteenCuisineTags: rawCanteen?.cuisine_tags || "Campus Vendor",
+    };
+  });
+}
+
+

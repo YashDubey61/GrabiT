@@ -52,7 +52,7 @@ export function RoleShellTabBar({ items }: { items: NavItem[] }) {
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center pb-[max(0.75rem,var(--safe-area-inset-bottom,0px))] px-4">
-      <nav className="pointer-events-auto w-full max-w-[340px] rounded-full border border-white/10 bg-[#121212]/95 px-2 py-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.7)] backdrop-blur-xl">
+      <nav className="pointer-events-auto w-full max-w-[340px] rounded-full border border-white/[0.12] bg-[#0c0c0e]/85 p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.7),0_0_20px_rgba(255,122,0,0.08)] backdrop-blur-2xl transition-all">
         <ul className={`grid items-center gap-1 ${GRID_COLS_CLASS[items.length] ?? "grid-cols-4"}`}>
           {items.map((item) => {
             const isActive = isNavItemActive(item.href, pathname);
@@ -62,10 +62,10 @@ export function RoleShellTabBar({ items }: { items: NavItem[] }) {
                 <Link
                   href={item.href}
                   aria-current={isActive ? "page" : undefined}
-                  className={`flex flex-col items-center justify-center gap-0.5 rounded-full py-1 px-1 text-center transition-all duration-150 ${
+                  className={`flex flex-col items-center justify-center gap-0.5 rounded-full py-1.5 px-1 text-center transition-all duration-150 ${
                     isActive
-                      ? "bg-primary/15 text-primary font-bold"
-                      : "text-muted hover:text-foreground font-medium"
+                      ? "bg-primary/20 text-primary font-extrabold border border-primary/30 shadow-[0_0_12px_rgba(255,122,0,0.25)]"
+                      : "text-zinc-400 hover:text-white font-medium hover:bg-white/[0.04]"
                   }`}
                 >
                   <span
@@ -103,9 +103,6 @@ export function RoleShellRail({
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleSignOut = async () => {
-    // Capture before signOut() clears the auth context's role — this rail
-    // is shared by both Vendor and Super Admin, so the redirect must go
-    // back to whichever role's own login page, never a hardcoded one.
     const authPath = role ? ROLE_AUTH_PATH[role] : "/auth";
     setIsSigningOut(true);
     try {
@@ -120,7 +117,7 @@ export function RoleShellRail({
   };
 
   return (
-    <nav className="flex h-dvh w-16 flex-col justify-between border-r border-border bg-surface-elevated px-2 py-4 md:w-56 md:px-3">
+    <nav className="flex h-dvh w-16 flex-col justify-between border-r border-white/[0.08] bg-[#0c0c0e]/80 backdrop-blur-2xl px-2 py-4 md:w-56 md:px-3">
       <div className="flex flex-col gap-1 overflow-y-auto">
         <p className="mb-4 hidden px-2 font-display text-heading font-800 text-foreground md:block">
           {title}
@@ -134,10 +131,10 @@ export function RoleShellRail({
                 <Link
                   href={item.href}
                   aria-current={isActive ? "page" : undefined}
-                  className={`flex items-center gap-3 rounded-md px-2.5 py-2 text-body font-semibold transition-colors duration-150 ${
+                  className={`flex items-center gap-3 rounded-xl px-2.5 py-2.5 text-body-sm font-semibold transition-all duration-150 ${
                     isActive
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted hover:bg-surface hover:text-foreground"
+                      ? "bg-primary/15 text-primary border border-primary/25 font-bold shadow-[0_0_16px_rgba(255,122,0,0.15)]"
+                      : "text-zinc-400 hover:bg-white/[0.05] hover:text-white"
                   }`}
                 >
                   <span
@@ -155,12 +152,12 @@ export function RoleShellRail({
       </div>
 
       {/* Sign Out Action at bottom of rail */}
-      <div className="pt-2 border-t border-border">
+      <div className="pt-2 border-t border-white/[0.08]">
         <button
           type="button"
           disabled={isSigningOut}
           onClick={handleSignOut}
-          className="flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-body font-semibold text-danger/80 hover:bg-danger-soft hover:text-danger transition-colors duration-150 disabled:opacity-50"
+          className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-body-sm font-semibold text-danger/80 hover:bg-danger/15 hover:text-danger transition-colors duration-150 disabled:opacity-50 cursor-pointer"
           title="Sign Out"
         >
           <span

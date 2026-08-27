@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { GrabItLogo } from "@/components/shared/GrabItLogo";
+import { AnimatedBackground } from "@/components/ui/animated-background";
 import {
   signStudentIn,
   signStudentUp,
@@ -271,12 +272,13 @@ function AuthFormContent() {
 
   if (user && role) {
     return (
-      <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-4 py-12 text-foreground">
+      <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-[#050505] px-4 py-12 text-foreground">
+        <AnimatedBackground intensity="subtle" />
         <div className="mb-6 flex flex-col items-center text-center">
           <GrabItLogo href="/customer" heightClassName="h-16 sm:h-20" priority />
         </div>
-        <div className="flex items-center gap-2 text-muted font-display font-medium">
-          <span className="material-symbols-outlined animate-spin text-[24px] text-primary">
+        <div className="flex items-center gap-2 text-muted font-display font-medium rounded-full bg-white/[0.05] border border-white/[0.10] px-4 py-2 backdrop-blur-md">
+          <span className="material-symbols-outlined animate-spin text-[20px] text-primary">
             progress_activity
           </span>
           <span>Redirecting to your campus...</span>
@@ -286,17 +288,20 @@ function AuthFormContent() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-4 py-12 text-foreground">
+    <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-[#050505] px-4 py-12 text-foreground">
+      {/* Ambient Orange Smokey Shader Background */}
+      <AnimatedBackground intensity="medium" />
+
       {/* Header Logo */}
-      <div className="mb-6 flex flex-col items-center text-center">
+      <div className="mb-6 flex flex-col items-center text-center z-10">
         <GrabItLogo href="/customer" heightClassName="h-16 sm:h-20" priority />
       </div>
 
-      {/* Main Container Card */}
-      <div className="w-full max-w-md rounded-3xl border border-border bg-surface p-6 sm:p-8 shadow-elevated backdrop-blur-xl transition-all">
+      {/* Main Glassmorphism Card */}
+      <div className="relative z-10 w-full max-w-md rounded-3xl border border-white/[0.12] bg-[#0c0c0e]/80 p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.7),0_0_30px_rgba(255,122,0,0.08)] backdrop-blur-2xl transition-all">
         {/* Mode Selector Tabs (Sign In / Register) */}
         {mode !== "forgot" && (
-          <div className="mb-6 flex rounded-2xl border border-border bg-surface-elevated p-1">
+          <div className="mb-6 flex rounded-2xl border border-white/[0.08] bg-white/[0.04] p-1 backdrop-blur-md">
             <button
               type="button"
               onClick={() => {
@@ -304,10 +309,10 @@ function AuthFormContent() {
                 setErrorMessage(null);
                 setSuccessMessage(null);
               }}
-              className={`flex-1 rounded-xl py-2.5 font-display text-caption font-extrabold transition-all ${
+              className={`flex-1 rounded-xl py-2.5 font-display text-caption font-extrabold transition-all cursor-pointer ${
                 mode === "signin"
-                  ? "bg-primary text-on-primary shadow-glow-primary"
-                  : "text-faint hover:text-foreground"
+                  ? "bg-primary text-black shadow-[0_4px_16px_rgba(255,122,0,0.4)]"
+                  : "text-zinc-400 hover:text-white"
               }`}
             >
               Sign In
@@ -319,10 +324,10 @@ function AuthFormContent() {
                 setErrorMessage(null);
                 setSuccessMessage(null);
               }}
-              className={`flex-1 rounded-xl py-2.5 font-display text-caption font-extrabold transition-all ${
+              className={`flex-1 rounded-xl py-2.5 font-display text-caption font-extrabold transition-all cursor-pointer ${
                 mode === "signup"
-                  ? "bg-primary text-on-primary shadow-glow-primary"
-                  : "text-faint hover:text-foreground"
+                  ? "bg-primary text-black shadow-[0_4px_16px_rgba(255,122,0,0.4)]"
+                  : "text-zinc-400 hover:text-white"
               }`}
             >
               Create Account
@@ -332,7 +337,7 @@ function AuthFormContent() {
 
         {/* Global Error Banner */}
         {errorMessage && (
-          <div className="mb-5 flex items-start gap-2 rounded-xl border border-danger/30 bg-danger-soft p-3.5 text-caption font-medium text-danger">
+          <div className="mb-5 flex items-start gap-2 rounded-xl border border-danger/40 bg-danger/15 p-3.5 text-caption font-medium text-danger backdrop-blur-md">
             <span className="material-symbols-outlined text-[18px] shrink-0" aria-hidden="true">
               error
             </span>
@@ -342,7 +347,7 @@ function AuthFormContent() {
 
         {/* Global Success Banner */}
         {successMessage && (
-          <div className="mb-5 flex items-start gap-2 rounded-xl border border-success/30 bg-success-soft p-3.5 text-caption font-medium text-success">
+          <div className="mb-5 flex items-start gap-2 rounded-xl border border-success/40 bg-success/15 p-3.5 text-caption font-medium text-success backdrop-blur-md">
             <span className="material-symbols-outlined text-[18px] shrink-0" aria-hidden="true">
               check_circle
             </span>
@@ -357,7 +362,7 @@ function AuthFormContent() {
             <div>
               <label
                 htmlFor="signin-email"
-                className="mb-1 block font-display text-caption font-bold text-muted"
+                className="mb-1.5 block font-display text-caption font-bold text-zinc-300"
               >
                 Student / User Email
               </label>
@@ -368,16 +373,16 @@ function AuthFormContent() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@campus.ac.in"
-                className="w-full rounded-xl border border-border bg-surface-elevated px-4 py-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none transition-colors disabled:opacity-50"
+                className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-4 py-3 text-body-sm text-foreground placeholder:text-zinc-500 focus:border-primary focus:bg-white/[0.07] focus:ring-2 focus:ring-primary/30 focus:outline-none transition-all disabled:opacity-50"
               />
             </div>
 
             {/* Password */}
             <div>
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center justify-between mb-1.5">
                 <label
                   htmlFor="signin-password"
-                  className="font-display text-caption font-bold text-muted"
+                  className="font-display text-caption font-bold text-zinc-300"
                 >
                   Password
                 </label>
@@ -388,7 +393,7 @@ function AuthFormContent() {
                     setErrorMessage(null);
                     setSuccessMessage(null);
                   }}
-                  className="font-display text-caption font-semibold text-primary hover:underline"
+                  className="font-display text-caption font-semibold text-primary hover:underline cursor-pointer"
                 >
                   Forgot Password?
                 </button>
@@ -401,12 +406,12 @@ function AuthFormContent() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full rounded-xl border border-border bg-surface-elevated px-4 py-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none transition-colors pr-10 disabled:opacity-50"
+                  className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-4 py-3 text-body-sm text-foreground placeholder:text-zinc-500 focus:border-primary focus:bg-white/[0.07] focus:ring-2 focus:ring-primary/30 focus:outline-none transition-all pr-10 disabled:opacity-50"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-faint hover:text-foreground transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-foreground transition-colors cursor-pointer"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
@@ -420,25 +425,28 @@ function AuthFormContent() {
             <button
               type="submit"
               disabled={isSubmitting || isGoogleLoading}
-              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 font-display text-body-sm font-bold uppercase tracking-wider text-on-primary shadow-glow-primary transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 font-display text-body-sm font-extrabold uppercase tracking-wider text-black shadow-[0_4px_24px_-2px_rgba(255,122,0,0.5)] transition-all hover:bg-primary-soft hover:shadow-[0_6px_28px_rgba(255,122,0,0.6)] active:scale-[0.98] disabled:opacity-50 cursor-pointer"
             >
               {isSubmitting ? (
-                <span className="inline-flex items-center gap-2">
+                <span className="inline-flex items-center gap-2 text-black font-bold">
                   <span className="material-symbols-outlined animate-spin text-[18px]">
                     progress_activity
                   </span>
                   Signing In...
                 </span>
               ) : (
-                "Sign In"
+                <span className="text-black font-bold flex items-center gap-1.5">
+                  Sign In
+                  <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                </span>
               )}
             </button>
 
             {/* Divider */}
             <div className="relative my-2 flex items-center justify-center">
-              <div className="w-full border-t border-border" />
-              <span className="absolute bg-surface px-3 font-display text-label font-bold uppercase tracking-widest text-faint">
-                OR
+              <div className="w-full border-t border-white/[0.08]" />
+              <span className="absolute bg-[#0c0c0e] px-3 font-display text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                OR CONTINUE WITH
               </span>
             </div>
 
@@ -447,7 +455,7 @@ function AuthFormContent() {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={isSubmitting || isGoogleLoading}
-              className="flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-surface-elevated py-3.5 font-display text-body-sm font-bold text-foreground transition-all hover:bg-border/40 hover:border-muted active:scale-[0.98] disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/[0.12] bg-white/[0.06] py-3.5 font-display text-body-sm font-bold text-foreground transition-all hover:bg-white/[0.12] hover:border-white/[0.2] active:scale-[0.98] disabled:opacity-50 cursor-pointer"
             >
               {isGoogleLoading ? (
                 <span className="material-symbols-outlined animate-spin text-[20px] text-primary">
@@ -460,7 +468,7 @@ function AuthFormContent() {
             </button>
 
             {/* Switch to Signup Link */}
-            <p className="mt-3 text-center font-body text-caption text-faint">
+            <p className="mt-3 text-center font-body text-caption text-zinc-400">
               Don&apos;t have an account?{" "}
               <button
                 type="button"
@@ -469,7 +477,7 @@ function AuthFormContent() {
                   setErrorMessage(null);
                   setSuccessMessage(null);
                 }}
-                className="font-display font-bold text-primary hover:underline"
+                className="font-display font-bold text-primary hover:underline cursor-pointer"
               >
                 Sign Up Now
               </button>
@@ -484,7 +492,7 @@ function AuthFormContent() {
             <div>
               <label
                 htmlFor="signup-name"
-                className="mb-1 block font-display text-caption font-bold text-muted"
+                className="mb-1.5 block font-display text-caption font-bold text-zinc-300"
               >
                 Full Name
               </label>
@@ -495,7 +503,7 @@ function AuthFormContent() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="e.g. Rahul Sharma"
-                className="w-full rounded-xl border border-border bg-surface-elevated px-4 py-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none transition-colors"
+                className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-4 py-3 text-body-sm text-foreground placeholder:text-zinc-500 focus:border-primary focus:bg-white/[0.07] focus:ring-2 focus:ring-primary/30 focus:outline-none transition-all"
               />
             </div>
 
@@ -503,7 +511,7 @@ function AuthFormContent() {
             <div>
               <label
                 htmlFor="signup-email"
-                className="mb-1 block font-display text-caption font-bold text-muted"
+                className="mb-1.5 block font-display text-caption font-bold text-zinc-300"
               >
                 Email Address
               </label>
@@ -514,7 +522,7 @@ function AuthFormContent() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="student@campus.ac.in"
-                className="w-full rounded-xl border border-border bg-surface-elevated px-4 py-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none transition-colors"
+                className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-4 py-3 text-body-sm text-foreground placeholder:text-zinc-500 focus:border-primary focus:bg-white/[0.07] focus:ring-2 focus:ring-primary/30 focus:outline-none transition-all"
               />
             </div>
 
@@ -522,7 +530,7 @@ function AuthFormContent() {
             <div>
               <label
                 htmlFor="signup-password"
-                className="mb-1 block font-display text-caption font-bold text-muted"
+                className="mb-1.5 block font-display text-caption font-bold text-zinc-300"
               >
                 Password
               </label>
@@ -535,12 +543,12 @@ function AuthFormContent() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full rounded-xl border border-border bg-surface-elevated px-4 py-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none transition-colors pr-10"
+                  className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-4 py-3 text-body-sm text-foreground placeholder:text-zinc-500 focus:border-primary focus:bg-white/[0.07] focus:ring-2 focus:ring-primary/30 focus:outline-none transition-all pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-faint hover:text-foreground transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-foreground transition-colors cursor-pointer"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
@@ -556,17 +564,17 @@ function AuthFormContent() {
                   <div className="flex gap-1">
                     <div
                       className={`h-1.5 w-6 rounded-full ${
-                        strength.score >= 1 ? "bg-danger" : "bg-border"
+                        strength.score >= 1 ? "bg-danger" : "bg-white/[0.1]"
                       }`}
                     />
                     <div
                       className={`h-1.5 w-6 rounded-full ${
-                        strength.score >= 2 ? "bg-warning" : "bg-border"
+                        strength.score >= 2 ? "bg-warning" : "bg-white/[0.1]"
                       }`}
                     />
                     <div
                       className={`h-1.5 w-6 rounded-full ${
-                        strength.score >= 3 ? "bg-success" : "bg-border"
+                        strength.score >= 3 ? "bg-success" : "bg-white/[0.1]"
                       }`}
                     />
                   </div>
@@ -578,7 +586,7 @@ function AuthFormContent() {
             <div>
               <label
                 htmlFor="signup-confirm-password"
-                className="mb-1 block font-display text-caption font-bold text-muted"
+                className="mb-1.5 block font-display text-caption font-bold text-zinc-300"
               >
                 Confirm Password
               </label>
@@ -590,7 +598,7 @@ function AuthFormContent() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full rounded-xl border border-border bg-surface-elevated px-4 py-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none transition-colors"
+                className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-4 py-3 text-body-sm text-foreground placeholder:text-zinc-500 focus:border-primary focus:bg-white/[0.07] focus:ring-2 focus:ring-primary/30 focus:outline-none transition-all"
               />
             </div>
 
@@ -598,25 +606,28 @@ function AuthFormContent() {
             <button
               type="submit"
               disabled={isSubmitting || isGoogleLoading}
-              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 font-display text-body-sm font-bold uppercase tracking-wider text-on-primary shadow-glow-primary transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 font-display text-body-sm font-extrabold uppercase tracking-wider text-black shadow-[0_4px_24px_-2px_rgba(255,122,0,0.5)] transition-all hover:bg-primary-soft hover:shadow-[0_6px_28px_rgba(255,122,0,0.6)] active:scale-[0.98] disabled:opacity-50 cursor-pointer"
             >
               {isSubmitting ? (
-                <span className="inline-flex items-center gap-2">
+                <span className="inline-flex items-center gap-2 text-black font-bold">
                   <span className="material-symbols-outlined animate-spin text-[18px]">
                     progress_activity
                   </span>
                   Creating Account...
                 </span>
               ) : (
-                "Create Account"
+                <span className="text-black font-bold flex items-center gap-1.5">
+                  Create Account
+                  <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                </span>
               )}
             </button>
 
             {/* Divider */}
             <div className="relative my-2 flex items-center justify-center">
-              <div className="w-full border-t border-border" />
-              <span className="absolute bg-surface px-3 font-display text-label font-bold uppercase tracking-widest text-faint">
-                OR
+              <div className="w-full border-t border-white/[0.08]" />
+              <span className="absolute bg-[#0c0c0e] px-3 font-display text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                OR CONTINUE WITH
               </span>
             </div>
 
@@ -625,7 +636,7 @@ function AuthFormContent() {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={isSubmitting || isGoogleLoading}
-              className="flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-surface-elevated py-3.5 font-display text-body-sm font-bold text-foreground transition-all hover:bg-border/40 hover:border-muted active:scale-[0.98] disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/[0.12] bg-white/[0.06] py-3.5 font-display text-body-sm font-bold text-foreground transition-all hover:bg-white/[0.12] hover:border-white/[0.2] active:scale-[0.98] disabled:opacity-50 cursor-pointer"
             >
               {isGoogleLoading ? (
                 <span className="material-symbols-outlined animate-spin text-[20px] text-primary">
@@ -638,7 +649,7 @@ function AuthFormContent() {
             </button>
 
             {/* Switch to Sign In Link */}
-            <p className="mt-3 text-center font-body text-caption text-faint">
+            <p className="mt-3 text-center font-body text-caption text-zinc-400">
               Already have an account?{" "}
               <button
                 type="button"
@@ -647,7 +658,7 @@ function AuthFormContent() {
                   setErrorMessage(null);
                   setSuccessMessage(null);
                 }}
-                className="font-display font-bold text-primary hover:underline"
+                className="font-display font-bold text-primary hover:underline cursor-pointer"
               >
                 Sign In
               </button>
@@ -661,7 +672,7 @@ function AuthFormContent() {
             <h2 className="font-display text-heading font-extrabold text-foreground text-center">
               Recover Password
             </h2>
-            <p className="font-body text-caption text-faint text-center mb-2">
+            <p className="font-body text-caption text-zinc-400 text-center mb-2">
               Enter your registered email address and we will send you a link to reset your
               password.
             </p>
@@ -669,7 +680,7 @@ function AuthFormContent() {
             <div>
               <label
                 htmlFor="forgot-email"
-                className="mb-1 block font-display text-caption font-bold text-muted"
+                className="mb-1.5 block font-display text-caption font-bold text-zinc-300"
               >
                 Email Address
               </label>
@@ -680,24 +691,24 @@ function AuthFormContent() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="student@campus.ac.in"
-                className="w-full rounded-xl border border-border bg-surface-elevated px-4 py-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none transition-colors"
+                className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-4 py-3 text-body-sm text-foreground placeholder:text-zinc-500 focus:border-primary focus:bg-white/[0.07] focus:ring-2 focus:ring-primary/30 focus:outline-none transition-all"
               />
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 font-display text-body-sm font-bold uppercase tracking-wider text-on-primary shadow-glow-primary transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 font-display text-body-sm font-extrabold uppercase tracking-wider text-black shadow-[0_4px_24px_-2px_rgba(255,122,0,0.5)] transition-all hover:bg-primary-soft hover:shadow-[0_6px_28px_rgba(255,122,0,0.6)] active:scale-[0.98] disabled:opacity-50 cursor-pointer"
             >
               {isSubmitting ? (
-                <span className="inline-flex items-center gap-2">
+                <span className="inline-flex items-center gap-2 text-black font-bold">
                   <span className="material-symbols-outlined animate-spin text-[18px]">
                     progress_activity
                   </span>
                   Sending Link...
                 </span>
               ) : (
-                "Send Reset Link"
+                <span className="text-black font-bold">Send Reset Link</span>
               )}
             </button>
 
@@ -709,7 +720,7 @@ function AuthFormContent() {
                   setErrorMessage(null);
                   setSuccessMessage(null);
                 }}
-                className="font-display text-caption font-bold text-primary hover:underline"
+                className="font-display text-caption font-bold text-primary hover:underline cursor-pointer"
               >
                 Back to Sign In
               </button>

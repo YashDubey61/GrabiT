@@ -10,6 +10,7 @@ import {
   sendPasswordResetEmail,
 } from "@/lib/supabase/auth";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { AnimatedBackground } from "@/components/ui/animated-background";
 import { getSafeRedirectUrl, hardNavigate, authLog, authError, authReject } from "@/lib/auth/redirect";
 
 type ViewMode = "signin" | "forgot";
@@ -167,9 +168,11 @@ function SuperAdminAuthFormContent() {
   };
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-4 py-12 text-foreground">
+    <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-[#050505] px-4 py-12 text-foreground">
+      <AnimatedBackground intensity="medium" />
+
       {/* Brand Header */}
-      <div className="mb-6 text-center">
+      <div className="relative z-10 mb-6 text-center">
         <Link href="/" className="inline-flex items-center gap-2 group">
           <span
             className="material-symbols-outlined text-[36px] text-primary transition-transform group-hover:scale-110"
@@ -177,35 +180,35 @@ function SuperAdminAuthFormContent() {
           >
             admin_panel_settings
           </span>
-          <span className="font-display text-3xl font-extrabold tracking-tight text-primary">
-            GrabIt Super Admin
+          <span className="font-display text-3xl font-extrabold tracking-tight text-white">
+            GrabIt <span className="text-primary">Super Admin</span>
           </span>
         </Link>
-        <p className="mt-2 font-body text-body-sm text-muted">
+        <p className="mt-1.5 font-body text-body-sm text-zinc-400">
           Platform Operations Portal
         </p>
       </div>
 
-      {/* Main Container Card */}
-      <div className="w-full max-w-md rounded-3xl border border-border bg-surface p-6 sm:p-8 shadow-elevated backdrop-blur-xl transition-all">
+      {/* Main Glassmorphic Card */}
+      <div className="relative z-10 w-full max-w-md rounded-3xl border border-white/[0.12] bg-[#0c0c0e]/80 p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.7),0_0_30px_rgba(255,122,0,0.08)] backdrop-blur-2xl transition-all">
         {/* Title & Security Badge */}
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-primary">
-            <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+          <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/15 border border-primary/30 text-primary shadow-[0_0_20px_rgba(255,122,0,0.2)]">
+            <span className="material-symbols-outlined text-[22px]" aria-hidden="true">
               shield
             </span>
           </div>
-          <h1 className="font-display text-title font-extrabold text-foreground">
+          <h1 className="font-display text-title font-extrabold text-white">
             Super Admin Portal
           </h1>
-          <p className="mt-1 font-body text-caption text-faint">
+          <p className="mt-1 font-body text-caption text-zinc-400">
             Secure access to GRABIT platform administration
           </p>
         </div>
 
         {/* Global Error Banner */}
         {errorMessage && (
-          <div className="mb-5 flex items-start gap-2 rounded-xl border border-danger/30 bg-danger-soft p-3.5 text-caption font-medium text-danger">
+          <div className="mb-5 flex items-start gap-2 rounded-xl border border-danger/40 bg-danger/15 p-3.5 text-caption font-medium text-danger backdrop-blur-md">
             <span className="material-symbols-outlined text-[18px] shrink-0" aria-hidden="true">
               error
             </span>
@@ -215,7 +218,7 @@ function SuperAdminAuthFormContent() {
 
         {/* Global Success Banner */}
         {successMessage && (
-          <div className="mb-5 flex items-start gap-2 rounded-xl border border-success/30 bg-success-soft p-3.5 text-caption font-medium text-success">
+          <div className="mb-5 flex items-start gap-2 rounded-xl border border-success/40 bg-success/15 p-3.5 text-caption font-medium text-success backdrop-blur-md">
             <span className="material-symbols-outlined text-[18px] shrink-0" aria-hidden="true">
               check_circle
             </span>
@@ -230,7 +233,7 @@ function SuperAdminAuthFormContent() {
             <div>
               <label
                 htmlFor="admin-email"
-                className="mb-1 block font-display text-caption font-bold text-muted"
+                className="mb-1.5 block font-display text-caption font-bold text-zinc-300"
               >
                 Administrator Email
               </label>
@@ -241,16 +244,16 @@ function SuperAdminAuthFormContent() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@grabit.in"
-                className="w-full rounded-xl border border-border bg-surface-elevated px-4 py-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none transition-colors"
+                className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-4 py-3 text-body-sm text-foreground placeholder:text-zinc-500 focus:border-primary focus:bg-white/[0.07] focus:ring-2 focus:ring-primary/30 focus:outline-none transition-all"
               />
             </div>
 
             {/* Password */}
             <div>
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center justify-between mb-1.5">
                 <label
                   htmlFor="admin-password"
-                  className="font-display text-caption font-bold text-muted"
+                  className="font-display text-caption font-bold text-zinc-300"
                 >
                   Password
                 </label>
@@ -261,7 +264,7 @@ function SuperAdminAuthFormContent() {
                     setErrorMessage(null);
                     setSuccessMessage(null);
                   }}
-                  className="font-display text-caption font-semibold text-primary hover:underline"
+                  className="font-display text-caption font-semibold text-primary hover:underline cursor-pointer"
                 >
                   Forgot Password?
                 </button>
@@ -274,12 +277,12 @@ function SuperAdminAuthFormContent() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full rounded-xl border border-border bg-surface-elevated px-4 py-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none transition-colors pr-10"
+                  className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-4 py-3 text-body-sm text-foreground placeholder:text-zinc-500 focus:border-primary focus:bg-white/[0.07] focus:ring-2 focus:ring-primary/30 focus:outline-none transition-all pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-faint hover:text-foreground transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-foreground transition-colors cursor-pointer"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
@@ -293,17 +296,20 @@ function SuperAdminAuthFormContent() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 font-display text-body-sm font-bold uppercase tracking-wider text-on-primary shadow-glow-primary transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 font-display text-body-sm font-extrabold uppercase tracking-wider text-black shadow-[0_4px_24px_-2px_rgba(255,122,0,0.5)] transition-all hover:bg-primary-soft hover:shadow-[0_6px_28px_rgba(255,122,0,0.6)] active:scale-[0.98] disabled:opacity-50 cursor-pointer"
             >
               {isSubmitting ? (
-                <span className="inline-flex items-center gap-2">
+                <span className="inline-flex items-center gap-2 text-black font-bold">
                   <span className="material-symbols-outlined animate-spin text-[18px]">
                     progress_activity
                   </span>
-                  Authenticating Administrator...
+                  Verifying Admin Access...
                 </span>
               ) : (
-                "Sign In to Admin Portal"
+                <span className="text-black font-bold flex items-center gap-1.5">
+                  Sign In to Console
+                  <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                </span>
               )}
             </button>
           </form>
@@ -313,44 +319,45 @@ function SuperAdminAuthFormContent() {
         {mode === "forgot" && (
           <form onSubmit={handleForgot} className="flex flex-col gap-4">
             <h2 className="font-display text-heading font-extrabold text-foreground text-center">
-              Administrator Recovery
+              Admin Password Reset
             </h2>
-            <p className="font-body text-caption text-faint text-center mb-2">
-              Enter your registered administrator email address to receive password recovery instructions.
+            <p className="font-body text-caption text-zinc-400 text-center mb-2">
+              Enter your registered administrator email address to receive password reset
+              instructions.
             </p>
 
             <div>
               <label
-                htmlFor="admin-forgot-email"
-                className="mb-1 block font-display text-caption font-bold text-muted"
+                htmlFor="forgot-admin-email"
+                className="mb-1.5 block font-display text-caption font-bold text-zinc-300"
               >
                 Administrator Email
               </label>
               <input
-                id="admin-forgot-email"
+                id="forgot-admin-email"
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@grabit.in"
-                className="w-full rounded-xl border border-border bg-surface-elevated px-4 py-3 text-body-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none transition-colors"
+                className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-4 py-3 text-body-sm text-foreground placeholder:text-zinc-500 focus:border-primary focus:bg-white/[0.07] focus:ring-2 focus:ring-primary/30 focus:outline-none transition-all"
               />
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 font-display text-body-sm font-bold uppercase tracking-wider text-on-primary shadow-glow-primary transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 font-display text-body-sm font-extrabold uppercase tracking-wider text-black shadow-[0_4px_24px_-2px_rgba(255,122,0,0.5)] transition-all hover:bg-primary-soft hover:shadow-[0_6px_28px_rgba(255,122,0,0.6)] active:scale-[0.98] disabled:opacity-50 cursor-pointer"
             >
               {isSubmitting ? (
-                <span className="inline-flex items-center gap-2">
+                <span className="inline-flex items-center gap-2 text-black font-bold">
                   <span className="material-symbols-outlined animate-spin text-[18px]">
                     progress_activity
                   </span>
                   Sending Link...
                 </span>
               ) : (
-                "Send Reset Link"
+                <span className="text-black font-bold">Send Reset Instructions</span>
               )}
             </button>
 
@@ -362,9 +369,9 @@ function SuperAdminAuthFormContent() {
                   setErrorMessage(null);
                   setSuccessMessage(null);
                 }}
-                className="font-display text-caption font-bold text-primary hover:underline"
+                className="font-display text-caption font-bold text-primary hover:underline cursor-pointer"
               >
-                Back to Admin Sign In
+                Back to Sign In
               </button>
             </div>
           </form>

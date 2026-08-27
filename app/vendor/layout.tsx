@@ -6,7 +6,7 @@ import { RoleShellRail, type NavItem } from "@/components/shared/RoleShellNav";
 import { VendorMobileNavBar } from "@/components/vendor/VendorMobileNavBar";
 import { VendorProvider } from "@/lib/vendor/VendorContext";
 import { getPendingOrderNavigation, onOrderNotificationTapped } from "@/lib/vendor/orderAlertService";
-
+import { AnimatedBackground } from "@/components/ui/animated-background";
 import { VendorExitModal } from "@/components/vendor/VendorExitModal";
 
 /**
@@ -76,7 +76,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
 
   if (isAuthPage) {
     return (
-      <main className="min-h-dvh w-full bg-background">
+      <main className="min-h-dvh w-full bg-[#050505] text-foreground">
         {children}
         <VendorExitModal />
       </main>
@@ -85,11 +85,12 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
 
   return (
     <VendorProvider>
-      <div className="flex h-dvh overflow-hidden bg-background">
-        <div className="hidden sm:flex">
+      <div className="relative flex h-dvh overflow-hidden bg-[#050505] text-foreground">
+        <AnimatedBackground intensity="subtle" />
+        <div className="relative z-10 hidden sm:flex">
           <RoleShellRail items={VENDOR_NAV} title="GrabIt Vendor" />
         </div>
-        <div className="flex min-w-0 max-w-full flex-1 flex-col overflow-hidden">
+        <div className="relative z-10 flex min-w-0 max-w-full flex-1 flex-col overflow-hidden">
           <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain sm:overflow-x-auto">
             {children}
           </div>

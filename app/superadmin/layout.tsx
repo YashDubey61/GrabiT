@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { RoleShellRail, type NavItem } from "@/components/shared/RoleShellNav";
 import { GlobalSearchModal } from "@/components/superadmin/search/GlobalSearchModal";
+import { AnimatedBackground } from "@/components/ui/animated-background";
 
 const SUPERADMIN_NAV: NavItem[] = [
   { label: "Global Dashboard", href: "/superadmin", icon: "dashboard" },
@@ -79,13 +80,16 @@ export default function SuperAdminLayout({
   }, [pathname]);
 
   if (isAuthPage) {
-    return <main className="min-h-dvh w-full bg-background">{children}</main>;
+    return <main className="min-h-dvh w-full bg-[#050505] text-foreground">{children}</main>;
   }
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-background">
-      <RoleShellRail items={SUPERADMIN_NAV} title="GrabIt Super Admin" />
-      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-auto overscroll-contain">{children}</div>
+    <div className="relative flex h-dvh overflow-hidden bg-[#050505] text-foreground">
+      <AnimatedBackground intensity="subtle" />
+      <div className="relative z-10 hidden sm:flex">
+        <RoleShellRail items={SUPERADMIN_NAV} title="GrabIt Super Admin" />
+      </div>
+      <div className="relative z-10 min-h-0 flex-1 overflow-y-auto overflow-x-auto overscroll-contain">{children}</div>
       <GlobalSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </div>
   );

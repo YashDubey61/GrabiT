@@ -62,19 +62,16 @@ export function VendorMobileNavBar() {
       {/* 1. Floating Dark Glassmorphism 4-Item Bottom Navigation Bar (Mobile Only) */}
       <nav
         aria-label="Vendor Mobile Navigation"
-        className="z-40 mx-4 mt-2 shrink-0 rounded-[24px] border border-white/10 bg-surface/90 backdrop-blur-xl shadow-2xl shadow-black/80 sm:hidden transition-all duration-200 mb-[max(0.75rem,var(--safe-area-inset-bottom))]"
+        className="z-40 mx-4 mt-2 shrink-0 rounded-full border border-white/[0.12] bg-[#0c0c0e]/85 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.7),0_0_20px_rgba(255,122,0,0.08)] sm:hidden transition-all duration-200 mb-[max(0.75rem,var(--safe-area-inset-bottom))]"
       >
-        {/* Subtle glass top highlight edge */}
-        <div className="absolute inset-x-0 top-0 h-px rounded-t-[24px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
-
-        <div className="grid grid-cols-4 items-center justify-items-center h-[68px] px-2 text-center">
+        <div className="grid grid-cols-4 items-center justify-items-center h-[64px] px-2 text-center">
           {/* Dashboard */}
           <Link
             href="/vendor"
-            className={`flex h-[52px] w-full flex-col items-center justify-center gap-0.5 rounded-2xl px-1 transition-all active:scale-95 ${
+            className={`flex h-[48px] w-full flex-col items-center justify-center gap-0.5 rounded-full px-1 transition-all active:scale-95 cursor-pointer ${
               isDashboardActive
-                ? "bg-primary/20 text-primary border border-primary/30 font-bold shadow-sm"
-                : "text-muted hover:text-foreground border border-transparent"
+                ? "bg-primary/20 text-primary border border-primary/30 font-extrabold shadow-[0_0_12px_rgba(255,122,0,0.25)]"
+                : "text-zinc-400 hover:text-white border border-transparent"
             }`}
           >
             <span
@@ -89,10 +86,10 @@ export function VendorMobileNavBar() {
           {/* Orders */}
           <Link
             href="/vendor/orders"
-            className={`flex h-[52px] w-full flex-col items-center justify-center gap-0.5 rounded-2xl px-1 transition-all active:scale-95 ${
+            className={`flex h-[48px] w-full flex-col items-center justify-center gap-0.5 rounded-full px-1 transition-all active:scale-95 cursor-pointer ${
               isOrdersActive
-                ? "bg-primary/20 text-primary border border-primary/30 font-bold shadow-sm"
-                : "text-muted hover:text-foreground border border-transparent"
+                ? "bg-primary/20 text-primary border border-primary/30 font-extrabold shadow-[0_0_12px_rgba(255,122,0,0.25)]"
+                : "text-zinc-400 hover:text-white border border-transparent"
             }`}
           >
             <span
@@ -107,10 +104,10 @@ export function VendorMobileNavBar() {
           {/* Menu */}
           <Link
             href="/vendor/menu"
-            className={`flex h-[52px] w-full flex-col items-center justify-center gap-0.5 rounded-2xl px-1 transition-all active:scale-95 ${
+            className={`flex h-[48px] w-full flex-col items-center justify-center gap-0.5 rounded-full px-1 transition-all active:scale-95 cursor-pointer ${
               isMenuActive
-                ? "bg-primary/20 text-primary border border-primary/30 font-bold shadow-sm"
-                : "text-muted hover:text-foreground border border-transparent"
+                ? "bg-primary/20 text-primary border border-primary/30 font-extrabold shadow-[0_0_12px_rgba(255,122,0,0.25)]"
+                : "text-zinc-400 hover:text-white border border-transparent"
             }`}
           >
             <span
@@ -126,10 +123,10 @@ export function VendorMobileNavBar() {
           <button
             type="button"
             onClick={() => setIsMoreOpen(true)}
-            className={`relative flex h-[52px] w-full flex-col items-center justify-center gap-0.5 rounded-2xl px-1 transition-all active:scale-95 ${
+            className={`relative flex h-[48px] w-full flex-col items-center justify-center gap-0.5 rounded-full px-1 transition-all active:scale-95 cursor-pointer ${
               isMoreActive
-                ? "bg-primary/20 text-primary border border-primary/30 font-bold shadow-sm"
-                : "text-muted hover:text-foreground border border-transparent"
+                ? "bg-primary/20 text-primary border border-primary/30 font-extrabold shadow-[0_0_12px_rgba(255,122,0,0.25)]"
+                : "text-zinc-400 hover:text-white border border-transparent"
             }`}
           >
             <div className="relative flex items-center justify-center">
@@ -140,7 +137,7 @@ export function VendorMobileNavBar() {
                 grid_view
               </span>
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-2 flex h-2 w-2 rounded-full bg-primary ring-2 ring-surface" />
+                <span className="absolute -top-1 -right-2 flex h-2 w-2 rounded-full bg-primary ring-2 ring-black" />
               )}
             </div>
             <span className="text-[10px] font-display font-bold leading-tight">More</span>

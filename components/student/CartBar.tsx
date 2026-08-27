@@ -45,24 +45,24 @@ export function CartBar({
         isBarVisible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0",
       )}
     >
-      <div className="glass-card flex h-16 w-full items-center justify-between gap-2 px-3.5 shadow-2xl">
+      <div className="relative flex h-16 w-full items-center justify-between gap-2 rounded-full border border-white/[0.14] bg-[#0c0c0e]/90 px-4 shadow-[0_16px_40px_rgba(0,0,0,0.8),0_0_24px_rgba(255,122,0,0.12)] backdrop-blur-2xl">
         <Link
           href="/customer/checkout"
           tabIndex={isBarVisible ? 0 : -1}
-          className="flex min-w-0 flex-1 items-center justify-between gap-2 py-2 transition-transform active:scale-[0.99]"
+          className="flex min-w-0 flex-1 items-center justify-between gap-2 py-2 transition-transform active:scale-[0.99] cursor-pointer"
         >
           <div className="min-w-0 pr-1">
-            <p className="truncate text-caption font-semibold text-muted">
+            <p className="truncate text-[11px] font-semibold text-zinc-400">
               {isDifferentVendor
                 ? `Cart from another vendor (${canteenName})`
                 : `${itemCount} item${itemCount === 1 ? "" : "s"} · ${canteenName}`}
             </p>
-            <p className="font-display text-body font-700 tabular-nums text-foreground">
+            <p className="font-display text-body font-extrabold tabular-nums text-white">
               ₹{total.toFixed(2)}
             </p>
           </div>
 
-          <span className="flex shrink-0 items-center gap-1 rounded-full bg-primary px-3 py-2 font-display text-caption font-extrabold uppercase tracking-wide text-on-primary">
+          <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-4 py-2 font-display text-caption font-extrabold uppercase tracking-wide text-black shadow-[0_2px_12px_rgba(255,122,0,0.45)] hover:bg-primary-soft transition-all">
             View Cart
             <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
               arrow_forward
@@ -70,7 +70,7 @@ export function CartBar({
           </span>
         </Link>
 
-        {/* X / Close Button — Tiny, subtle 24px circular control inside an accessible 44x44px touch target */}
+        {/* X / Close Button */}
         <button
           type="button"
           aria-label="Dismiss cart"
@@ -80,9 +80,9 @@ export function CartBar({
             e.preventDefault();
             setIsDismissed(true);
           }}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-2 transition-all"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-2 transition-all cursor-pointer"
         >
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-muted/80 transition-colors hover:bg-white/20 hover:text-foreground active:scale-95">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-zinc-400 transition-colors hover:bg-white/20 hover:text-white active:scale-95">
             <span className="material-symbols-outlined text-[13px] leading-none" aria-hidden="true">
               close
             </span>

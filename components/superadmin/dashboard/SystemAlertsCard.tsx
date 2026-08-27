@@ -8,12 +8,18 @@ interface SystemAlertsCardProps {
 
 export function SystemAlertsCard({ alerts }: SystemAlertsCardProps) {
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-border bg-surface-elevated/80 p-5 backdrop-blur-md">
-      <div className="flex items-center justify-between">
-        <h4 className="font-display text-caption font-bold uppercase tracking-widest text-foreground">
+    <div className="relative flex flex-col gap-4 rounded-2xl border border-white/[0.10] bg-[#0c0c0e]/80 p-5 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.36)]">
+      {/* Top glare */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.15] to-transparent opacity-60"
+        aria-hidden="true"
+      />
+
+      <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+        <h4 className="font-display text-caption font-extrabold uppercase tracking-wider text-white">
           System Alerts
         </h4>
-        <span className="font-display text-[10px] font-bold text-primary animate-pulse uppercase tracking-wider">
+        <span className="rounded-full bg-primary/15 border border-primary/30 px-2.5 py-0.5 font-display text-[10px] font-extrabold text-primary uppercase tracking-wider animate-pulse">
           {alerts.length} Unresolved
         </span>
       </div>
@@ -22,20 +28,20 @@ export function SystemAlertsCard({ alerts }: SystemAlertsCardProps) {
         {alerts.map((alt) => (
           <div
             key={alt.id}
-            className={`flex items-start gap-3 rounded-xl border-l-2 p-3 bg-surface-sunken/60 ${
+            className={`flex items-start gap-3 rounded-2xl border p-3.5 backdrop-blur-md transition-all ${
               alt.severity === "error"
-                ? "border-l-danger bg-danger/5"
+                ? "border-red-500/30 bg-red-500/10 text-red-400"
                 : alt.severity === "warning"
-                  ? "border-l-warning bg-warning/5"
-                  : "border-l-primary bg-primary/5"
+                  ? "border-amber-500/30 bg-amber-500/10 text-amber-400"
+                  : "border-primary/30 bg-primary/10 text-primary"
             }`}
           >
             <span
-              className={`material-symbols-outlined text-[20px] ${
+              className={`material-symbols-outlined text-[20px] shrink-0 ${
                 alt.severity === "error"
-                  ? "text-danger"
+                  ? "text-red-400"
                   : alt.severity === "warning"
-                    ? "text-warning"
+                    ? "text-amber-400"
                     : "text-primary"
               }`}
               aria-hidden="true"
@@ -48,13 +54,13 @@ export function SystemAlertsCard({ alerts }: SystemAlertsCardProps) {
             </span>
 
             <div className="flex-1 min-w-0">
-              <p className="font-display text-body-sm font-bold text-foreground">
+              <p className="font-display text-body-sm font-bold text-white">
                 {alt.title}
               </p>
-              <p className="text-caption text-faint line-clamp-1">
+              <p className="text-caption text-zinc-400 line-clamp-1">
                 {alt.subtitle}
               </p>
-              <p className="mt-1 font-display text-[9px] uppercase tracking-wider text-muted">
+              <p className="mt-1 font-display text-[9px] font-mono uppercase tracking-wider text-zinc-500">
                 {alt.timestampText}
               </p>
             </div>

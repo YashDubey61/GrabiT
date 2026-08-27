@@ -69,7 +69,7 @@ export function VendorMetricCards({
       change: aov > 0 ? "Target ₹150+" : "No orders yet",
       changeType: "neutral",
       icon: "analytics",
-      iconBg: "bg-blue-500/10 text-blue-400",
+      iconBg: "bg-primary/10 text-primary",
     },
     {
       title: "Avg Prep Time",
@@ -86,14 +86,20 @@ export function VendorMetricCards({
       {metrics.map((m) => (
         <div
           key={m.title}
-          className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border bg-surface-elevated p-3.5 sm:p-5 transition-all duration-200 hover:border-primary/40 hover:shadow-lg"
+          className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/[0.10] bg-[#0c0c0e]/80 p-3.5 sm:p-5 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.36)] transition-all duration-200 hover:border-primary/50 hover:shadow-[0_12px_36px_rgba(0,0,0,0.5),0_0_20px_rgba(255,122,0,0.12)] hover:-translate-y-0.5"
         >
+          {/* Subtle top glare */}
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.15] to-transparent opacity-60"
+            aria-hidden="true"
+          />
+
           <div className="flex items-center justify-between gap-2">
-            <span className="font-display text-caption font-bold text-muted line-clamp-1">
+            <span className="font-display text-caption font-bold text-zinc-400 uppercase tracking-wider line-clamp-1">
               {m.title}
             </span>
             <div
-              className={`flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-xl ${m.iconBg}`}
+              className={`flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] ${m.iconBg}`}
             >
               <span className="material-symbols-outlined text-[18px] sm:text-[20px]" aria-hidden="true">
                 {m.icon}
@@ -102,7 +108,7 @@ export function VendorMetricCards({
           </div>
 
           <div className="mt-2.5 flex items-baseline justify-between gap-2">
-            <span className="font-display text-title sm:text-display font-extrabold tracking-tight text-foreground">
+            <span className="font-display text-title sm:text-display font-extrabold tracking-tight text-white font-mono">
               {m.value}
             </span>
           </div>
@@ -114,7 +120,7 @@ export function VendorMetricCards({
                   ? "text-emerald-400"
                   : m.changeType === "negative"
                     ? "text-danger"
-                    : "text-muted"
+                    : "text-zinc-400"
               }`}
             >
               {m.changeType === "positive" && (

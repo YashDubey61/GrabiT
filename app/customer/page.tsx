@@ -4,7 +4,9 @@ import {
   getLiveCampusList,
   getLiveCampusDetails,
   getLiveCampusCanteens,
+  getLiveCampusFoodItems,
   type SupabaseCampus,
+  type CampusFoodItem,
 } from "@/lib/supabase/data";
 import type { MockCanteen } from "@/lib/mock/campus";
 
@@ -20,17 +22,20 @@ export default async function StudentHomePage() {
     estWaitMinutes: number;
   } | null = null;
   let initialCanteens: MockCanteen[] = [];
+  let initialFoodItems: CampusFoodItem[] = [];
 
   try {
-    const [campusList, details, canteens] = await Promise.all([
+    const [campusList, details, canteens, foodItems] = await Promise.all([
       getLiveCampusList(),
       getLiveCampusDetails(),
       getLiveCampusCanteens(),
+      getLiveCampusFoodItems(),
     ]);
 
     initialCampuses = campusList;
     initialCampusDetails = details;
     initialCanteens = canteens;
+    initialFoodItems = foodItems;
   } catch (err) {
     console.error("Failed to load initial Supabase campus data:", err);
   }
@@ -42,6 +47,7 @@ export default async function StudentHomePage() {
         initialCampuses={initialCampuses}
         initialCampusDetails={initialCampusDetails}
         initialCanteens={initialCanteens}
+        initialFoodItems={initialFoodItems}
       />
     </>
   );

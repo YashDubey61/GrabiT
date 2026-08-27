@@ -33,15 +33,15 @@ export function VendorRecentActivity({
     if (o.status === "completed" || o.status === "picked_up") {
       title = `Order #${o.orderNumber} completed by ${o.studentName}`;
       icon = "check_circle";
-      color = "text-emerald-400 bg-emerald-500/10";
+      color = "text-emerald-400 bg-emerald-500/15 border border-emerald-500/30";
     } else if (o.status === "ready") {
       title = `Order #${o.orderNumber} marked ready for pickup`;
       icon = "notifications_active";
-      color = "text-blue-400 bg-blue-500/10";
+      color = "text-emerald-400 bg-emerald-500/15 border border-emerald-500/30";
     } else if (o.status === "preparing") {
       title = `Order #${o.orderNumber} accepted & preparing`;
       icon = "cooking";
-      color = "text-amber-400 bg-amber-500/10";
+      color = "text-amber-400 bg-amber-500/15 border border-amber-500/30";
     }
 
     return {
@@ -55,13 +55,19 @@ export function VendorRecentActivity({
   });
 
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-border bg-surface-elevated p-4 sm:p-6">
-      <div className="flex items-center justify-between border-b border-border pb-3">
+    <div className="relative flex flex-col gap-4 rounded-2xl border border-white/[0.10] bg-[#0c0c0e]/80 p-4 sm:p-6 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.36)]">
+      {/* Top glare */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.15] to-transparent opacity-60"
+        aria-hidden="true"
+      />
+
+      <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
         <div>
-          <h2 className="font-display text-title font-bold text-foreground">
+          <h2 className="font-display text-title font-extrabold text-white">
             Recent Canteen Activity
           </h2>
-          <p className="text-caption text-muted">
+          <p className="text-caption text-zinc-400">
             Live operations log for current orders and updates
           </p>
         </div>
@@ -69,17 +75,17 @@ export function VendorRecentActivity({
 
       {activities.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 text-center">
-          <span className="material-symbols-outlined text-[32px] text-faint">
+          <span className="material-symbols-outlined text-[32px] text-zinc-500">
             history
           </span>
-          <p className="text-caption text-muted">No activity logged yet today.</p>
+          <p className="text-caption text-zinc-400">No activity logged yet today.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
           {activities.map((act) => (
             <div
               key={act.id}
-              className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-background/50 p-3"
+              className="flex items-center justify-between gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-3 backdrop-blur-md transition-all hover:border-primary/40"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div
@@ -91,14 +97,14 @@ export function VendorRecentActivity({
                 </div>
 
                 <div className="min-w-0">
-                  <p className="truncate font-display text-body-sm font-bold text-foreground">
+                  <p className="truncate font-display text-body-sm font-bold text-white">
                     {act.title}
                   </p>
-                  <p className="text-caption text-muted">{act.subtext}</p>
+                  <p className="text-caption text-zinc-400">{act.subtext}</p>
                 </div>
               </div>
 
-              <span className="shrink-0 text-caption font-bold text-faint">
+              <span className="shrink-0 text-caption font-bold text-zinc-500 font-mono">
                 {act.time}
               </span>
             </div>

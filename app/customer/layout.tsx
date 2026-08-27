@@ -1,5 +1,6 @@
 import { RoleShellTabBar, type NavItem } from "@/components/shared/RoleShellNav";
 import { StudentPushInit } from "@/components/student/StudentPushInit";
+import { AnimatedBackground } from "@/components/ui/animated-background";
 import { CartProvider } from "@/lib/cart/CartContext";
 import { OrderProvider } from "@/lib/orders/OrderContext";
 
@@ -10,15 +11,6 @@ const STUDENT_NAV: NavItem[] = [
   { label: "Profile", href: "/customer/profile", icon: "person" },
 ];
 
-// Structural shell for the Student role. Route-group layout — does not
-// itself render a URL segment. Auth/role enforcement happens in middleware,
-// not here (see middleware.ts) — this layout assumes an authorized student.
-//
-// CartProvider is mounted here (Day 3) rather than per-page so Menu and
-// Checkout — both under this layout — share one cart instance instead of
-// each holding its own copy. OrderProvider (Day 4) follows the same
-// reasoning: Checkout creates orders, Track Order (and Day 5's Order
-// History) reads them — one store, not one per route.
 export default function StudentLayout({
   children,
 }: {
@@ -28,8 +20,9 @@ export default function StudentLayout({
     <CartProvider>
       <OrderProvider>
         <StudentPushInit />
-        <div className="relative min-h-dvh w-full bg-background">
-          <div className="w-full min-h-dvh">
+        <div className="relative min-h-dvh w-full overflow-x-hidden bg-[#050505] text-foreground">
+          <AnimatedBackground intensity="subtle" />
+          <div className="relative z-10 w-full min-h-dvh">
             {children}
           </div>
           <RoleShellTabBar items={STUDENT_NAV} />

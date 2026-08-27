@@ -18,18 +18,18 @@ export function CampusHeader({
   isDetecting = false,
 }: CampusHeaderProps) {
   return (
-    <header className="sticky top-0 z-30 border-b border-border/60 bg-background/95 backdrop-blur-md transition-all">
+    <header className="sticky top-0 z-30 border-b border-white/[0.08] bg-[#08080a]/85 backdrop-blur-2xl transition-all">
       <div className="mx-auto flex h-14 w-full max-w-2xl items-center justify-between px-4 sm:px-6">
         {/* Campus / Location Selector Trigger */}
         <button
           type="button"
           onClick={onOpenCampusSelector}
-          className="group flex min-w-0 flex-1 items-center gap-2.5 rounded-xl border border-border/60 bg-surface-elevated/80 py-1.5 pl-2.5 pr-3 text-left transition-all hover:border-primary/50 active:scale-[0.98] mr-3"
+          className="group flex min-w-0 flex-1 items-center gap-2.5 rounded-2xl border border-white/[0.10] bg-white/[0.04] py-2 pl-3 pr-3.5 text-left backdrop-blur-md transition-all hover:border-primary/50 hover:bg-white/[0.08] active:scale-[0.98] mr-3 cursor-pointer"
           aria-label="Change active campus"
         >
           {/* Orange Location Pin */}
           <span
-            className="material-symbols-outlined text-[20px] shrink-0 text-primary"
+            className="material-symbols-outlined text-[20px] shrink-0 text-primary drop-shadow-[0_0_8px_rgba(255,122,0,0.4)]"
             aria-hidden="true"
           >
             location_on
@@ -46,7 +46,7 @@ export function CampusHeader({
               </span>
             ) : (
               <span
-                className="material-symbols-outlined text-[18px] text-muted group-hover:text-primary transition-colors shrink-0"
+                className="material-symbols-outlined text-[18px] text-zinc-400 group-hover:text-primary transition-colors shrink-0"
                 aria-hidden="true"
               >
                 expand_more
@@ -60,7 +60,7 @@ export function CampusHeader({
           <Link
             href="/customer/notifications"
             aria-label="Notifications"
-            className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-border/60 bg-surface-elevated/80 text-foreground transition-all hover:border-primary/50 hover:text-primary active:scale-95"
+            className="relative flex h-10 w-10 items-center justify-center rounded-2xl border border-white/[0.10] bg-white/[0.04] text-foreground backdrop-blur-md transition-all hover:border-primary/50 hover:text-primary hover:bg-white/[0.08] active:scale-95"
           >
             <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
               notifications
@@ -70,7 +70,7 @@ export function CampusHeader({
           <Link
             href="/customer/rewards"
             aria-label="Rewards"
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-border/60 bg-surface-elevated/80 text-foreground transition-all hover:border-primary/50 hover:text-primary active:scale-95"
+            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/[0.10] bg-white/[0.04] text-foreground backdrop-blur-md transition-all hover:border-primary/50 hover:text-primary hover:bg-white/[0.08] active:scale-95"
           >
             <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
               card_giftcard
