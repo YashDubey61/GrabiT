@@ -17,7 +17,7 @@ async function probeNetwork(): Promise<boolean> {
   // Probe 1: App server HEAD /api/health
   try {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 3000);
+    const timer = setTimeout(() => controller.abort(), 3500);
     const res = await fetch(`/api/health?t=${Date.now()}`, {
       method: "HEAD",
       cache: "no-store",
@@ -31,10 +31,26 @@ async function probeNetwork(): Promise<boolean> {
     // Fall through to probe 2
   }
 
-  // Probe 2: App server GET /api/health
+  // Probe 2: Public CDN / Supabase ping
   try {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 2500);
+    const timer = setTimeout(() => controller.abort(), 3000);
+    const res = await fetch(`https://cloudflare.com/cdn-cgi/trace?t=${Date.now()}`, {
+      method: "HEAD",
+      mode: "no-cors",
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    return true;
+  } catch {
+    // Fall through to probe 3
+  }
+
+  // Probe 3: App server GET /api/health
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3000);
     const res = await fetch(`/api/health?t=${Date.now()}`, {
       method: "GET",
       cache: "no-store",
@@ -45,27 +61,10 @@ async function probeNetwork(): Promise<boolean> {
       return true;
     }
   } catch {
-    // Fall through to probe 3
+    // Genuinely offline
   }
 
-  // Probe 3: External public internet ping (mode: no-cors)
-  // If the browser can reach Cloudflare's CDN trace without throwing a NetworkError,
-  // the mobile device is definitely connected to the internet.
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 2500);
-    await fetch(`https://cloudflare.com/cdn-cgi/trace?t=${Date.now()}`, {
-      method: "HEAD",
-      mode: "no-cors",
-      cache: "no-store",
-      signal: controller.signal,
-    });
-    clearTimeout(timer);
-    return true;
-  } catch {
-    // Genuinely offline
-    return false;
-  }
+  return false;
 }
 
 export function OfflineOverlay({ forceVisible = false }: OfflineOverlayProps) {
@@ -75,6 +74,7 @@ export function OfflineOverlay({ forceVisible = false }: OfflineOverlayProps) {
   const [liked, setLiked] = useState(false);
   const [, startTransition] = useTransition();
   const offlineDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const autoRetryIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const showToast = useCallback((text: string, icon = "📡") => {
     setToastMsg({ text, icon });
@@ -109,6 +109,32 @@ export function OfflineOverlay({ forceVisible = false }: OfflineOverlayProps) {
     [isChecking, showToast]
   );
 
+  // Auto-polling when offline to auto-recover immediately
+  useEffect(() => {
+    if (isOffline) {
+      autoRetryIntervalRef.current = setInterval(async () => {
+        const online = await probeNetwork();
+        if (online) {
+          startTransition(() => {
+            setIsOffline(false);
+          });
+          showToast("Back online! Resuming GrabIt...", "🎉");
+        }
+      }, 3000);
+    } else {
+      if (autoRetryIntervalRef.current) {
+        clearInterval(autoRetryIntervalRef.current);
+        autoRetryIntervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (autoRetryIntervalRef.current) {
+        clearInterval(autoRetryIntervalRef.current);
+      }
+    };
+  }, [isOffline, showToast]);
+
   useEffect(() => {
     if (forceVisible) {
       setIsOffline(true);
@@ -117,7 +143,7 @@ export function OfflineOverlay({ forceVisible = false }: OfflineOverlayProps) {
 
     if (typeof window === "undefined") return;
 
-    // Handle offline event with a debounce & active probe so momentary Wi-Fi/LTE handovers don't block user
+    // Handle offline event with a debounce & active probe so momentary handovers don't lock screen
     const handleOffline = () => {
       if (offlineDebounceRef.current) clearTimeout(offlineDebounceRef.current);
       offlineDebounceRef.current = setTimeout(async () => {
@@ -125,7 +151,7 @@ export function OfflineOverlay({ forceVisible = false }: OfflineOverlayProps) {
         if (!stillConnected) {
           setIsOffline(true);
         }
-      }, 1500);
+      }, 3000);
     };
 
     // Handle online event
@@ -134,10 +160,7 @@ export function OfflineOverlay({ forceVisible = false }: OfflineOverlayProps) {
         clearTimeout(offlineDebounceRef.current);
         offlineDebounceRef.current = null;
       }
-      showToast("Back online! Resuming GrabIt...", "🎉");
-      setTimeout(() => {
-        void checkConnectivity(false);
-      }, 400);
+      void checkConnectivity(false);
     };
 
     // Auto-recheck when user returns to app/tab
@@ -151,15 +174,6 @@ export function OfflineOverlay({ forceVisible = false }: OfflineOverlayProps) {
     window.addEventListener("online", handleOnline);
     window.addEventListener("focus", handleVisibilityOrFocus);
     document.addEventListener("visibilitychange", handleVisibilityOrFocus);
-
-    // Initial check on mount: If navigator claims offline, verify with a real probe before locking screen
-    if (typeof navigator !== "undefined" && !navigator.onLine) {
-      probeNetwork().then((connected) => {
-        if (!connected) {
-          setIsOffline(true);
-        }
-      });
-    }
 
     return () => {
       if (offlineDebounceRef.current) clearTimeout(offlineDebounceRef.current);
