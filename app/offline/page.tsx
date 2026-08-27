@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function OfflinePage() {
   return (
     <div className="min-h-screen bg-[#08080a]">
-      <OfflineOverlay />
+      <OfflineOverlay forceVisible={true} />
     </div>
   );
 }

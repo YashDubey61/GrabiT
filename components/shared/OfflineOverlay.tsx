@@ -1,14 +1,80 @@
 "use client";
 
-import { useEffect, useState, useCallback, useTransition } from "react";
+import { useEffect, useState, useCallback, useTransition, useRef } from "react";
 import Image from "next/image";
 
-export function OfflineOverlay() {
-  const [isOffline, setIsOffline] = useState(false);
+interface OfflineOverlayProps {
+  forceVisible?: boolean;
+}
+
+/**
+ * Actively probe network connectivity across multiple layers:
+ * 1. App server health check (HEAD /api/health)
+ * 2. App server GET /api/health fallback
+ * 3. Public DNS / CDN probe (Cloudflare trace) to confirm internet access
+ */
+async function probeNetwork(): Promise<boolean> {
+  // Probe 1: App server HEAD /api/health
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3000);
+    const res = await fetch(`/api/health?t=${Date.now()}`, {
+      method: "HEAD",
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (res.ok || res.status < 500) {
+      return true;
+    }
+  } catch {
+    // Fall through to probe 2
+  }
+
+  // Probe 2: App server GET /api/health
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 2500);
+    const res = await fetch(`/api/health?t=${Date.now()}`, {
+      method: "GET",
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (res.ok || res.status < 500) {
+      return true;
+    }
+  } catch {
+    // Fall through to probe 3
+  }
+
+  // Probe 3: External public internet ping (mode: no-cors)
+  // If the browser can reach Cloudflare's CDN trace without throwing a NetworkError,
+  // the mobile device is definitely connected to the internet.
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 2500);
+    await fetch(`https://cloudflare.com/cdn-cgi/trace?t=${Date.now()}`, {
+      method: "HEAD",
+      mode: "no-cors",
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    return true;
+  } catch {
+    // Genuinely offline
+    return false;
+  }
+}
+
+export function OfflineOverlay({ forceVisible = false }: OfflineOverlayProps) {
+  const [isOffline, setIsOffline] = useState(forceVisible);
   const [isChecking, setIsChecking] = useState(false);
   const [toastMsg, setToastMsg] = useState<{ text: string; icon: string } | null>(null);
   const [liked, setLiked] = useState(false);
   const [, startTransition] = useTransition();
+  const offlineDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const showToast = useCallback((text: string, icon = "📡") => {
     setToastMsg({ text, icon });
@@ -17,69 +83,92 @@ export function OfflineOverlay() {
     }, 3200);
   }, []);
 
-  const checkConnectivity = useCallback(async () => {
-    if (isChecking) return;
-    setIsChecking(true);
+  const checkConnectivity = useCallback(
+    async (showUserFeedback = true) => {
+      if (isChecking) return;
+      if (showUserFeedback) setIsChecking(true);
 
-    if (typeof navigator !== "undefined" && !navigator.onLine) {
-      setTimeout(() => {
-        setIsChecking(false);
-        showToast("Still offline. Check your network & signal.", "⚠️");
-      }, 600);
+      const isConnected = await probeNetwork();
+
+      if (isConnected) {
+        if (showUserFeedback) {
+          showToast("Connection active! Resuming GrabIt...", "⚡");
+        }
+        startTransition(() => {
+          setIsOffline(false);
+          setIsChecking(false);
+        });
+      } else {
+        if (showUserFeedback) {
+          setIsChecking(false);
+          showToast("Still offline. Check your network & signal.", "⚠️");
+        }
+        setIsOffline(true);
+      }
+    },
+    [isChecking, showToast]
+  );
+
+  useEffect(() => {
+    if (forceVisible) {
+      setIsOffline(true);
       return;
     }
 
-    try {
-      // Ping API health check to confirm real internet connectivity
-      const res = await fetch(`/api/health?t=${Date.now()}`, {
-        method: "HEAD",
-        cache: "no-store",
-      });
-      if (res.ok) {
-        showToast("Connection restored! Reconnecting...", "⚡");
-        setTimeout(() => {
-          startTransition(() => {
-            setIsOffline(false);
-            setIsChecking(false);
-          });
-        }, 500);
-      } else {
-        setIsChecking(false);
-        showToast("Still offline. Check your network & signal.", "⚠️");
-      }
-    } catch {
-      setIsChecking(false);
-      showToast("Still offline. Check your network & signal.", "⚠️");
-    }
-  }, [isChecking, showToast]);
-
-  useEffect(() => {
     if (typeof window === "undefined") return;
 
+    // Handle offline event with a debounce & active probe so momentary Wi-Fi/LTE handovers don't block user
     const handleOffline = () => {
-      setIsOffline(true);
+      if (offlineDebounceRef.current) clearTimeout(offlineDebounceRef.current);
+      offlineDebounceRef.current = setTimeout(async () => {
+        const stillConnected = await probeNetwork();
+        if (!stillConnected) {
+          setIsOffline(true);
+        }
+      }, 1500);
     };
 
+    // Handle online event
     const handleOnline = () => {
+      if (offlineDebounceRef.current) {
+        clearTimeout(offlineDebounceRef.current);
+        offlineDebounceRef.current = null;
+      }
       showToast("Back online! Resuming GrabIt...", "🎉");
       setTimeout(() => {
-        checkConnectivity();
-      }, 500);
+        void checkConnectivity(false);
+      }, 400);
+    };
+
+    // Auto-recheck when user returns to app/tab
+    const handleVisibilityOrFocus = () => {
+      if (document.visibilityState === "visible") {
+        void checkConnectivity(false);
+      }
     };
 
     window.addEventListener("offline", handleOffline);
     window.addEventListener("online", handleOnline);
+    window.addEventListener("focus", handleVisibilityOrFocus);
+    document.addEventListener("visibilitychange", handleVisibilityOrFocus);
 
-    // Initial check
-    if (!navigator.onLine) {
-      setIsOffline(true);
+    // Initial check on mount: If navigator claims offline, verify with a real probe before locking screen
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      probeNetwork().then((connected) => {
+        if (!connected) {
+          setIsOffline(true);
+        }
+      });
     }
 
     return () => {
+      if (offlineDebounceRef.current) clearTimeout(offlineDebounceRef.current);
       window.removeEventListener("offline", handleOffline);
       window.removeEventListener("online", handleOnline);
+      window.removeEventListener("focus", handleVisibilityOrFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
     };
-  }, [checkConnectivity, showToast]);
+  }, [checkConnectivity, forceVisible, showToast]);
 
   const handleNotify = () => {
     if (typeof window !== "undefined" && "Notification" in window) {
@@ -221,7 +310,7 @@ export function OfflineOverlay() {
         <section className="flex flex-col gap-2.5 w-full">
           <button
             type="button"
-            onClick={checkConnectivity}
+            onClick={() => checkConnectivity(true)}
             disabled={isChecking}
             className="w-full flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#ff7a00] to-[#ff5500] py-3.5 px-6 font-display text-[15px] font-extrabold text-black shadow-[0_4px_24px_rgba(255,107,0,0.35)] transition-all hover:opacity-95 active:scale-[0.98] disabled:opacity-75 cursor-pointer"
           >
@@ -236,7 +325,7 @@ export function OfflineOverlay() {
             >
               <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
             </svg>
-            <span>{isChecking ? "Checking..." : "Retry"}</span>
+            <span>{isChecking ? "Checking Connection..." : "Retry Connection"}</span>
           </button>
 
           <button
@@ -249,6 +338,14 @@ export function OfflineOverlay() {
               <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
             </svg>
             <span>Notify me when I&apos;m back online</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsOffline(false)}
+            className="text-[12px] font-semibold text-zinc-400 hover:text-zinc-200 transition-colors py-1 cursor-pointer underline underline-offset-4"
+          >
+            Dismiss &amp; Continue to App
           </button>
         </section>
 

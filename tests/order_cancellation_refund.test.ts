@@ -19,7 +19,7 @@ async function runOrderCancellationRefundTestSuite() {
   let passed = 0;
   let total = 0;
 
-  const assert = (condition: boolean, title: string, detail?: any) => {
+  const assert = (condition: any, title: string, detail?: any) => {
     total++;
     if (condition) {
       console.log(`✅ TEST ${total} PASSED: ${title}`);
@@ -83,6 +83,7 @@ async function runOrderCancellationRefundTestSuite() {
     .eq("user_id", testStudentId);
 
   const { data: walletRow } = await admin.from("wallets").select("id").eq("user_id", testStudentId).single();
+  assert(walletRow, "Wallet row exists");
 
   // Insert payment record & debit transaction
   await admin.from("payments").insert({
@@ -95,7 +96,7 @@ async function runOrderCancellationRefundTestSuite() {
   });
 
   await admin.from("wallet_transactions").insert({
-    wallet_id: walletRow.id,
+    wallet_id: walletRow?.id,
     type: "spend",
     amount: orderAmount,
     related_order_id: order1.id,
@@ -124,7 +125,7 @@ async function runOrderCancellationRefundTestSuite() {
 
   // Verify payment status in DB
   const { data: payment1 } = await admin.from("payments").select("status").eq("order_id", order1.id).single();
-  assert(payment1.status === "refunded", "Payment record status updated to 'refunded'");
+  assert(payment1 && payment1.status === "refunded", "Payment record status updated to 'refunded'");
 
   // Verify ledger transactions
   const { data: txs1 } = await admin
@@ -132,9 +133,9 @@ async function runOrderCancellationRefundTestSuite() {
     .select("type, amount")
     .eq("related_order_id", order1.id);
 
-  assert(txs1.length === 2, "Exactly 2 transactions exist for order (1 spend, 1 refund)");
-  assert(txs1.some((t: any) => t.type === "spend" && Number(t.amount) === 20), "Original spend transaction (-₹20) remains intact");
-  assert(txs1.some((t: any) => t.type === "refund" && Number(t.amount) === 20), "Refund credit transaction (+₹20) is recorded");
+  assert(txs1 && txs1.length === 2, "Exactly 2 transactions exist for order (1 spend, 1 refund)");
+  assert(txs1?.some((t: any) => t.type === "spend" && Number(t.amount) === 20), "Original spend transaction (-₹20) remains intact");
+  assert(txs1?.some((t: any) => t.type === "refund" && Number(t.amount) === 20), "Refund credit transaction (+₹20) is recorded");
 
   // --- SCENARIO 2: Idempotency Protection (Duplicate Cancellation Requests) ---
   console.log("\n--- SCENARIO 2: Idempotency Protection ---");
@@ -143,7 +144,7 @@ async function runOrderCancellationRefundTestSuite() {
     reason: "Duplicate cancellation call",
   });
 
-  assert(refundResult2.success && !refundResult2.refunded && refundResult2.alreadyRefunded, "Duplicate call detected alreadyRefunded=true and did NOT refund again");
+  assert(Boolean(refundResult2.success && !refundResult2.refunded && refundResult2.alreadyRefunded), "Duplicate call detected alreadyRefunded=true and did NOT refund again");
   const balanceAfterDuplicateCall = await getStudentWalletBalance();
   assert(balanceAfterDuplicateCall === 65.0, "Wallet balance remained strictly ₹65.00 (NO duplicate refund)", { balanceAfterDuplicateCall });
 
@@ -153,7 +154,7 @@ async function runOrderCancellationRefundTestSuite() {
     .eq("related_order_id", order1.id)
     .eq("type", "refund");
 
-  assert(txsAfterDuplicate.length === 1, "Ledger strictly contains only 1 refund transaction");
+  assert(txsAfterDuplicate && txsAfterDuplicate.length === 1, "Ledger strictly contains only 1 refund transaction");
 
   // --- SCENARIO 3: Order Cancelled Before Payment ---
   console.log("\n--- SCENARIO 3: Order Cancelled Before Payment ---");
