@@ -573,7 +573,7 @@
         if (target && target.startsWith("http")) return target;
         if (window.location.protocol === "file:") return "http://localhost:3000/customer";
         if (window.location.origin && window.location.origin.startsWith("http")) return window.location.origin + "/customer";
-        return "/customer";
+        return "http://localhost:3000/customer";
       }
 
       function attemptReconnect() {
@@ -581,82 +581,28 @@
         isChecking = true;
 
         retrySvg.classList.add("spinner");
-        retryLabel.textContent = "Checking...";
+        retryLabel.textContent = "Reconnecting...";
         btnRetry.style.opacity = "0.85";
 
         var dest = getDestination();
+        showToast("Reconnecting to GrabIt...", "⚡");
 
-        if (navigator.onLine === false) {
-          setTimeout(function () {
-            finishCheck(false, dest);
-          }, 600);
-          return;
-        }
-
-        var originUrl = dest.startsWith("http") ? new URL(dest).origin : (window.location.origin || "");
-        var pingUrl = (originUrl ? originUrl : "") + "/favicon.ico?t=" + Date.now();
-        var img = new Image();
-        var done = false;
-
-        var timer = setTimeout(function () {
-          if (!done) {
-            done = true;
-            if (navigator.onLine) {
-              finishCheck(true, dest);
-            } else {
-              finishCheck(false, dest);
-            }
-          }
-        }, 1200);
-
-        img.onload = function () {
-          if (!done) {
-            done = true;
-            clearTimeout(timer);
-            finishCheck(true, dest);
-          }
-        };
-
-        img.onerror = function () {
-          if (!done) {
-            done = true;
-            clearTimeout(timer);
-            if (navigator.onLine) {
-              finishCheck(true, dest);
-            } else {
-              finishCheck(false, dest);
-            }
-          }
-        };
-
-        img.src = pingUrl;
-      }
-
-      function finishCheck(isOnline, dest) {
-        isChecking = false;
-        retrySvg.classList.remove("spinner");
-        retryLabel.textContent = "Retry";
-        btnRetry.style.opacity = "1";
-
-        if (isOnline) {
-          showToast("Connection restored! Reconnecting...", "⚡");
-          setTimeout(function () {
-            window.location.href = dest;
-          }, 350);
-        } else {
-          showToast("Still offline. Check your network & signal.", "⚠️");
-          btnRetry.animate([
-            { transform: "translateX(0)" },
-            { transform: "translateX(-6px)" },
-            { transform: "translateX(6px)" },
-            { transform: "translateX(-4px)" },
-            { transform: "translateX(4px)" },
-            { transform: "translateX(0)" }
-          ], { duration: 350 });
-        }
+        setTimeout(function () {
+          window.location.href = dest;
+        }, 350);
       }
 
       btnRetry.addEventListener("click", attemptReconnect);
+
+      // Auto-reconnect after 1 second
+      setTimeout(function () {
+        attemptReconnect();
+      }, 1000);
+
+      window.addEventListener("online", function () {
+        showToast("Back online! Resuming GrabIt...", "🎉");
+        setTimeout(attemptReconnect, 300);
+      });
 
       window.addEventListener("online", function () {
         showToast("Back online! Resuming GrabIt...", "🎉");
