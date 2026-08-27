@@ -224,6 +224,21 @@ GRABIT has three distinct, isolated application surfaces. **NEVER MERGE OR CROSS
 
 ---
 
+### [PROTECTED FIX 17] Cashfree Payment Gateway (Sandbox) Integration & Exit/Cancel/Failure Handling
+- **Original Bug / Goal**: Enable seamless Cashfree Sandbox hybrid checkout for student wallet top-ups ("Add Money") and online payments while protecting the secret key, preventing double-crediting, and ensuring Android back button / cancellation flows never trap the user or crash the app.
+- **Root Cause**: Gateway required end-to-end server order minting, webhook signature verification with `CASHFREE_CLIENT_SECRET`, idempotent wallet crediting, and robust lifecycle / modal stack cleanup when users press back or cancel.
+- **Fix Implemented**:
+  - `lib/payments/cashfree.ts`: Updated configuration to support `CASHFREE_ENV` / `CASHFREE_ENVIRONMENT` with API version `2025-01-01`, `getCashfreeOrderStatus`, `getCashfreeOrderPayments`, HMAC-SHA256 signature verification, and status mappers (`SUCCESS`, `PENDING`, `FAILED`).
+  - `lib/payments/cashfree_client.ts`: Registered `registerModalBackHandler("cashfree-checkout-modal", ...)` on global modal LIFO stack, added postMessage listener for Cashfree cancellation events, `App.addListener("appStateChange")` for background/resume handling, and `dismissCashfreeCheckoutDOM()` to safely remove Cashfree iframe and overlays without disturbing Next.js root DOM.
+  - `app/api/payments/cashfree/create-order/route.ts`: Supports both generic wallet top-ups (`{ amount }`) and food orders (`{ canteenId, items }`), creating pending orders server-side without client-secret exposure.
+  - `app/api/payments/cashfree/status/[orderId]/route.ts` & `app/api/payments/cashfree/wallet-topup/status/route.ts`: Reconciles live Cashfree payment status server-side and triggers idempotent wallet credit / order confirmation.
+  - `app/api/payments/cashfree/webhook/route.ts`: Enforces HMAC signature verification, timestamp checking, and deduplication via `payment_webhook_events`.
+  - `components/student/wallet/WalletTopUpSelector.tsx`: Preset chips `[₹50, ₹100, ₹200, ₹500, ₹1000]`, multi-click protection (`isSubmitting`), bottom safe area margins, `useModalBackHandler` registration, and distinct UI states for Case 1 (`cancelled`), Case 2 (`failed`), Case 3 (`dropped`), and Case 4 (`success`) with `[ Try Again ]` and `[ Back to Wallet ]` buttons.
+- **Key Files**: `lib/payments/cashfree.ts`, `lib/payments/cashfree_client.ts`, `app/api/payments/cashfree/create-order/route.ts`, `app/api/payments/cashfree/status/[orderId]/route.ts`, `app/api/payments/cashfree/wallet-topup/status/route.ts`, `app/api/payments/cashfree/webhook/route.ts`, `components/student/wallet/WalletTopUpSelector.tsx`, `tests/cashfree_gateway.test.ts`.
+- **Verification**: 34/34 tests passed in `tests/cashfree_gateway.test.ts`, live sandbox order creation tested against Cashfree Sandbox API, and end-to-end exit/cancel/back flow verified on connected Android device.
+
+---
+
 
 
 

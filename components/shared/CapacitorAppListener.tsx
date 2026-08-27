@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { App } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
 import { createClient } from "@/lib/supabase/client";
+import { handleGlobalBackPress } from "@/lib/navigation/backButtonManager";
 
 // Native deep-link scheme registered in AndroidManifest.xml
 // (scheme=app.grabit.student, host=auth, path=/callback). Matched by
@@ -67,9 +68,7 @@ export function CapacitorAppListener() {
     // Handle Android hardware/gesture back button with full modal and navigation priority
     const backButtonListener = App.addListener("backButton", ({ canGoBack }) => {
       const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
-      import("@/lib/navigation/backButtonManager").then(({ handleGlobalBackPress }) => {
-        handleGlobalBackPress({ canGoBack, pathname });
-      });
+      void handleGlobalBackPress({ canGoBack, pathname });
     });
 
     // Warm start / already-open app: OS delivers the deep link directly.

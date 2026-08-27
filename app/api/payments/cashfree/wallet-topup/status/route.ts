@@ -35,15 +35,35 @@ export async function GET(request: Request) {
 
   if (topup.status === "PENDING") {
     try {
-      const cfStatus = await getCashfreeOrderStatus(cashfreeOrderId);
-      const orderStatus = (cfStatus as { order_status?: string })?.order_status;
+      const cfStatus = (await getCashfreeOrderStatus(cashfreeOrderId)) as { order_status?: string };
+      const orderStatus = cfStatus?.order_status;
       if (orderStatus === "PAID") {
+        let paymentId: string | null = null;
+        try {
+          const payments = (await (await import("@/lib/payments/cashfree")).getCashfreeOrderPayments(cashfreeOrderId)) as Array<{ payment_status?: string; cf_payment_id?: string }>;
+          const successfulPayment = payments.find((p) => p.payment_status === "SUCCESS");
+          if (successfulPayment?.cf_payment_id) {
+            paymentId = String(successfulPayment.cf_payment_id);
+          }
+        } catch {
+          // Non-fatal
+        }
+
+        await admin.rpc("confirm_wallet_topup", {
+          p_cashfree_order_id: cashfreeOrderId,
+          p_cashfree_payment_id: paymentId,
+          p_status: "SUCCESS",
+        });
+        return NextResponse.json({ ok: true, status: "SUCCESS", totalWalletCredit: topup.total_wallet_credit });
+      }
+
+      if (orderStatus === "EXPIRED" || orderStatus === "TERMINATED" || orderStatus === "TERMINATION_REQUESTED") {
         await admin.rpc("confirm_wallet_topup", {
           p_cashfree_order_id: cashfreeOrderId,
           p_cashfree_payment_id: null,
-          p_status: "SUCCESS",
+          p_status: "FAILED",
         });
-        return NextResponse.json({ ok: true, status: "SUCCESS" });
+        return NextResponse.json({ ok: true, status: "FAILED" });
       }
     } catch {
       // Fall through to the DB-known status.

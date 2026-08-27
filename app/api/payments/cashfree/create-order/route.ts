@@ -15,10 +15,19 @@ interface IncomingOrderItem {
 }
 
 interface CreateOrderPayload {
-  canteenId: string;
+  amount?: number;
+  customerId?: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  orderNote?: string;
+  returnUrl?: string;
+  type?: "wallet" | "order" | "generic";
+  // Food order fields:
+  canteenId?: string;
   canteenName?: string;
-  slot: string;
-  items: IncomingOrderItem[];
+  slot?: string;
+  items?: IncomingOrderItem[];
   promoCode?: string | null;
   rewardCode?: string | null;
 }
@@ -48,12 +57,8 @@ const PROMO_ERROR_MESSAGES: Record<string, string> = {
 };
 
 /**
- * Mirrors app/api/orders/route.ts's server-side validation exactly (same
- * canteen/menu/price/availability checks, same order_number/QR/OTP
- * generation), but instead of debiting the wallet immediately, creates
- * the order+payment as PENDING and hands back a Cashfree payment
- * session for the student to complete on Cashfree's own checkout UI.
- * The order is only ever marked paid by the verified webhook.
+ * Handles Cashfree order creation for both direct wallet top-up/payments
+ * and food checkout orders with full server-side validation.
  */
 export async function POST(request: Request) {
   try {
@@ -63,8 +68,72 @@ export async function POST(request: Request) {
 
     const payload = (await request.json()) as CreateOrderPayload;
 
+    const supabaseServer = await createServerClient();
+    const {
+      data: { user },
+      error: authErr,
+    } = await supabaseServer.auth.getUser();
+
+    // 1. Direct wallet top-up / generic payment order flow (when canteenId is not specified)
+    if (!payload.canteenId && payload.amount !== undefined) {
+      const studentId = user?.id || payload.customerId;
+      if (!studentId) {
+        return NextResponse.json({ ok: false, error: "Please sign in to make a payment." }, { status: 401 });
+      }
+
+      const amount = Number(payload.amount);
+      if (!Number.isFinite(amount) || amount <= 0) {
+        return NextResponse.json({ ok: false, error: "Enter a valid amount." }, { status: 400 });
+      }
+
+      const admin = getSupabaseAdminClient();
+      const { data: userRow } = await admin
+        .from("users")
+        .select("id, role, full_name, email, phone")
+        .eq("id", studentId)
+        .maybeSingle();
+
+      const cashfreeOrderId = `GRABIT-WALLET-${randomUUID()}`;
+
+      try {
+        const cfOrder = await createCashfreeOrder({
+          orderId: cashfreeOrderId,
+          orderAmount: amount,
+          customerDetails: {
+            customerId: studentId,
+            customerName: payload.customerName || userRow?.full_name || "GRABIT Student",
+            customerEmail: payload.customerEmail || userRow?.email || "student@grabit.app",
+            customerPhone: payload.customerPhone || (userRow?.phone && userRow.phone.trim() ? userRow.phone : "9999999999"),
+          },
+          orderNote: payload.orderNote || "GrabIt Wallet top-up",
+          returnUrl: payload.returnUrl,
+        });
+
+        await admin.rpc("create_wallet_topup_intent", {
+          p_user_id: studentId,
+          p_topup_amount: amount,
+          p_cashfree_order_id: cashfreeOrderId,
+        });
+
+        return NextResponse.json({
+          ok: true,
+          order_id: cashfreeOrderId,
+          cashfreeOrderId,
+          payment_session_id: cfOrder.payment_session_id,
+          paymentSessionId: cfOrder.payment_session_id,
+          order_status: cfOrder.order_status,
+          orderStatus: cfOrder.order_status,
+          paymentMode: getPaymentModeLabel(),
+        });
+      } catch (err) {
+        console.error("Cashfree generic/wallet order creation failed:", err);
+        return NextResponse.json({ ok: false, error: "Couldn't start payment. Please try again." }, { status: 502 });
+      }
+    }
+
+    // 2. Food order flow
     if (!payload.canteenId) {
-      return NextResponse.json({ ok: false, error: "Canteen ID is required." }, { status: 400 });
+      return NextResponse.json({ ok: false, error: "Canteen ID or valid amount is required." }, { status: 400 });
     }
     if (!payload.items || !Array.isArray(payload.items) || payload.items.length === 0) {
       return NextResponse.json({ ok: false, error: "Your cart is empty." }, { status: 400 });
@@ -78,11 +147,6 @@ export async function POST(request: Request) {
       }
     }
 
-    const supabaseServer = await createServerClient();
-    const {
-      data: { user },
-      error: authErr,
-    } = await supabaseServer.auth.getUser();
     if (authErr || !user) {
       return NextResponse.json({ ok: false, error: "Please sign in to place an order." }, { status: 401 });
     }

@@ -15,14 +15,12 @@ function getBaseUrl(env: CashfreeEnvironment): string {
 export function getCashfreeConfig() {
   const clientId = process.env.CASHFREE_CLIENT_ID;
   const clientSecret = process.env.CASHFREE_CLIENT_SECRET;
-  const environment = (process.env.CASHFREE_ENVIRONMENT?.toUpperCase() as CashfreeEnvironment) || "SANDBOX";
-  const apiVersion = process.env.CASHFREE_API_VERSION || "2023-08-01";
+  const rawEnv = (process.env.CASHFREE_ENV || process.env.CASHFREE_ENVIRONMENT || "SANDBOX").toUpperCase();
+  const environment = (rawEnv === "PROD" || rawEnv === "PRODUCTION" ? "PRODUCTION" : "SANDBOX") as CashfreeEnvironment;
+  const apiVersion = process.env.CASHFREE_API_VERSION || "2025-01-01";
 
   if (!clientId || !clientSecret) {
     throw new Error("Cashfree is not configured. Set CASHFREE_CLIENT_ID and CASHFREE_CLIENT_SECRET.");
-  }
-  if (environment !== "SANDBOX" && environment !== "PRODUCTION") {
-    throw new Error("CASHFREE_ENVIRONMENT must be SANDBOX or PRODUCTION.");
   }
 
   return { clientId, clientSecret, environment, apiVersion, baseUrl: getBaseUrl(environment) };
@@ -159,7 +157,24 @@ export function verifyCashfreeWebhookSignature(rawBody: string, timestamp: strin
 }
 
 export function getPaymentModeLabel(): "SANDBOX" | "PRODUCTION" {
-  return (process.env.CASHFREE_ENVIRONMENT?.toUpperCase() as CashfreeEnvironment) === "PRODUCTION"
-    ? "PRODUCTION"
-    : "SANDBOX";
+  try {
+    return getCashfreeConfig().environment;
+  } catch {
+    const rawEnv = (process.env.CASHFREE_ENV || process.env.CASHFREE_ENVIRONMENT || "SANDBOX").toUpperCase();
+    return rawEnv === "PROD" || rawEnv === "PRODUCTION" ? "PRODUCTION" : "SANDBOX";
+  }
 }
+
+export type InternalPaymentStatus = "SUCCESS" | "PENDING" | "FAILED";
+
+/**
+ * Maps Cashfree order/payment statuses into GRABIT's internal status representation.
+ */
+export function mapCashfreeStatusToInternal(status?: string | null): InternalPaymentStatus {
+  if (!status) return "PENDING";
+  const upper = status.trim().toUpperCase();
+  if (upper === "SUCCESS" || upper === "PAID") return "SUCCESS";
+  if (upper === "PENDING" || upper === "ACTIVE") return "PENDING";
+  return "FAILED";
+}
+
