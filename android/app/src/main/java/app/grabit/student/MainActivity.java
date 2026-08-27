@@ -30,10 +30,9 @@ public class MainActivity extends BridgeActivity {
     private static final String PREFS_NAME = "grabit_app_prefs";
     private static final String KEY_LAST_WORKING_URL = "last_working_url";
 
-    // Candidate development endpoints for instantaneous fallback (USB ADB reverse + Wi-Fi LAN)
+    private static final String DEFAULT_PRODUCTION_URL = "https://grabit.ventures/customer";
     private static final String[] CANDIDATE_URLS = new String[] {
-        "http://localhost:3000/customer",
-        "http://192.168.29.205:3000/customer"
+        DEFAULT_PRODUCTION_URL
     };
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -119,12 +118,16 @@ public class MainActivity extends BridgeActivity {
                 // Priority order: 1) preferredTarget, 2) SharedPreferences last working URL, 3) Candidate list
                 SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
                 String lastSaved = prefs.getString(KEY_LAST_WORKING_URL, null);
+                if (lastSaved != null && (lastSaved.contains("192.168.") || lastSaved.contains("localhost") || lastSaved.contains("127.0.0.1"))) {
+                    lastSaved = null;
+                }
+
+                String cleanPreferred = (preferredTarget != null && !preferredTarget.contains("192.168.") && !preferredTarget.contains("localhost")) ? preferredTarget : null;
 
                 String[] targetsToTest = new String[] {
-                    preferredTarget,
-                    lastSaved,
-                    CANDIDATE_URLS[0],
-                    CANDIDATE_URLS[1]
+                    cleanPreferred,
+                    DEFAULT_PRODUCTION_URL,
+                    lastSaved
                 };
 
                 String foundWorkingUrl = null;

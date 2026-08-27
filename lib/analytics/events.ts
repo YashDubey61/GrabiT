@@ -53,7 +53,7 @@ export async function trackProductEvent(payload: TrackProductEventPayload): Prom
     const isBrowser = typeof window !== "undefined";
     const endpoint = isBrowser
       ? "/api/analytics/events"
-      : `${process.env.NEXT_PUBLIC_SUPABASE_URL ? "" : "http://localhost:3000"}/api/analytics/events`;
+      : `${process.env.NEXT_PUBLIC_SITE_URL || "https://grabit.ventures"}/api/analytics/events`;
 
     const body = JSON.stringify({
       event_name: payload.eventName,

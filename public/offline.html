@@ -570,10 +570,9 @@
       }
 
       function getDestination() {
-        if (target && target.startsWith("http")) return target;
-        if (window.location.protocol === "file:") return "http://localhost:3000/customer";
-        if (window.location.origin && window.location.origin.startsWith("http")) return window.location.origin + "/customer";
-        return "http://localhost:3000/customer";
+        if (target && target.startsWith("http") && !target.includes("192.168.") && !target.includes("localhost")) return target;
+        if (window.location.origin && window.location.origin.startsWith("http") && !window.location.origin.includes("192.168.") && !window.location.origin.includes("localhost")) return window.location.origin + "/customer";
+        return "https://grabit.ventures/customer";
       }
 
       var autoPollInterval = null;

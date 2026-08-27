@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     }
 
     const admin = getSupabaseAdminClient();
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://grabit.ventures";
     const redirectTo = `${siteUrl.replace(/\/$/, "")}/auth/reset-password`;
 
     const { data, error } = await admin.auth.admin.generateLink({
