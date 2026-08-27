@@ -163,7 +163,7 @@ function VendorAuthFormContent() {
   };
 
   return (
-    <div className="relative flex min-h-dvh w-full flex-col items-center justify-center overflow-hidden bg-[#050505] px-4 py-8 text-foreground selection:bg-primary selection:text-black">
+    <div className="relative flex min-h-dvh w-full flex-col items-center justify-center overflow-x-hidden overflow-y-auto bg-[#050505] px-4 py-8 text-foreground selection:bg-primary selection:text-black">
       <AnimatedBackground intensity="medium" />
 
       {/* Standalone Center Container */}

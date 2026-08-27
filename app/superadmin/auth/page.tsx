@@ -168,7 +168,7 @@ function SuperAdminAuthFormContent() {
   };
 
   return (
-    <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-[#050505] px-4 py-12 text-foreground">
+    <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-x-hidden overflow-y-auto bg-[#050505] px-4 py-12 text-foreground">
       <AnimatedBackground intensity="medium" />
 
       {/* Brand Header */}

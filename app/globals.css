@@ -166,6 +166,7 @@
 
 html {
   color-scheme: dark;
+  -webkit-text-size-adjust: 100%;
 
   /* Safe-area tokens — single source of truth for the whole app.
      On native Android, Capacitor 8's built-in SystemBars plugin injects
@@ -190,6 +191,7 @@ body {
   min-height: 100vh;
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
+  -webkit-overflow-scrolling: touch;
 }
 
 h1, h2, h3, h4 {
