@@ -7,7 +7,6 @@ import { PickupPassCard } from "@/components/student/order/PickupPassCard";
 import { OrderItemsBento } from "@/components/student/order/OrderItemsBento";
 import { OrderInfoTiles } from "@/components/student/order/OrderInfoTiles";
 import { OrderContactActions } from "@/components/student/order/OrderContactActions";
-import { DevOrderStatusControls } from "@/components/student/order/DevOrderStatusControls";
 import { OrderNotFoundState } from "@/components/student/order/OrderNotFoundState";
 import { useOrders } from "@/lib/orders/OrderContext";
 import { getLiveOrderById } from "@/lib/supabase/orders";
@@ -22,7 +21,7 @@ export default function StudentTrackOrderPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const { getOrder, updateOrderStatus } = useOrders();
+  const { getOrder } = useOrders();
   const [liveOrder, setLiveOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isConfirmingPickup, setIsConfirmingPickup] = useState(false);
@@ -221,14 +220,6 @@ export default function StudentTrackOrderPage({
           vendorName={order.canteenName}
           vendorPhone={order.vendorPhone}
           orderNumber={order.orderNumber}
-        />
-
-        <DevOrderStatusControls
-          status={order.status}
-          onSetStatus={(status) => {
-            setLiveOrder((prev) => (prev ? { ...prev, status } : null));
-            updateOrderStatus(order.id, status);
-          }}
         />
       </main>
 
