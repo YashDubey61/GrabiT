@@ -12,6 +12,7 @@ import { getLiveWalletForStudent, getLiveWalletTransactions } from "@/lib/supaba
 export default function StudentWalletPage() {
   const [wallet, setWallet] = useState<Wallet>(MOCK_WALLET);
   const [transactions, setTransactions] = useState<WalletTransaction[]>(MOCK_TRANSACTIONS);
+  const [rewardsPoints, setRewardsPoints] = useState<number>(1250);
   const [isTopUpOpen, setIsTopUpOpen] = useState(false);
   const [activeToast, setActiveToast] = useState<string | null>(null);
 
@@ -34,6 +35,17 @@ export default function StudentWalletPage() {
       if (isMounted) {
         if (liveWallet) setWallet(liveWallet);
         if (liveTxs && liveTxs.length > 0) setTransactions(liveTxs);
+      }
+      try {
+        const res = await fetch("/api/student/rewards/summary");
+        if (res.ok) {
+          const json = await res.json();
+          if (isMounted && json.ok && json.summary && typeof json.summary.balancePoints === "number") {
+            setRewardsPoints(json.summary.balancePoints);
+          }
+        }
+      } catch {
+        // Fallback to 1,250 default
       }
     })();
     return () => {
@@ -96,9 +108,10 @@ export default function StudentWalletPage() {
         {/* Quick Info Tiles */}
         <WalletQuickTiles
           wallet={wallet}
+          rewardsPoints={rewardsPoints}
           onTileClick={(tile) => {
-            if (tile === "bank") {
-              showToast(`Linked Bank: ${wallet.linkedBank}`);
+            if (tile === "rewards") {
+              showToast(`GrabIt Rewards: ${rewardsPoints.toLocaleString()} points`);
             } else {
               showToast(`Total cashback earned: ₹${wallet.cashbackBalance.toFixed(2)}`);
             }

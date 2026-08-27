@@ -187,6 +187,19 @@ GRABIT has three distinct, isolated application surfaces. **NEVER MERGE OR CROSS
 
 ---
 
+### [PROTECTED FIX 14] Student Wallet "GrabIt Rewards" Quick Tile Integration
+- **Original Bug**: Student wallet showed a legacy "Linked Bank" card beside "Cashback" which was no longer relevant for student points/rewards.
+- **Root Cause**: Quick tile component was hardcoded to display bank details rather than the rewards ecosystem.
+- **Fix Implemented**:
+  - Replaced "Linked Bank" with "GrabIt Rewards" in `WalletQuickTiles.tsx`, matching the exact dimensions, border radius, glass surface, and spacing of the adjacent Cashback tile.
+  - Linked to `/customer/rewards` with gift icon `redeem`, points count (`1,250 points` / live account summary balance), and callout `Redeem rewards →`.
+  - Integrated live rewards summary fetch in `app/customer/wallet/page.tsx` with fallback to 1,250 default points.
+- **Key Files**: `components/student/wallet/WalletQuickTiles.tsx`, `app/customer/wallet/page.tsx`.
+- **Verification**: Verified on connected Android phone: card aligns beside Cashback, displays 1,250 points, and navigates seamlessly to Rewards screen and back.
+
+---
+
+
 ## 3. Canonical Development Commands
 
 Run all commands from root `/Users/gopaljidwivedi/GRABIT-WHHG`:
