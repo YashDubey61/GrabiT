@@ -46,8 +46,8 @@ export function CampusSelectorModal({
   );
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/80 backdrop-blur-md transition-all p-3 pb-[max(1.5rem,calc(env(safe-area-inset-bottom,0px)+1.25rem))] sm:items-center sm:p-4 sm:pb-4">
-      <div className="w-full max-w-md max-h-[80dvh] flex flex-col rounded-3xl border border-border bg-surface p-4 sm:p-5 shadow-2xl animate-in slide-in-from-bottom duration-200">
+    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/80 backdrop-blur-md transition-all p-3 pb-[max(2rem,calc(env(safe-area-inset-bottom,0px)+1.5rem))] sm:items-center sm:p-4 sm:pb-4">
+      <div className="w-full max-w-md max-h-[75dvh] flex flex-col rounded-3xl border border-border bg-surface p-4 sm:p-5 shadow-2xl animate-in slide-in-from-bottom duration-200">
         {/* Header */}
         <div className="mb-3 flex items-center justify-between gap-2 shrink-0">
           <div>

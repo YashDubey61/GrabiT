@@ -22,7 +22,7 @@ export default function StudentLayout({
         <StudentPushInit />
         <div className="relative min-h-dvh w-full overflow-x-hidden bg-[#070709] text-foreground">
           <DashboardBackground intensity="subtle" />
-          <div className="relative z-10 w-full min-h-dvh">
+          <div className="w-full min-h-dvh">
             {children}
           </div>
           <RoleShellTabBar items={STUDENT_NAV} />
