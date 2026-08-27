@@ -6,7 +6,7 @@ import { RoleShellRail, type NavItem } from "@/components/shared/RoleShellNav";
 import { VendorMobileNavBar } from "@/components/vendor/VendorMobileNavBar";
 import { VendorProvider } from "@/lib/vendor/VendorContext";
 import { getPendingOrderNavigation, onOrderNotificationTapped } from "@/lib/vendor/orderAlertService";
-import { AnimatedBackground } from "@/components/ui/animated-background";
+import { DashboardBackground } from "@/components/ui/dashboard-background";
 import { VendorExitModal } from "@/components/vendor/VendorExitModal";
 
 /**
@@ -86,7 +86,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
   return (
     <VendorProvider>
       <div className="relative flex h-dvh overflow-hidden bg-[#050505] text-foreground">
-        <AnimatedBackground intensity="subtle" />
+        <DashboardBackground intensity="subtle" />
         <div className="relative z-10 hidden sm:flex">
           <RoleShellRail items={VENDOR_NAV} title="GrabIt Vendor" />
         </div>

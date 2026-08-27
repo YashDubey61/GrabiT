@@ -1,6 +1,6 @@
 import { RoleShellTabBar, type NavItem } from "@/components/shared/RoleShellNav";
 import { StudentPushInit } from "@/components/student/StudentPushInit";
-import { AnimatedBackground } from "@/components/ui/animated-background";
+import { DashboardBackground } from "@/components/ui/dashboard-background";
 import { CartProvider } from "@/lib/cart/CartContext";
 import { OrderProvider } from "@/lib/orders/OrderContext";
 
@@ -21,7 +21,7 @@ export default function StudentLayout({
       <OrderProvider>
         <StudentPushInit />
         <div className="relative min-h-dvh w-full overflow-x-hidden bg-[#050505] text-foreground">
-          <AnimatedBackground intensity="subtle" />
+          <DashboardBackground intensity="subtle" />
           <div className="relative z-10 w-full min-h-dvh">
             {children}
           </div>

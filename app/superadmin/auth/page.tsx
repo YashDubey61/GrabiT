@@ -10,7 +10,6 @@ import {
   sendPasswordResetEmail,
 } from "@/lib/supabase/auth";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { AnimatedBackground } from "@/components/ui/animated-background";
 import { getSafeRedirectUrl, hardNavigate, authLog, authError, authReject } from "@/lib/auth/redirect";
 
 type ViewMode = "signin" | "forgot";
@@ -169,8 +168,6 @@ function SuperAdminAuthFormContent() {
 
   return (
     <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-x-hidden overflow-y-auto bg-[#050505] px-4 py-12 text-foreground">
-      <AnimatedBackground intensity="medium" />
-
       {/* Brand Header */}
       <div className="relative z-10 mb-6 text-center">
         <Link href="/" className="inline-flex items-center gap-2 group">

@@ -10,7 +10,6 @@ import {
   sendPasswordResetEmail,
 } from "@/lib/supabase/auth";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { AnimatedBackground } from "@/components/ui/animated-background";
 import { getSafeRedirectUrl, hardNavigate, hardReplace, authLog, authError, authReject } from "@/lib/auth/redirect";
 
 type ViewMode = "signin" | "forgot";
@@ -164,8 +163,6 @@ function VendorAuthFormContent() {
 
   return (
     <div className="relative flex min-h-dvh w-full flex-col items-center justify-center overflow-x-hidden overflow-y-auto bg-[#050505] px-4 py-8 text-foreground selection:bg-primary selection:text-black">
-      <AnimatedBackground intensity="medium" />
-
       {/* Standalone Center Container */}
       <div className="relative z-10 w-full max-w-[440px] rounded-3xl border border-white/[0.12] bg-[#0c0c0e]/80 p-7 sm:p-9 shadow-[0_20px_50px_rgba(0,0,0,0.7),0_0_30px_rgba(255,122,0,0.08)] backdrop-blur-2xl">
         {/* Brand Header */}

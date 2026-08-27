@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { RoleShellRail, type NavItem } from "@/components/shared/RoleShellNav";
 import { GlobalSearchModal } from "@/components/superadmin/search/GlobalSearchModal";
-import { AnimatedBackground } from "@/components/ui/animated-background";
+import { DashboardBackground } from "@/components/ui/dashboard-background";
 
 const SUPERADMIN_NAV: NavItem[] = [
   { label: "Global Dashboard", href: "/superadmin", icon: "dashboard" },
@@ -85,7 +85,7 @@ export default function SuperAdminLayout({
 
   return (
     <div className="relative flex h-dvh overflow-hidden bg-[#050505] text-foreground">
-      <AnimatedBackground intensity="subtle" />
+      <DashboardBackground intensity="subtle" />
       <div className="relative z-10 hidden sm:flex">
         <RoleShellRail items={SUPERADMIN_NAV} title="GrabIt Super Admin" />
       </div>

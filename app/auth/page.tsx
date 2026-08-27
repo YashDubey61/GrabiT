@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { GrabItLogo } from "@/components/shared/GrabItLogo";
-import { AnimatedBackground } from "@/components/ui/animated-background";
 import {
   signStudentIn,
   signStudentUp,
@@ -273,7 +272,6 @@ function AuthFormContent() {
   if (user && role) {
     return (
       <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-x-hidden overflow-y-auto bg-[#050505] px-4 py-12 text-foreground">
-        <AnimatedBackground intensity="subtle" />
         <div className="mb-6 flex flex-col items-center text-center">
           <GrabItLogo href="/customer" heightClassName="h-16 sm:h-20" priority />
         </div>
@@ -289,8 +287,7 @@ function AuthFormContent() {
 
   return (
     <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-x-hidden overflow-y-auto bg-[#050505] px-4 py-12 text-foreground">
-      {/* Ambient Orange Smokey Shader Background */}
-      <AnimatedBackground intensity="medium" />
+      {/* Header Logo */}
 
       {/* Header Logo */}
       <div className="mb-6 flex flex-col items-center text-center z-10">
