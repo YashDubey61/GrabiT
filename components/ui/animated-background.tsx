@@ -24,7 +24,7 @@ export function AnimatedBackground({
 
   return (
     <div
-      className={`pointer-events-none fixed inset-0 z-0 overflow-hidden select-none bg-[#070709] ${className}`}
+      className={`pointer-events-none fixed inset-0 -z-10 overflow-hidden select-none bg-[#070709] ${className}`}
       aria-hidden="true"
     >
       {/* 1. Deep tonal gradient baseline */}

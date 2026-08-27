@@ -149,6 +149,19 @@ GRABIT has three distinct, isolated application surfaces. **NEVER MERGE OR CROSS
 
 ---
 
+### [PROTECTED FIX 11] Background Stacking & Guest Recommendation Fallback
+- **Original Bug**: Student dashboard rendered a blank area where hero headline ("Crave it. Grab it.") and "Popular Around Campus" cards were missing.
+- **Root Cause**:
+  1. `DashboardBackground` container was set to `z-0` instead of `-z-10`, causing in-flow static content without relative positioning to be painted behind the solid background gradient.
+  2. `/api/student/recommendations` returned `401 Unauthorized` when requested without an active session cookie instead of gracefully falling back to campus-level popular picks.
+- **Fix Implemented**:
+  - Set `DashboardBackground` and `AnimatedBackground` containers to `fixed inset-0 -z-10`.
+  - Updated `/api/student/recommendations/route.ts` to gracefully return public campus popular recommendations for guest/fresh-start sessions.
+- **Key Files**: `components/ui/dashboard-background.tsx`, `components/ui/animated-background.tsx`, `app/api/student/recommendations/route.ts`.
+- **Verification**: Screen captured on device confirms all sections (`Crave it. Grab it.`, `Popular Around Campus`, `LATE NIGHT PACK`, food cards, category chips, and stall banners) are completely visible.
+
+---
+
 ## 3. Canonical Development Commands
 
 Run all commands from root `/Users/gopaljidwivedi/GRABIT-WHHG`:
