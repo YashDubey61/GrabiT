@@ -11,9 +11,9 @@
 /** Earning: ₹10 spent = 1 point. */
 export const POINTS_PER_RUPEE_DIVISOR = 10;
 
-/** Sending: points can only be transferred in multiples of this amount. */
-export const TRANSFER_STEP = 100;
-export const MIN_TRANSFER_AMOUNT = 100;
+/** Sending: points can only be transferred in multiples of this amount (minimum 10). */
+export const TRANSFER_STEP = 10;
+export const MIN_TRANSFER_AMOUNT = 10;
 
 /** Mirrors award_order_points()'s `floor(total_amount / 10)` — for
  * display/preview purposes only; the database always recalculates this
@@ -25,11 +25,11 @@ export function calculateEarnedPoints(qualifyingAmount: number): number {
 
 export interface TransferValidationResult {
   valid: boolean;
-  reason?: "NOT_A_NUMBER" | "BELOW_MINIMUM" | "NOT_MULTIPLE_OF_100" | "INSUFFICIENT_BALANCE";
+  reason?: "NOT_A_NUMBER" | "BELOW_MINIMUM" | "NOT_MULTIPLE_OF_10" | "INSUFFICIENT_BALANCE";
 }
 
 /** Mirrors transfer_points()'s amount checks — amount must be a positive
- * integer, at least 100, and a multiple of 100. Optionally checks against
+ * integer, at least 10, and a multiple of 10. Optionally checks against
  * a known balance too (the RPC re-checks this itself either way). */
 export function validateTransferAmount(amount: number, currentBalance?: number): TransferValidationResult {
   if (!Number.isFinite(amount) || !Number.isInteger(amount) || amount <= 0) {
@@ -39,7 +39,7 @@ export function validateTransferAmount(amount: number, currentBalance?: number):
     return { valid: false, reason: "BELOW_MINIMUM" };
   }
   if (amount % TRANSFER_STEP !== 0) {
-    return { valid: false, reason: "NOT_MULTIPLE_OF_100" };
+    return { valid: false, reason: "NOT_MULTIPLE_OF_10" };
   }
   if (currentBalance !== undefined && amount > currentBalance) {
     return { valid: false, reason: "INSUFFICIENT_BALANCE" };
@@ -50,3 +50,4 @@ export function validateTransferAmount(amount: number, currentBalance?: number):
 export function isValidTransferAmount(amount: number): boolean {
   return validateTransferAmount(amount).valid;
 }
+

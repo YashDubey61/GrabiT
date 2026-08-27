@@ -68,16 +68,16 @@ export function SendPointsSheet({
 
   const amountHintMessage =
     currentBalance < MIN_TRANSFER_AMOUNT
-      ? "You need at least 100 points to send."
-      : "Send points in multiples of 100.";
+      ? "You need at least 10 points to send."
+      : "Send points in multiples of 10.";
 
   const amountErrorMessage =
     amountValidation && !amountValidation.valid
       ? amountValidation.reason === "INSUFFICIENT_BALANCE"
         ? "You don't have enough points for this transfer."
         : amountValidation.reason === "BELOW_MINIMUM"
-          ? "You need at least 100 points to send."
-          : "Points can only be sent in multiples of 100."
+          ? "You need at least 10 points to send."
+          : "Points must be in multiples of 10."
       : null;
 
   const handleConfirm = async () => {
@@ -108,46 +108,58 @@ export function SendPointsSheet({
   };
 
   return (
-    <div className="fixed inset-0 z-[85] flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
-      <div className="w-full max-w-md rounded-t-3xl border border-border-subtle bg-surface-elevated p-6 pb-[max(1.5rem,var(--safe-area-inset-bottom))] shadow-2xl sm:rounded-3xl">
-        <div className="mb-5 flex items-center justify-between">
-          <h3 className="font-display text-body font-800 text-foreground">Send Points</h3>
-          <button type="button" onClick={handleClose} aria-label="Close" className="text-faint hover:text-foreground">
-            <span className="material-symbols-outlined text-[20px]">close</span>
+    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/75 backdrop-blur-md p-3 pb-[max(2rem,calc(env(safe-area-inset-bottom,0px)+1.5rem))] transition-all sm:items-center sm:p-4 sm:pb-4">
+      <div className="relative w-full max-w-md max-h-[80dvh] overflow-y-auto rounded-3xl border border-border bg-surface-elevated p-5 sm:p-6 shadow-2xl animate-in slide-in-from-bottom duration-200 [::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="font-display text-title font-bold text-foreground">Send Points</h2>
+          <button
+            type="button"
+            onClick={handleClose}
+            aria-label="Close"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-surface text-muted hover:text-foreground"
+          >
+            <span className="material-symbols-outlined text-[18px]">close</span>
           </button>
         </div>
 
         {step === "select" && (
           <div className="flex flex-col gap-3">
-            <input
-              autoFocus
-              value={query}
-              onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Search by name or GRABIT ID"
-              className="w-full rounded-xl border border-border-subtle bg-surface px-3 py-3 text-body-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none"
-            />
-            <div className="flex max-h-64 flex-col gap-1 overflow-y-auto">
-              {isSearching && <p className="py-4 text-center text-caption text-muted">Searching...</p>}
-              {!isSearching && query.trim().length >= 2 && results.length === 0 && (
-                <p className="py-4 text-center text-caption text-muted">No students found.</p>
-              )}
-              {results.map((r) => (
+            <p className="text-body-sm text-muted">Send GRABIT Points to friends on your campus.</p>
+            <div className="relative">
+              <span className="material-symbols-outlined absolute left-3 top-3 text-[20px] text-muted">
+                search
+              </span>
+              <input
+                autoFocus
+                type="text"
+                value={query}
+                onChange={(e) => handleSearch(e.target.value)}
+                placeholder="Search friend by name or campus..."
+                className="w-full rounded-xl border border-border-subtle bg-surface py-2.5 pl-10 pr-3 text-body-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none"
+              />
+            </div>
+            {isSearching && <p className="text-center text-caption text-muted">Searching...</p>}
+            <div className="flex max-h-60 flex-col gap-2 overflow-y-auto">
+              {results.map((friend) => (
                 <button
-                  key={r.userId}
+                  key={friend.userId}
                   type="button"
                   onClick={() => {
-                    setRecipient(r);
+                    setRecipient(friend);
                     setStep("amount");
                   }}
-                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-surface"
+                  className="flex items-center justify-between rounded-xl bg-surface p-3 text-left transition-colors hover:bg-surface-elevated"
                 >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 font-display text-caption font-bold text-primary">
-                    {r.displayName.charAt(0).toUpperCase()}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="truncate font-display text-body-sm font-bold text-foreground">{r.displayName}</p>
-                    {r.grabitUserId && <p className="truncate text-[11px] text-muted">{r.grabitUserId}</p>}
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 font-display text-caption font-bold text-primary">
+                      {friend.displayName.charAt(0).toUpperCase()}
+                    </span>
+                    <div>
+                      <p className="font-display text-body-sm font-bold text-foreground">{friend.displayName}</p>
+                      {friend.grabitUserId && <p className="truncate text-[11px] text-muted">{friend.grabitUserId}</p>}
+                    </div>
                   </div>
+                  <span className="font-display text-caption font-bold text-primary">Select</span>
                 </button>
               ))}
             </div>
@@ -172,7 +184,7 @@ export function SendPointsSheet({
                 step={TRANSFER_STEP}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                placeholder="e.g. 100"
+                placeholder="e.g. 50"
                 aria-invalid={amountErrorMessage !== null}
                 className={`w-full rounded-xl border bg-surface px-3 py-3 text-body font-bold text-foreground placeholder:text-muted focus:outline-none ${
                   amountErrorMessage ? "border-danger focus:border-danger" : "border-border-subtle focus:border-primary"

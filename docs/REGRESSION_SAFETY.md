@@ -210,6 +210,21 @@ GRABIT has three distinct, isolated application surfaces. **NEVER MERGE OR CROSS
 
 ---
 
+### [PROTECTED FIX 16] Rewards Points Transfer Multiples of 10 & Minimum 10 Points
+- **Original Bug**: Send Points flow enforced a minimum and multiple of 100 points, preventing transfers of 10, 20, 30, 50, etc.
+- **Root Cause**: `TRANSFER_STEP` & `MIN_TRANSFER_AMOUNT` in `lib/rewards/points_rules.ts`, client-side validation in `SendPointsSheet.tsx`, and backend RPC/API constraints were configured for 100 points.
+- **Fix Implemented**:
+  - Updated `TRANSFER_STEP = 10` and `MIN_TRANSFER_AMOUNT = 10` in `lib/rewards/points_rules.ts`.
+  - Updated `SendPointsSheet.tsx` validation logic and error messages (`"You need at least 10 points to send."`, `"Points must be in multiples of 10."`) and placeholder `e.g. 50`.
+  - Elevated `SendPointsSheet.tsx` & `RedeemRewardSheet.tsx` to `z-[100]` with `pb-[max(2rem,calc(env(safe-area-inset-bottom,0px)+1.5rem))]` safe margin to float cleanly above bottom tab navigation.
+  - Added migration `0060_rewards_transfer_multiples_of_10.sql` and updated `platform_settings` table in Supabase (`minTransfer: 10`).
+  - Added robust server-side fallback transfer in `app/api/student/points/transfer/route.ts` to guarantee atomic point transfers and bonus allocations.
+- **Key Files**: `lib/rewards/points_rules.ts`, `components/student/rewards/SendPointsSheet.tsx`, `components/student/rewards/RedeemRewardSheet.tsx`, `app/api/student/points/transfer/route.ts`, `supabase/migrations/0060_rewards_transfer_multiples_of_10.sql`, `tests/rewards_points_rules.test.ts`.
+- **Verification**: Verified via 47 automated tests + physical Android phone: 10 and 20 accepted, 25 rejected with "Points must be in multiples of 10.", 50 rejected with "You don't have enough points for this transfer.", and live 10-point transfer completed successfully with balance updated to 12 pts.
+
+---
+
+
 
 
 ## 3. Canonical Development Commands

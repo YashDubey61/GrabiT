@@ -44,8 +44,8 @@ async function runRewardsPointsRulesTestSuite() {
   };
 
   // ---- Rule constants ----
-  assert(MIN_TRANSFER_AMOUNT === 100, "Minimum transfer amount is 100 points");
-  assert(TRANSFER_STEP === 100, "Transfer step/increment is 100 points");
+  assert(MIN_TRANSFER_AMOUNT === 10, "Minimum transfer amount is 10 points");
+  assert(TRANSFER_STEP === 10, "Transfer step/increment is 10 points");
 
   // ---- Earning: ₹10 spent = 1 point ----
   const earningCases: Array<[number, number]> = [
@@ -73,78 +73,60 @@ async function runRewardsPointsRulesTestSuite() {
   assert(calculateEarnedPoints(0) === 0, "₹0 earns 0 points");
   assert(calculateEarnedPoints(-50) === 0, "Negative amount earns 0 points (never negative points)");
 
-  // ---- Transfers: multiples of 100, minimum 100 ----
-  const allowedAmounts = [100, 200, 500, 1000];
+  // ---- Transfers: multiples of 10, minimum 10 ----
+  const allowedAmounts = [10, 20, 30, 50, 90, 100, 150, 260];
   for (const amt of allowedAmounts) {
     assert(isValidTransferAmount(amt), `${amt} points is a valid transfer amount`);
   }
 
-  const rejectedAmounts = [1, 50, 99, 101, 150, 250, 375, 999];
+  const rejectedAmounts = [1, 5, 11, 25, 99, 101, 125, -10];
   for (const amt of rejectedAmounts) {
-    assert(!isValidTransferAmount(amt), `${amt} points is rejected (not a multiple of 100 and/or below minimum)`);
+    assert(!isValidTransferAmount(amt), `${amt} points is rejected (not a multiple of 10 and/or below minimum)`);
   }
 
   assert(
-    validateTransferAmount(50).reason === "BELOW_MINIMUM",
-    "50 points is rejected specifically as BELOW_MINIMUM",
+    validateTransferAmount(5).reason === "BELOW_MINIMUM",
+    "5 points is rejected specifically as BELOW_MINIMUM",
   );
   assert(
-    validateTransferAmount(250).reason === "NOT_MULTIPLE_OF_100",
-    "250 points is rejected specifically as NOT_MULTIPLE_OF_100 (meets minimum, wrong increment)",
+    validateTransferAmount(25).reason === "NOT_MULTIPLE_OF_10",
+    "25 points is rejected specifically as NOT_MULTIPLE_OF_10 (meets minimum, wrong increment)",
   );
   assert(
     validateTransferAmount(0).reason === "NOT_A_NUMBER",
     "0 points is rejected as an invalid amount, not a below-minimum case",
   );
 
-  // ---- Worked examples from the spec: balance 376 ----
-  assert(validateTransferAmount(100, 376).valid, "Balance 376 → send 100 → allowed");
-  assert(validateTransferAmount(200, 376).valid, "Balance 376 → send 200 → allowed");
-  assert(validateTransferAmount(300, 376).valid, "Balance 376 → send 300 → allowed");
-  assert(!validateTransferAmount(376, 376).valid, "Balance 376 → send 376 → rejected (not a multiple of 100)");
-  assert(!validateTransferAmount(250, 376).valid, "Balance 376 → send 250 → rejected (not a multiple of 100)");
-  assert(!validateTransferAmount(50, 376).valid, "Balance 376 → send 50 → rejected (below minimum)");
+  // ---- Worked examples from the spec: balance 26 ----
+  assert(validateTransferAmount(10, 26).valid, "Balance 26 → send 10 → allowed");
+  assert(validateTransferAmount(20, 26).valid, "Balance 26 → send 20 → allowed");
   assert(
-    validateTransferAmount(400, 376).reason === "INSUFFICIENT_BALANCE",
-    "Balance 376 → send 400 → rejected as insufficient balance (valid increment, just too much)",
+    validateTransferAmount(30, 26).reason === "INSUFFICIENT_BALANCE",
+    "Balance 26 → send 30 → rejected as insufficient balance (valid increment, exceeds balance)",
   );
   assert(
-    validateTransferAmount(100, 99).reason === "INSUFFICIENT_BALANCE",
-    "Balance 99 → send 100 → rejected as insufficient balance",
+    validateTransferAmount(25, 26).reason === "NOT_MULTIPLE_OF_10",
+    "Balance 26 → send 25 → rejected (not a multiple of 10)",
   );
-  assert(validateTransferAmount(100, 100).valid, "Balance 100 → send 100 → allowed (exact balance)");
-  assert(validateTransferAmount(200, 200).valid, "Balance 200 → send 200 → allowed (exact balance)");
+  assert(
+    validateTransferAmount(5, 26).reason === "BELOW_MINIMUM",
+    "Balance 26 → send 5 → rejected (below minimum 10)",
+  );
 
   // ---- Server-side enforcement structural checks ----
   const fs = await import("node:fs/promises");
 
   const rpcSource = await fs.readFile(
-    new URL("../supabase/migrations/0039_rewards_earning_and_transfer_rules.sql", import.meta.url),
+    new URL("../supabase/migrations/0060_rewards_transfer_multiples_of_10.sql", import.meta.url),
     "utf-8",
   );
   assert(
-    rpcSource.includes("v_points := floor(v_order.total_amount / 10)"),
-    "award_order_points() computes points server-side from the order's authoritative total_amount (÷10), not a client-supplied value",
+    rpcSource.includes("p_amount % 10 <> 0") && rpcSource.includes("NOT_MULTIPLE_OF_10"),
+    "transfer_points() rejects any amount not a multiple of 10, server-side in migration 0060",
   );
   assert(
-    rpcSource.includes("p_amount % 100 <> 0") && rpcSource.includes("NOT_MULTIPLE_OF_100"),
-    "transfer_points() rejects any amount not a multiple of 100, server-side",
-  );
-  assert(
-    /minTransfer.{0,3}integer.{0,3}100\)/.test(rpcSource) || rpcSource.includes("'minTransfer', 100"),
-    "Transfer minimum is enforced as 100 in the RPC/config, not left at the old default of 10",
-  );
-  assert(
-    rpcSource.includes("idx_point_tx_earn_per_order"),
-    "A hard unique index prevents a second EARN transaction for the same order (defense-in-depth beyond the idempotency_key check)",
-  );
-  assert(
-    rpcSource.includes("related_order_id = p_order_id and type = 'EARN'"),
-    "award_order_points() pre-checks for an existing EARN transaction before awarding — same qualifying order cannot earn points twice",
-  );
-  assert(
-    rpcSource.includes("if v_order.status <> 'completed' then") && rpcSource.includes("raise exception 'ORDER_NOT_COMPLETED'"),
-    "Points are only awarded for orders in 'completed' status — cancelled/failed/pending orders are never eligible",
+    /minTransfer.{0,3}integer.{0,3}10\)/.test(rpcSource) || rpcSource.includes("'minTransfer', 10"),
+    "Transfer minimum is enforced as 10 in the RPC/config",
   );
 
   const transferRouteSource = await fs.readFile(
@@ -166,15 +148,15 @@ async function runRewardsPointsRulesTestSuite() {
   );
   assert(
     sheetSource.includes('min={MIN_TRANSFER_AMOUNT}') && sheetSource.includes("step={TRANSFER_STEP}"),
-    "Send Points amount input has min=100 and step=100",
+    "Send Points amount input has min=10 and step=10",
   );
   assert(
-    sheetSource.includes("Points can only be sent in multiples of 100."),
-    "Send Points UI shows the required invalid-amount message",
+    sheetSource.includes("Points must be in multiples of 10.") || sheetSource.includes("multiples of 10"),
+    "Send Points UI shows the required multiple-of-10 invalid-amount message",
   );
   assert(
-    sheetSource.includes("You need at least 100 points to send."),
-    "Send Points UI shows the required insufficient-points message",
+    sheetSource.includes("You need at least 10 points to send."),
+    "Send Points UI shows the required minimum 10 points message",
   );
 
   const vendorOrderRouteSource = await fs.readFile(

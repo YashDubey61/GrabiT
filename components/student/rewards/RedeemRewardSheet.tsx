@@ -92,8 +92,8 @@ export function RedeemRewardSheet({
   };
 
   return (
-    <div className="fixed inset-0 z-[85] flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
-      <div className="w-full max-w-md rounded-t-3xl border border-border-subtle bg-surface-elevated p-6 pb-[max(1.5rem,var(--safe-area-inset-bottom))] shadow-2xl sm:rounded-3xl">
+    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/75 backdrop-blur-md p-3 pb-[max(2rem,calc(env(safe-area-inset-bottom,0px)+1.5rem))] transition-all sm:items-center sm:p-4 sm:pb-4">
+      <div className="relative w-full max-w-md max-h-[80dvh] overflow-y-auto rounded-3xl border border-border bg-surface-elevated p-5 sm:p-6 shadow-2xl animate-in slide-in-from-bottom duration-200 [::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <div className="mb-5 flex items-center justify-between">
           <h3 className="font-display text-body font-800 text-foreground">{reward.name}</h3>
           <button type="button" onClick={onClose} aria-label="Close" className="text-faint hover:text-foreground">
