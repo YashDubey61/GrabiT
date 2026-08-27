@@ -12,6 +12,7 @@ import {
 import { useAuth } from "@/lib/auth/AuthContext";
 import { isNativePlatform } from "@/lib/capacitor/platform";
 import { getSafeRedirectUrl, hardNavigate, authLog, authError } from "@/lib/auth/redirect";
+import { DashboardBackground } from "@/components/ui/dashboard-background";
 
 function GoogleIcon() {
   return (
@@ -286,9 +287,8 @@ function AuthFormContent() {
   }
 
   return (
-    <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-x-hidden overflow-y-auto bg-[#050505] px-4 py-12 text-foreground">
-      {/* Header Logo */}
-
+    <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-x-hidden overflow-y-auto bg-[#070709] px-4 py-12 text-foreground">
+      <DashboardBackground intensity="subtle" />
       {/* Header Logo */}
       <div className="mb-6 flex flex-col items-center text-center z-10">
         <GrabItLogo href="/customer" heightClassName="h-16 sm:h-20" priority />

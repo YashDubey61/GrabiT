@@ -80,11 +80,18 @@ export default function SuperAdminLayout({
   }, [pathname]);
 
   if (isAuthPage) {
-    return <main className="min-h-dvh w-full bg-[#050505] text-foreground">{children}</main>;
+    return (
+      <main className="relative min-h-dvh w-full overflow-x-hidden bg-[#070709] text-foreground">
+        <DashboardBackground intensity="subtle" />
+        <div className="relative z-10 w-full min-h-dvh">
+          {children}
+        </div>
+      </main>
+    );
   }
 
   return (
-    <div className="relative flex h-dvh overflow-hidden bg-[#050505] text-foreground">
+    <div className="relative flex h-dvh overflow-hidden bg-[#070709] text-foreground">
       <DashboardBackground intensity="subtle" />
       <div className="relative z-10 hidden sm:flex">
         <RoleShellRail items={SUPERADMIN_NAV} title="GrabIt Super Admin" />
