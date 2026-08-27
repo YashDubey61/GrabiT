@@ -352,7 +352,7 @@ export function AnimatedBackground({
       {hasWebGL ? (
         <canvas
           ref={canvasRef}
-          className="h-full w-full object-cover block"
+          className="pointer-events-none select-none h-full w-full object-cover block"
           style={{ width: "100vw", height: "100vh" }}
         />
       ) : (

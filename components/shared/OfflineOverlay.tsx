@@ -8,16 +8,23 @@ interface OfflineOverlayProps {
 }
 
 /**
- * Actively probe network connectivity across multiple layers:
- * 1. App server health check (HEAD /api/health)
- * 2. App server GET /api/health fallback
- * 3. Public DNS / CDN probe (Cloudflare trace) to confirm internet access
+ * Actively probe network connectivity:
+ * 1. Primary probe: App server health check (HEAD /api/health)
+ * 2. Fallback probe: App server GET /api/health
+ * 3. Internet probe: Cloudflare trace
  */
 async function probeNetwork(): Promise<boolean> {
-  // Probe 1: App server HEAD /api/health
+  // If running locally, we only care that the local/app server is reachable
+  const isLocal =
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1" ||
+      window.location.hostname.startsWith("192.168."));
+
+  // Probe 1: App server HEAD /api/health (fastest)
   try {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 3500);
+    const timer = setTimeout(() => controller.abort(), 2000);
     const res = await fetch(`/api/health?t=${Date.now()}`, {
       method: "HEAD",
       cache: "no-store",
@@ -31,26 +38,10 @@ async function probeNetwork(): Promise<boolean> {
     // Fall through to probe 2
   }
 
-  // Probe 2: Public CDN / Supabase ping
+  // Probe 2: App server GET /api/health
   try {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 3000);
-    const res = await fetch(`https://cloudflare.com/cdn-cgi/trace?t=${Date.now()}`, {
-      method: "HEAD",
-      mode: "no-cors",
-      cache: "no-store",
-      signal: controller.signal,
-    });
-    clearTimeout(timer);
-    return true;
-  } catch {
-    // Fall through to probe 3
-  }
-
-  // Probe 3: App server GET /api/health
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 3000);
+    const timer = setTimeout(() => controller.abort(), 2500);
     const res = await fetch(`/api/health?t=${Date.now()}`, {
       method: "GET",
       cache: "no-store",
@@ -61,6 +52,27 @@ async function probeNetwork(): Promise<boolean> {
       return true;
     }
   } catch {
+    // Fall through
+  }
+
+  if (isLocal) {
+    // On local development, if localhost responded earlier or window is online, consider connected
+    return typeof navigator !== "undefined" ? navigator.onLine : true;
+  }
+
+  // Probe 3: Public CDN probe (only for remote production)
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 2500);
+    await fetch(`https://cloudflare.com/cdn-cgi/trace?t=${Date.now()}`, {
+      method: "HEAD",
+      mode: "no-cors",
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    return true;
+  } catch {
     // Genuinely offline
   }
 
@@ -69,6 +81,7 @@ async function probeNetwork(): Promise<boolean> {
 
 export function OfflineOverlay({ forceVisible = false }: OfflineOverlayProps) {
   const [isOffline, setIsOffline] = useState(forceVisible);
+  const [isDismissed, setIsDismissed] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const [toastMsg, setToastMsg] = useState<{ text: string; icon: string } | null>(null);
   const [liked, setLiked] = useState(false);
@@ -211,7 +224,7 @@ export function OfflineOverlay({ forceVisible = false }: OfflineOverlayProps) {
     }
   };
 
-  if (!isOffline) return null;
+  if (!isOffline || isDismissed) return null;
 
   return (
     <div
@@ -356,7 +369,10 @@ export function OfflineOverlay({ forceVisible = false }: OfflineOverlayProps) {
 
           <button
             type="button"
-            onClick={() => setIsOffline(false)}
+            onClick={() => {
+              setIsOffline(false);
+              setIsDismissed(true);
+            }}
             className="text-[12px] font-semibold text-zinc-400 hover:text-zinc-200 transition-colors py-1 cursor-pointer underline underline-offset-4"
           >
             Dismiss &amp; Continue to App

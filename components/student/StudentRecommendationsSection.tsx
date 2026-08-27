@@ -104,7 +104,7 @@ export function StudentRecommendationsSection() {
           <div className="h-5 w-48 rounded bg-surface-elevated animate-pulse"></div>
           <div className="h-4 w-24 rounded bg-surface-elevated animate-pulse"></div>
         </div>
-        <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 sm:-mx-6 sm:px-6 touch-pan-y [::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 sm:-mx-6 sm:px-6 [::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <div className="h-36 w-[230px] shrink-0 rounded-2xl bg-surface-elevated animate-pulse border border-border-subtle"></div>
           <div className="h-36 w-[230px] shrink-0 rounded-2xl bg-surface-elevated animate-pulse border border-border-subtle"></div>
           <div className="h-36 w-[230px] shrink-0 rounded-2xl bg-surface-elevated animate-pulse border border-border-subtle"></div>
@@ -131,7 +131,7 @@ export function StudentRecommendationsSection() {
       </div>
 
       {/* Horizontal Scrollable Cards Container */}
-      <div className="flex overflow-x-auto gap-3 pb-2 pt-1 -mx-4 px-4 sm:-mx-6 sm:px-6 snap-x snap-mandatory touch-pan-y [::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <div className="flex overflow-x-auto gap-3 pb-2 pt-1 -mx-4 px-4 sm:-mx-6 sm:px-6 snap-x snap-mandatory [::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {data.recommendations.map((item, idx) => {
           const quantity = quantityOf(item.itemId);
           return (

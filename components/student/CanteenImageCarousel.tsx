@@ -60,7 +60,7 @@ export function CanteenImageCarousel({
 
   return (
     <div
-      className="relative h-full w-full touch-pan-y overflow-hidden bg-surface-elevated"
+      className="relative h-full w-full overflow-hidden bg-surface-elevated"
       onTouchStart={hasMultiple ? handleTouchStart : undefined}
       onTouchEnd={hasMultiple ? handleTouchEnd : undefined}
     >
