@@ -127,6 +127,17 @@ GRABIT has three distinct, isolated application surfaces. **NEVER MERGE OR CROSS
 
 ---
 
+### [PROTECTED FIX 9] Time Bucket & Pack Label Display Formatting
+- **Original Bug**: Recommendation pack label was displayed with an raw underscore as `LATE_NIGHT PACK`.
+- **Root Cause**: Raw enum string `timeBucket` was directly rendered in JSX without whitespace formatting.
+- **Fix Implemented**:
+  - Replaced underscores with spaces in `StudentRecommendationsSection.tsx` (`{data.timeBucket.replace(/_/g, " ")} PACK`).
+  - Formatted recommendation reason strings in `lib/supabase/student_recommendations.ts`.
+- **Key Files**: `components/student/StudentRecommendationsSection.tsx`, `lib/supabase/student_recommendations.ts`.
+- **Verification**: Displayed as `LATE NIGHT PACK` across both Website and Android App.
+
+---
+
 ## 3. Canonical Development Commands
 
 Run all commands from root `/Users/gopaljidwivedi/GRABIT-WHHG`:

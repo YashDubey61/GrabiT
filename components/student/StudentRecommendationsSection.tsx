@@ -126,7 +126,7 @@ export function StudentRecommendationsSection() {
           {data.isPersonalized ? "Recommended for You" : `Popular Around ${data.campusName}`}
         </h2>
         <span className="text-[11px] font-mono text-muted uppercase tracking-wider">
-          {data.timeBucket} PICK
+          {data.timeBucket.replace(/_/g, " ")} PACK
         </span>
       </div>
 

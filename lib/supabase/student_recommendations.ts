@@ -222,7 +222,7 @@ export async function getStudentRecommendations(): Promise<StudentRecommendation
       recommendationList.push({
         itemId: item.id,
         title: item.name,
-        reason: `Trending ${timeBucket.toLowerCase()} pick`,
+        reason: `Trending ${timeBucket.replace(/_/g, " ").toLowerCase()} pick`,
         category: "TRENDING_NOW",
         score: Math.min(98, 80 + qty * 3),
         canteenId: item.canteenId,
@@ -270,7 +270,7 @@ export async function getStudentRecommendations(): Promise<StudentRecommendation
       recommendationList.push({
         itemId: item.id,
         title: item.name,
-        reason: `Popular during ${timeBucket.toLowerCase()}`,
+        reason: `Popular during ${timeBucket.replace(/_/g, " ").toLowerCase()}`,
         category: "TIME_OF_DAY",
         score: 85,
         canteenId: item.canteenId,
