@@ -174,6 +174,19 @@ GRABIT has three distinct, isolated application surfaces. **NEVER MERGE OR CROSS
 
 ---
 
+### [PROTECTED FIX 13] Vendor Detail Info Modal Elevation & Rating Display Formatting
+- **Original Bug**: Vendor detail bottom sheet/modal was sitting flush with the bottom screen edge and overlapped by the bottom tab bar navigation. Rating displayed unwanted `(Live)` suffix (`4.8 (Live)`).
+- **Root Cause**:
+  1. `Modal.tsx` was rendered at `z-50` with bottom-flush attachment without safe-area offset, causing it to sit beneath `RoleShellTabBar` (`z-50`).
+  2. `ratingCount` / `ratingNote` strings containing `"Live"` were rendered unconditionally inside parentheses next to the numeric score.
+- **Fix Implemented**:
+  - Elevated `Modal.tsx` to `z-[100]` with `p-3 pb-[max(2rem,calc(env(safe-area-inset-bottom,0px)+1.5rem))]`, `rounded-3xl` glass container, `max-h-[75dvh]`, and body scroll locking.
+  - Removed `(Live)` display suffix across `VendorInfoModal.tsx`, `MenuInfoCard.tsx`, and `CanteenCard.tsx` while preserving internal data bindings.
+- **Key Files**: `components/ui/Modal.tsx`, `components/student/VendorInfoModal.tsx`, `components/student/MenuInfoCard.tsx`, `components/student/CanteenCard.tsx`.
+- **Verification**: Verified on connected Android phone: info modal floats above bottom navigation with full scrollability, clean alignment, and rating displays clean `4.8`.
+
+---
+
 ## 3. Canonical Development Commands
 
 Run all commands from root `/Users/gopaljidwivedi/GRABIT-WHHG`:

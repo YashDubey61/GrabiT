@@ -54,9 +54,11 @@ export function CanteenCard({ canteen }: { canteen: MockCanteen }) {
               star
             </span>
             <span className="text-label font-700">{canteen.rating}</span>
-            <span className="ml-1 text-[10px] text-muted">
-              ({canteen.ratingNote})
-            </span>
+            {canteen.ratingNote && canteen.ratingNote !== "Live" && (
+              <span className="ml-1 text-[10px] text-muted">
+                ({canteen.ratingNote})
+              </span>
+            )}
           </div>
         </div>
 

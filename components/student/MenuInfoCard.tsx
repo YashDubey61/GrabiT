@@ -39,7 +39,9 @@ export function MenuInfoCard({
               star
             </span>
             <span className="text-body font-700 text-foreground">{rating}</span>
-            <span className="text-caption text-muted">({ratingCount})</span>
+            {ratingCount && ratingCount !== "Live" && (
+              <span className="text-caption text-muted">({ratingCount})</span>
+            )}
           </div>
         </div>
 

@@ -42,7 +42,13 @@ export function VendorInfoModal({
 
   const rows: { icon: string; label: string; value: string }[] = [
     { icon: "timer", label: "Avg prep time", value: `${vendor.avgPrepMinutes} mins` },
-    { icon: "star", label: "Rating", value: `${vendor.rating} (${vendor.ratingCount})` },
+    {
+      icon: "star",
+      label: "Rating",
+      value: `${vendor.rating}${
+        vendor.ratingCount && vendor.ratingCount !== "Live" ? ` (${vendor.ratingCount})` : ""
+      }`,
+    },
   ];
   if (vendor.operatingHours) {
     rows.push({ icon: "schedule", label: "Operating hours", value: vendor.operatingHours });
@@ -55,7 +61,7 @@ export function VendorInfoModal({
   }
 
   return (
-    <Modal open={open} onClose={onClose} className="max-h-[85vh] overflow-y-auto" glass>
+    <Modal open={open} onClose={onClose} glass>
       <div role="dialog" aria-modal="true" aria-labelledby="vendor-info-title">
         <div className="mb-4 flex items-start justify-between gap-3">
           <h2
