@@ -138,6 +138,17 @@ GRABIT has three distinct, isolated application surfaces. **NEVER MERGE OR CROSS
 
 ---
 
+### [PROTECTED FIX 10] Campus Selector Modal Viewport & Bottom Margin
+- **Original Bug**: "Choose Your Campus" sheet extended to the very bottom screen edge, causing the bottom campus item to be partially clipped by the mobile gesture bar.
+- **Root Cause**: Modal was flush against the bottom edge (`p-0`, `max-h-[85dvh]`, `rounded-t-3xl`) without responsive safe-area offset.
+- **Fix Implemented**:
+  - Added safe floating padding `p-3 pb-[max(1.5rem,calc(env(safe-area-inset-bottom,0px)+1.25rem))]` and `max-h-[80dvh]` with all-around `rounded-3xl` borders.
+  - Trimmed internal list padding to `pb-2` for a clean scroll boundary.
+- **Key Files**: `components/student/CampusSelectorModal.tsx`.
+- **Verification**: Modal floats cleanly above the system gesture bar on mobile with 0 clipped content.
+
+---
+
 ## 3. Canonical Development Commands
 
 Run all commands from root `/Users/gopaljidwivedi/GRABIT-WHHG`:
