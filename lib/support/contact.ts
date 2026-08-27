@@ -4,6 +4,7 @@
  */
 export const SUPPORT_CONTACT = {
   email: "support.grabit@gmail.com",
-  helpline: "1800-GRABIT",
+  helpline: "9140070535",
 };
+
 

@@ -199,6 +199,18 @@ GRABIT has three distinct, isolated application surfaces. **NEVER MERGE OR CROSS
 
 ---
 
+### [PROTECTED FIX 15] Call Support Helpline Number Update
+- **Original Bug**: Support section displayed placeholder helpline `1800-GRABIT` instead of direct phone number.
+- **Root Cause**: `SUPPORT_CONTACT.helpline` in `lib/support/contact.ts` held the previous string `1800-GRABIT`.
+- **Fix Implemented**:
+  - Updated `SUPPORT_CONTACT.helpline` in `lib/support/contact.ts` to `9140070535`.
+  - Made the helpline row in `app/customer/support/page.tsx` an interactive `tel:9140070535` link while preserving all styles, layout, and labels.
+- **Key Files**: `lib/support/contact.ts`, `app/customer/support/page.tsx`.
+- **Verification**: Verified on connected Android phone: Call Support displays `9140070535` with working `tel:` link.
+
+---
+
+
 
 ## 3. Canonical Development Commands
 

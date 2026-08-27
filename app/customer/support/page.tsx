@@ -353,7 +353,12 @@ export default function HelpSupportPage() {
                   </span>
                   <span className="text-body-sm font-semibold text-foreground">Call Support</span>
                 </div>
-                <span className="text-body-sm font-semibold text-muted">{SUPPORT_CONTACT.helpline}</span>
+                <a
+                  href={`tel:${SUPPORT_CONTACT.helpline}`}
+                  className="text-body-sm font-semibold text-muted hover:text-primary transition-colors"
+                >
+                  {SUPPORT_CONTACT.helpline}
+                </a>
               </div>
             </Card>
           </section>
