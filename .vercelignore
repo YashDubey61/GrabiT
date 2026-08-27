@@ -1,3 +1,7 @@
 android/
 scratch/
-
+GrabiT/
+public/download/
+*.apk
+*.aab
+.gradle/
