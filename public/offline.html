@@ -576,111 +576,44 @@
         return "http://localhost:3000/customer";
       }
 
-      function probeServer(url, timeoutMs) {
-        return new Promise(function (resolve) {
-          var origin = url.startsWith("http") ? new URL(url).origin : (window.location.origin || "http://localhost:3000");
-          var probeUrl = origin + "/api/health?t=" + Date.now();
-          var controller = null;
-          var timer = null;
-
-          if (typeof AbortController !== "undefined") {
-            controller = new AbortController();
-          }
-
-          timer = setTimeout(function () {
-            if (controller) controller.abort();
-            resolve(false);
-          }, timeoutMs || 2500);
-
-          fetch(probeUrl, {
-            method: "HEAD",
-            mode: "no-cors",
-            cache: "no-store",
-            signal: controller ? controller.signal : undefined
-          })
-          .then(function () {
-            clearTimeout(timer);
-            resolve(true);
-          })
-          .catch(function () {
-            // Also try fetching destination root as fallback
-            fetch(origin + "/favicon.ico?t=" + Date.now(), {
-              method: "HEAD",
-              mode: "no-cors",
-              cache: "no-store"
-            })
-            .then(function () {
-              clearTimeout(timer);
-              resolve(true);
-            })
-            .catch(function () {
-              clearTimeout(timer);
-              resolve(false);
-            });
-          });
-        });
-      }
-
       var autoPollInterval = null;
 
-      function attemptReconnect(isAuto) {
+      function attemptReconnect() {
         if (isChecking) return;
         isChecking = true;
 
         retrySvg.classList.add("spinner");
-        retryLabel.textContent = "Checking...";
+        retryLabel.textContent = "Connecting...";
         btnRetry.style.opacity = "0.85";
 
         var dest = getDestination();
+        showToast("Connecting to GrabIt...", "⚡");
 
-        probeServer(dest, 2000).then(function (isOnline) {
-          isChecking = false;
-          retrySvg.classList.remove("spinner");
-          retryLabel.textContent = "Retry";
-          btnRetry.style.opacity = "1";
+        if (autoPollInterval) clearInterval(autoPollInterval);
 
-          if (isOnline) {
-            if (autoPollInterval) clearInterval(autoPollInterval);
-            showToast("Connection restored! Resuming GrabIt...", "⚡");
-            setTimeout(function () {
-              window.location.href = dest;
-            }, 300);
-          } else {
-            if (!isAuto) {
-              showToast("Still offline. Check Wi-Fi, data, or USB.", "⚠️");
-              btnRetry.animate([
-                { transform: "translateX(0)" },
-                { transform: "translateX(-6px)" },
-                { transform: "translateX(6px)" },
-                { transform: "translateX(-4px)" },
-                { transform: "translateX(4px)" },
-                { transform: "translateX(0)" }
-              ], { duration: 350 });
-            }
+        // Direct top-level WebView navigation (unrestricted by AJAX CORS)
+        setTimeout(function () {
+          try {
+            window.location.replace(dest);
+          } catch (e) {
+            window.location.href = dest;
           }
-        });
+        }, 150);
       }
 
       btnRetry.addEventListener("click", function () {
-        attemptReconnect(false);
+        attemptReconnect();
       });
 
-      // Initial check on mount
-      setTimeout(function () {
-        attemptReconnect(true);
-      }, 500);
-
-      // Auto-poll every 2.5 seconds
-      autoPollInterval = setInterval(function () {
-        if (!isChecking) {
-          attemptReconnect(true);
-        }
-      }, 2500);
+      // Auto-reconnect after 1 second
+      autoPollInterval = setTimeout(function () {
+        attemptReconnect();
+      }, 1000);
 
       window.addEventListener("online", function () {
         showToast("Back online! Resuming GrabIt...", "🎉");
         setTimeout(function () {
-          attemptReconnect(false);
+          attemptReconnect();
         }, 200);
       });
 

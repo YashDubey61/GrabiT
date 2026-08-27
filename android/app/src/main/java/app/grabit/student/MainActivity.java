@@ -79,7 +79,11 @@ public class MainActivity extends BridgeActivity {
         @Override
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
             if (request.isForMainFrame() && isConnectivityError(error.getErrorCode())) {
-                view.loadUrl(offlineUrl("network", request.getUrl().toString()));
+                String target = request.getUrl() != null ? request.getUrl().toString() : "";
+                if (target.contains("offline.html")) {
+                    return;
+                }
+                view.loadUrl(offlineUrl("network", target));
                 return;
             }
             super.onReceivedError(view, request, error);
