@@ -2,8 +2,14 @@ package app.grabit.student;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -12,40 +18,51 @@ import android.webkit.WebViewClient;
 import com.getcapacitor.Bridge;
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.BridgeWebViewClient;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MainActivity extends BridgeActivity {
-    /** Single stable channel for all order-status pushes — must match
-     * AndroidManifest's default_notification_channel_id and the
-     * android_channel_id sent in the FCM payload (see
-     * lib/notifications/student_push_service.ts) so every code path
-     * (foreground JS listener, background/terminated system tray) posts
-     * to the same channel instead of Android creating duplicates. */
+    private static final String TAG = "GrabitMainActivity";
     private static final String ORDERS_CHANNEL_ID = "grabit_orders_channel_v1";
+    private static final String PREFS_NAME = "grabit_app_prefs";
+    private static final String KEY_LAST_WORKING_URL = "last_working_url";
+
+    // Candidate development endpoints for instantaneous fallback (USB ADB reverse + Wi-Fi LAN)
+    private static final String[] CANDIDATE_URLS = new String[] {
+        "http://localhost:3000/customer",
+        "http://192.168.29.205:3000/customer"
+    };
+
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private final AtomicBoolean isReconnecting = new AtomicBoolean(false);
+    private Runnable autoRetryRunnable;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(NativeGoogleAuthPlugin.class);
         registerPlugin(NativeSettingsPlugin.class);
         super.onCreate(savedInstanceState);
-        // Deliberately no manual WindowInsets padding here — Capacitor 8's
-        // built-in SystemBars plugin (see node_modules/@capacitor/android's
-        // SystemBars.java, auto-registered, default insetsHandling="css")
-        // already injects --safe-area-inset-top/right/bottom/left as CSS
-        // variables exactly once. A second native setPadding() on the root
-        // content view here previously double-applied the top inset: once
-        // as real view padding pushing the whole WebView down, then again
-        // as CSS padding-top on every <header> (app/globals.css) reading
-        // that same injected variable — producing the oversized gap between
-        // the status bar and the app's top navigation.
         createOrdersNotificationChannel();
 
         Bridge bridge = getBridge();
         WebView webView = bridge.getWebView();
+        webView.addJavascriptInterface(new AndroidOfflineBridge(webView), "AndroidOfflineBridge");
         webView.setWebViewClient(new GrabitWebViewClient(bridge));
         webView.setVerticalScrollBarEnabled(true);
         webView.setHorizontalScrollBarEnabled(false);
         webView.setOverScrollMode(android.view.View.OVER_SCROLL_IF_CONTENT_SCROLLS);
         webView.setNestedScrollingEnabled(false);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        stopAutoRetry();
+        executor.shutdown();
     }
 
     private void createOrdersNotificationChannel() {
@@ -57,23 +74,121 @@ public class MainActivity extends BridgeActivity {
         );
         channel.setDescription("Order status updates — prepared, ready for pickup, picked up.");
         NotificationManager manager = getSystemService(NotificationManager.class);
-        // createNotificationChannel is a safe no-op if a channel with this
-        // id already exists, so calling it on every launch never creates
-        // a duplicate channel.
         manager.createNotificationChannel(channel);
     }
 
-    /**
-     * Wraps Capacitor's default client to show a branded GRABIT recovery
-     * screen only for genuine connectivity loss (main-frame DNS/connect/
-     * timeout failures) and real 5xx outages. 4xx responses, non-main-frame
-     * failures, and anything else are left untouched so real server,
-     * auth, or payment-callback errors are never hidden behind a fake
-     * "offline" screen.
-     */
-    private static class GrabitWebViewClient extends BridgeWebViewClient {
+    public class AndroidOfflineBridge {
+        private final WebView webView;
+
+        AndroidOfflineBridge(WebView webView) {
+            this.webView = webView;
+        }
+
+        @JavascriptInterface
+        public void retry(String preferredTarget) {
+            Log.d(TAG, "AndroidOfflineBridge.retry triggered with target: " + preferredTarget);
+            mainHandler.post(() -> performProbeAndReconnect(webView, preferredTarget));
+        }
+    }
+
+    private void startAutoRetry(WebView webView, String preferredTarget) {
+        stopAutoRetry();
+        autoRetryRunnable = new Runnable() {
+            @Override
+            public void run() {
+                performProbeAndReconnect(webView, preferredTarget);
+                mainHandler.postDelayed(this, 2000);
+            }
+        };
+        mainHandler.postDelayed(autoRetryRunnable, 1200);
+    }
+
+    private void stopAutoRetry() {
+        if (autoRetryRunnable != null) {
+            mainHandler.removeCallbacks(autoRetryRunnable);
+            autoRetryRunnable = null;
+        }
+    }
+
+    private void performProbeAndReconnect(WebView webView, String preferredTarget) {
+        if (isReconnecting.get()) return;
+        isReconnecting.set(true);
+
+        executor.execute(() -> {
+            try {
+                // Priority order: 1) preferredTarget, 2) SharedPreferences last working URL, 3) Candidate list
+                SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                String lastSaved = prefs.getString(KEY_LAST_WORKING_URL, null);
+
+                String[] targetsToTest = new String[] {
+                    preferredTarget,
+                    lastSaved,
+                    CANDIDATE_URLS[0],
+                    CANDIDATE_URLS[1]
+                };
+
+                String foundWorkingUrl = null;
+                for (String candidate : targetsToTest) {
+                    if (candidate == null || candidate.trim().isEmpty() || candidate.contains("offline.html")) {
+                        continue;
+                    }
+                    if (probeUrl(candidate)) {
+                        foundWorkingUrl = candidate;
+                        break;
+                    }
+                }
+
+                if (foundWorkingUrl != null) {
+                    final String targetToLoad = foundWorkingUrl;
+                    Log.i(TAG, "Server connection verified online: " + targetToLoad + ". Reloading WebView...");
+                    stopAutoRetry();
+                    mainHandler.post(() -> {
+                        webView.loadUrl(targetToLoad);
+                    });
+                }
+            } finally {
+                isReconnecting.set(false);
+            }
+        });
+    }
+
+    private boolean probeUrl(String urlString) {
+        HttpURLConnection conn = null;
+        try {
+            URL url = new URL(urlString);
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setConnectTimeout(1200);
+            conn.setReadTimeout(1200);
+            conn.setRequestMethod("GET");
+            conn.setInstanceFollowRedirects(true);
+            int responseCode = conn.getResponseCode();
+            // Any response code < 500 (200 OK, 307 redirect, 401 auth, etc.) confirms the server is UP!
+            return responseCode > 0 && responseCode < 500;
+        } catch (Exception e) {
+            return false;
+        } finally {
+            if (conn != null) {
+                conn.disconnect();
+            }
+        }
+    }
+
+    private class GrabitWebViewClient extends BridgeWebViewClient {
         GrabitWebViewClient(Bridge bridge) {
             super(bridge);
+        }
+
+        @Override
+        public void onPageFinished(WebView view, String url) {
+            super.onPageFinished(view, url);
+            if (url != null && !url.contains("offline.html") && url.startsWith("http")) {
+                stopAutoRetry();
+                getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                    .edit()
+                    .putString(KEY_LAST_WORKING_URL, url)
+                    .apply();
+                Log.d(TAG, "Saved active working URL: " + url);
+            }
         }
 
         @Override
@@ -84,6 +199,7 @@ public class MainActivity extends BridgeActivity {
                     return;
                 }
                 view.loadUrl(offlineUrl("network", target));
+                startAutoRetry(view, target);
                 return;
             }
             super.onReceivedError(view, request, error);
@@ -92,7 +208,9 @@ public class MainActivity extends BridgeActivity {
         @Override
         public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
             if (request.isForMainFrame() && errorResponse.getStatusCode() >= 500) {
-                view.loadUrl(offlineUrl("server", request.getUrl().toString()));
+                String target = request.getUrl() != null ? request.getUrl().toString() : "";
+                view.loadUrl(offlineUrl("server", target));
+                startAutoRetry(view, target);
                 return;
             }
             super.onReceivedHttpError(view, request, errorResponse);
@@ -117,3 +235,4 @@ public class MainActivity extends BridgeActivity {
         }
     }
 }
+

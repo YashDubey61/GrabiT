@@ -162,6 +162,18 @@ GRABIT has three distinct, isolated application surfaces. **NEVER MERGE OR CROSS
 
 ---
 
+### [PROTECTED FIX 12] Resilient Native Offline Auto-Recovery & Multi-Target Prober
+- **Original Bug**: Android app dropped to "You're Offline" when ADB reverse socket momentarily reset during rebuilds or USB re-negotiations.
+- **Root Cause**: WebView running `file:///android_asset/public/offline.html` had no native bridge to probe alternate origins (Wi-Fi LAN IP / USB localhost) and couldn't bypass WebView CORS/navigation constraints.
+- **Fix Implemented**:
+  - Implemented `AndroidOfflineBridge` and `performProbeAndReconnect` in `MainActivity.java` with multi-endpoint probing (`localhost:3000` via USB + `192.168.29.205:3000` via Wi-Fi + SharedPreferences last working URL).
+  - Added background auto-retry loop in Java whenever `offline.html` is shown that automatically reloads the WebView the moment any candidate endpoint responds with HTTP < 500.
+  - Added persistent host watchdog daemon (`scripts/adb-reverse-watchdog.sh`) to maintain `adb reverse tcp:3000 tcp:3000`.
+- **Key Files**: `android/app/src/main/java/app/grabit/student/MainActivity.java`, `public/offline.html`, `scripts/adb-reverse-watchdog.sh`.
+- **Verification**: App auto-reconnects seamlessly on physical device across USB resets and network fluctuations.
+
+---
+
 ## 3. Canonical Development Commands
 
 Run all commands from root `/Users/gopaljidwivedi/GRABIT-WHHG`:

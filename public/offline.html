@@ -591,13 +591,28 @@
 
         if (autoPollInterval) clearInterval(autoPollInterval);
 
-        // Direct top-level WebView navigation (unrestricted by AJAX CORS)
+        // If native AndroidOfflineBridge is available, trigger multi-candidate probe immediately
+        if (window.AndroidOfflineBridge && typeof window.AndroidOfflineBridge.retry === "function") {
+          try {
+            window.AndroidOfflineBridge.retry(dest);
+          } catch (err) {
+            console.error("Bridge retry error:", err);
+          }
+        }
+
+        // Direct top-level WebView navigation fallback
         setTimeout(function () {
           try {
             window.location.replace(dest);
           } catch (e) {
             window.location.href = dest;
           }
+          setTimeout(function () {
+            isChecking = false;
+            retrySvg.classList.remove("spinner");
+            retryLabel.textContent = "Try Reconnecting";
+            btnRetry.style.opacity = "1";
+          }, 3000);
         }, 150);
       }
 
