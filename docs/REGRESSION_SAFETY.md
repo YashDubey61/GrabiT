@@ -116,6 +116,17 @@ GRABIT has three distinct, isolated application surfaces. **NEVER MERGE OR CROSS
 
 ---
 
+### [PROTECTED FIX 8] Single Search Clear Button (Suppressed Browser Pseudo-Elements)
+- **Original Bug**: When typing queries in the Student search bar, two X/clear icons appeared side by side.
+- **Root Cause**: `<input type="search">` triggered Chromium/WebKit's native `::-webkit-search-cancel-button` alongside the custom GRABIT circular `✕` button.
+- **Fix Implemented**:
+  - Globally disabled `::-webkit-search-cancel-button` and `::-ms-clear` in `app/globals.css`.
+  - Added utility classes `[&::-webkit-search-cancel-button]:hidden` to search inputs in `StudentDashboardClient.tsx`.
+- **Key Files**: `app/globals.css`, `components/student/StudentDashboardClient.tsx`.
+- **Verification**: Typing "Maggi" on mobile displays exactly one circular `✕` button.
+
+---
+
 ## 3. Canonical Development Commands
 
 Run all commands from root `/Users/gopaljidwivedi/GRABIT-WHHG`:

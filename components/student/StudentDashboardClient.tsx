@@ -346,7 +346,7 @@ export function StudentDashboardClient({
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={`Search ${activeCampus.name} stalls or dishes...`}
               aria-label="Search stalls or dishes"
-              className="w-full rounded-2xl border border-white/[0.10] bg-white/[0.04] py-4 pl-12 pr-10 text-body text-white outline-none transition-all placeholder:text-zinc-500 backdrop-blur-xl focus:border-primary focus:bg-white/[0.07] focus:ring-2 focus:ring-primary/30 shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
+              className="w-full rounded-2xl border border-white/[0.10] bg-white/[0.04] py-4 pl-12 pr-10 text-body text-white outline-none transition-all placeholder:text-zinc-500 backdrop-blur-xl focus:border-primary focus:bg-white/[0.07] focus:ring-2 focus:ring-primary/30 shadow-[0_4px_20px_rgba(0,0,0,0.3)] [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:hidden"
             />
             {isSearching && (
               <button

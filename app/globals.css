@@ -458,3 +458,20 @@ nextjs-portal,
 div[data-nextjs-dev-overlay] {
   display: none !important;
 }
+
+/* Disable native browser search cancel/clear buttons so only custom GRABIT clear buttons appear */
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+input[type="search"]::-ms-clear,
+input[type="search"]::-ms-reveal {
+  display: none;
+  width: 0;
+  height: 0;
+}
